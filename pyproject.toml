@@ -2,9 +2,7 @@
 name = "nonebot-plugin-all4one"
 version = "0.1.0"
 description = ""
-authors = [
-    { name = "Jigsaw", email = "j1g5aw@foxmail.com" },
-]
+authors = [{ name = "Jigsaw", email = "j1g5aw@foxmail.com" }]
 dependencies = ["nonebot2<3.0.0,>=2.0.0rc2"]
 requires-python = ">=3.8,<4.0"
 readme = "README.md"
@@ -12,9 +10,6 @@ license = { text = "MIT" }
 
 [tool.pdm.dev-dependencies]
 pre-commit = ["pycln", "isort", "black", "nonemoji", "pre-commit"]
-
-[tool.pdm.scripts]
-post_install = "pre-commit install"
 
 [tool.black]
 line-length = 88
