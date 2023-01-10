@@ -1,23 +1,19 @@
-from nonebot.typing import T_State
-from nonebot.adapters import Bot, Event
-from nonebot.plugin import on_shell_command
+import time
 
-from .data import Data
-from .handle import Handle
-from .parser import Namespace, parser
+from nonebot import get_driver
+from nonebot.adapters.telegram import Bot
+from nonebot.exception import IgnoredException
+from nonebot.message import event_preprocessor
+from nonebot.adapters.telegram.message import Entity
+from nonebot.adapters.telegram.event import MessageEvent
 
-command = on_shell_command("command", parser=parser, priority=1)
+from . import obimpl as obimpl
+from .middlewares import import_middlewares
+
+get_driver().on_startup(import_middlewares)
 
 
-@command.handle()
-async def _(bot: Bot, event: Event, state: T_State):
-
-    args: Namespace = state["args"]
-
-    if hasattr(args, "handle"):
-        try:
-            await bot.send(event, getattr(Handle, args.handle)(args))
-        except:
-            pass
-    else:
-        await bot.send(event, args.message)
+@event_preprocessor
+async def _(bot: Bot, event: MessageEvent):
+    # TODO
+    raise IgnoredException("All4One has transfer it to OneBot V12")  # TODO 可配置是否跳过
