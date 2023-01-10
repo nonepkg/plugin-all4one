@@ -3,13 +3,17 @@ name = "nonebot-plugin-all4one"
 version = "0.1.0"
 description = ""
 authors = [{ name = "Jigsaw", email = "j1g5aw@foxmail.com" }]
-dependencies = ["nonebot2<3.0.0,>=2.0.0rc2"]
+dependencies = ["nonebot2<3.0.0,>=2.0.0rc2", "nonebot-adapter-onebot>=2.2.0"]
 requires-python = ">=3.8,<4.0"
 readme = "README.md"
 license = { text = "MIT" }
 
+[project.optional-dependencies]
+telegram = ["nonebot-adapter-telegram>=0.1.0b4"]
+
 [tool.pdm.dev-dependencies]
 pre-commit = ["pycln", "isort", "black", "nonemoji", "pre-commit"]
+nonebot = ["httpx>=0.23.3,<1.0.0", "fastapi>=0.88.0,!=0.89.0,<1.0.0"]
 
 [tool.black]
 line-length = 88
