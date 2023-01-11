@@ -1,12 +1,14 @@
+import asyncio
 import importlib
-from abc import abstractmethod
-from typing import Any, Dict, List, Type, Literal, Optional
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Type, Literal, Optional, TypedDict
 
 from nonebot.log import logger
+from pydantic import Extra, BaseModel
 from nonebot.adapters import Bot, Event, Adapter, Message
-from nonebot.adapters.onebot.v12.bot import GetStatusResult
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
+from nonebot.adapters.onebot.v12.event import BotSelf, BotStatus
 
 middlewares_map = {"onebot": "onebot", "telegram": "telegram"}
 
@@ -15,27 +17,31 @@ _middlewares: Dict[str, Type["Middleware"]] = {}
 
 def import_middlewares(*adapters):
     for adapter in set(adapter.split(maxsplit=1)[0].lower() for adapter in adapters):
-        if adapter in middlewares_map:
-            module = importlib.import_module(
-                f"nonebot_plugin_all4one.middlewares.{middlewares_map[adapter]}"
-            )
-            _middlewares[adapter] = getattr(module, "Middleware")
-        else:
+        try:
+            if adapter in middlewares_map:
+                module = importlib.import_module(
+                    f"nonebot_plugin_all4one.middlewares.{middlewares_map[adapter]}"
+                )
+                _middlewares[adapter] = getattr(module, "Middleware")
+            else:
+                logger.warning(f"Can not find middleware for Adapter {adapter}")
+        except AttributeError:
             logger.warning(f"Can not find middleware for Adapter {adapter}")
 
 
-class Middleware(Bot):
-    def __init__(self, adapter: "Adapter", self_id: str):
-        self.adapter: "Adapter" = adapter
-        """协议适配器实例"""
-        self.self_id: str = self_id
-        """机器人 ID"""
+class Middleware(ABC):
+    def __init__(self, bot: "Bot"):
+        self.bot = bot
+        self.events: List[OneBotEvent] = []
+
+    def get_bot_self(self) -> BotSelf:
+        return BotSelf(platform=self.get_platform(), user_id=f"a4o@{self.bot.self_id}")
 
     async def get_latest_events(
         self,
         *,
-        limit: Optional[int] = None,
-        timeout: Optional[int] = None,
+        limit: int = 0,
+        timeout: int = 0,
         **kwargs: Any,
     ) -> List[OneBotEvent]:
         """获取最新事件列表
@@ -45,7 +51,15 @@ class Middleware(Bot):
             timeout: 没有事件时要等待的秒数，0 表示使用短轮询，不等待
             kwargs: 扩展字段
         """
-        raise NotImplementedError
+        if self.events:
+            if limit == 0:
+                return self.events
+            events = self.events[:limit]
+            self.events = self.events[limit:]
+            return events
+        else:
+            await asyncio.sleep(timeout)
+            return []
 
     async def get_supported_actions(self, **kwargs: Any) -> List[str]:
         """获取支持的动作列表
@@ -55,41 +69,55 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    async def get_status(self, **kwargs: Any) -> GetStatusResult:
+    async def get_status(self, **kwargs: Any) -> BotStatus:
         """获取运行状态
 
         参数:
             kwargs: 扩展字段
         """
-        raise NotImplementedError
+        return BotStatus(
+            **{
+                "good": True,
+                "bots": [
+                    {
+                        "self": self.get_bot_self(),
+                        "online": True,
+                    },
+                ],
+            }
+        )
 
     async def get_version(
         self,
         **kwargs: Any,
-    ) -> Dict[Literal["impl", "platform", "version", "onebot_version"] | str, str]:
+    ) -> Dict[Literal["impl", "version", "onebot_version"] | str, str]:
         """获取版本信息
 
         参数:
             kwargs: 扩展字段
         """
+        return {
+            "impl": "nonebot-plugin-all4one",
+            "version": "0.1.0",
+            "onebot_version": "12",
+        }
+
+    @abstractmethod
+    def get_platform(self):
         raise NotImplementedError
 
     @abstractmethod
-    @classmethod
-    def to_onebot_event(cls, message: Event) -> OneBotEvent:
+    def to_onebot_event(self, event: Event) -> OneBotEvent:
         raise NotImplementedError
 
     @abstractmethod
-    @classmethod
-    def from_onebot_message(cls, message: OneBotMessage) -> Message:
+    def from_onebot_message(self, message: OneBotMessage) -> Message:
         raise NotImplementedError
 
     @abstractmethod
-    @classmethod
-    def to_onebot_message(cls, message: Message) -> OneBotMessage:
+    def to_onebot_message(self, message: Message) -> OneBotMessage:
         raise NotImplementedError
 
-    @abstractmethod
     async def send_message(
         self,
         *,
@@ -114,7 +142,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def delete_message(self, *, message_id: str, **kwargs: Any) -> None:
         """撤回消息
 
@@ -123,14 +150,12 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def get_self_info(
         self, **kwargs: Any
     ) -> Dict[Literal["user_id", "nickname"] | str, str]:
         """获取机器人自身信息"""
         raise NotImplementedError
 
-    @abstractmethod
     async def get_user_info(
         self, *, user_id: str, **kwargs: Any
     ) -> Dict[Literal["user_id", "nickname"] | str, str]:
@@ -142,7 +167,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def get_friend_list(
         self,
         **kwargs: Any,
@@ -154,7 +178,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def get_group_info(
         self, *, group_id: str, **kwargs: Any
     ) -> Dict[Literal["group_id", "group_name"] | str, str]:
@@ -166,7 +189,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def get_group_list(
         self,
         **kwargs: Any,
@@ -178,7 +200,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def get_group_member_info(
         self, *, group_id: str, user_id: str, **kwargs: Any
     ) -> Dict[Literal["user_id", "nickname"] | str, str]:
@@ -191,7 +212,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def get_group_member_list(
         self, *, group_id: str, **kwargs: Any
     ) -> List[Dict[Literal["user_id", "nickname"] | str, str]]:
@@ -203,7 +223,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def set_group_name(
         self, *, group_id: str, group_name: str, **kwargs: Any
     ) -> None:
@@ -216,7 +235,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def leave_group(self, *, group_id: str, **kwargs: Any) -> None:
         """退出群
 
@@ -226,7 +244,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def get_guild_info(
         self, *, guild_id: str, **kwargs: Any
     ) -> Dict[Literal["guild_id", "guild_name"] | str, str]:
@@ -238,7 +255,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def get_guild_list(
         self,
         **kwargs: Any,
@@ -250,7 +266,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def set_guild_name(
         self, *, guild_id: str, guild_name: str, **kwargs: Any
     ) -> None:
@@ -263,7 +278,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def get_guild_member_info(
         self, *, guild_id: str, user_id: str, **kwargs: Any
     ) -> Dict[Literal["user_id", "nickname"] | str, str]:
@@ -276,7 +290,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def get_guild_member_list(
         self, *, guild_id: str, **kwargs: Any
     ) -> List[Dict[Literal["user_id", "nickname"] | str, str]]:
@@ -288,7 +301,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def leave_guild(self, *, guild_id: str, **kwargs: Any) -> None:
         """退出群组
 
@@ -298,7 +310,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def get_channel_info(
         self, *, guild_id: str, channel_id: str, **kwargs: Any
     ) -> Dict[Literal["channel_id", "channel_name"] | str, str]:
@@ -311,7 +322,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def get_channel_list(
         self, *, guild_id: str, **kwargs: Any
     ) -> List[Dict[Literal["channel_id", "channel_name"] | str, str]]:
@@ -323,7 +333,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def set_channel_name(
         self, *, guild_id: str, channel_id: str, channel_name: str, **kwargs: Any
     ) -> None:
@@ -337,7 +346,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def upload_file(
         self,
         *,
@@ -364,7 +372,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def upload_file_fragmented(
         self,
         stage: Literal["prepare", "transfer", "finish"],
@@ -392,7 +399,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def get_file(
         self,
         *,
@@ -409,7 +415,6 @@ class Middleware(Bot):
         """
         raise NotImplementedError
 
-    @abstractmethod
     async def get_file_fragmented(
         self,
         *,

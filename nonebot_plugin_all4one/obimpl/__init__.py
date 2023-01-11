@@ -1,11 +1,14 @@
 import json
 import time
 import asyncio
-from typing import List
+from datetime import datetime
+from functools import partial
+from typing import Any, Dict, List
 
 from pydantic import parse_obj_as
-from nonebot.adapters import Event
-from nonebot import get_bot, get_driver
+from nonebot.adapters import Bot, Event
+from pydantic.json import pydantic_encoder
+from nonebot import Driver, get_bot, get_driver
 from nonebot.adapters.onebot.v12.message import Message
 from nonebot.adapters.onebot.v12 import PrivateMessageEvent
 from nonebot.drivers import (
@@ -17,53 +20,83 @@ from nonebot.drivers import (
     HTTPServerSetup,
 )
 
-driver = get_driver()
-tasks: List[asyncio.Task] = []
-events = []
+from ..middlewares import Middleware, _middlewares
 
 
-async def handle_http(request: Request) -> Response:
-    # TODO
-    return Response(200)
+class OneBotImplementation:
+    def __init__(self, driver: Driver, **kwargs: Any):
+        self.driver: Driver = driver
+        self.middleswares: Dict[str, Middleware] = {}
+        self.tasks: Dict[str, asyncio.Task] = {}
+        self.setup()
 
+    async def handle_http(self, middleware: Middleware, request: Request) -> Response:
+        try:
+            if request.content:
+                data = json.loads(request.content)
+                resp = await getattr(middleware, data["action"])(**data["params"])
+                return Response(
+                    200,
+                    content=json.dumps(
+                        {"status": "ok", "retcode": 0, "data": resp, "message": ""}
+                    ),
+                )
+        except Exception as e:
+            print(e)
+        return Response(200)
 
-if isinstance(driver, ReverseDriver):
-    driver.setup_http_server(
-        HTTPServerSetup(
-            URL("/obimpl/"),
-            "POST",
-            "OneBotImpl",
-            handle_http,
-        )
-    )
+    def bot_connect(self, bot: Bot) -> None:
+        middleware = _middlewares[bot.type.split(maxsplit=1)[0].lower()](bot)
+        self.middleswares[bot.self_id] = middleware
+        if isinstance(self.driver, ReverseDriver):
+            self.driver.setup_http_server(
+                HTTPServerSetup(
+                    URL(f"/obimpl/{bot.self_id}/"),
+                    "POST",
+                    "OneBotImpl",
+                    partial(self.handle_http, middleware),
+                )
+            )
+        if isinstance(self.driver, ForwardDriver):
 
-if isinstance(driver, ForwardDriver):
+            async def post(middle: Middleware):
+                while True:
+                    try:
+                        event = middle.events.pop()
+                        request = Request(
+                            "POST",
+                            f"http://127.0.0.1:4000/onebot/v12/http/",
+                            headers={
+                                "Content-Type": "application/json",
+                                "User-Agent": "OneBot/12 NoneBot Plugin All4One/0.1.0",
+                                "X-OneBot-Version": "12",
+                                "X-Impl": "nonebot-plugin-all4one",
+                            },
+                            content=event.json(
+                                encoder=lambda v: v.timestamp()
+                                if isinstance(v, datetime)
+                                else pydantic_encoder(v)
+                            ),
+                        )
+                        await self.driver.request(request)
+                    except IndexError:
+                        pass
+                    except Exception as e:
+                        print(e)
+                    await asyncio.sleep(0.01)
 
-    @driver.on_startup
-    async def _():
-        async def post():
-            while True:
-                try:
-                    event = events.pop()
-                    print(event)
-                    request = Request(
-                        "POST",
-                        f"http://127.0.0.1:4000/onebot/v12/http/",
-                        headers={"X-OneBot-Version": "12", "X-Impl": "NoneBot"},
-                        json=event,
-                    )
-                    print((await driver.request(request)).content)
-                except IndexError:
-                    pass
-                except Exception as e:
-                    print(e)
-                await asyncio.sleep(0.01)
+            self.tasks[bot.self_id] = asyncio.create_task(post(middleware))
 
-        tasks.append(asyncio.create_task(post()))
+    def bot_disconnect(self, bot: Bot) -> None:
+        self.middleswares.pop(bot.self_id, None)
+        task = self.tasks[bot.self_id]
+        if not task.done():
+            task.cancel()
 
-    @driver.on_shutdown
-    async def _():
-        for task in tasks:
-            if not task.done():
-                task.cancel()
-        await asyncio.gather(*tasks, return_exceptions=True)
+    def setup(self):
+        @self.driver.on_shutdown
+        async def _():
+            for task in self.tasks.values():
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*self.tasks.values(), return_exceptions=True)
