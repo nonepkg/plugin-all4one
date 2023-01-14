@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/github/license/nonepkg/nonebot-plugin-all4one?style=flat-square)](LICENSE)
 ![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg?style=flat-square)
 ![NoneBot Version](https://img.shields.io/badge/nonebot-2.0.0rc2+-red.svg?style=flat-square)
-[![](https://img.shields.io/badge/OneBot-12-black?style=flat-square)](https://12.onebot.dev/)
+[![OneBot V12](https://img.shields.io/badge/OneBot-12-black?style=flat-square)](https://12.onebot.dev/)
 [![Pypi Version](https://img.shields.io/pypi/v/nonebot-plugin-all4one.svg?style=flat-square)](https://pypi.python.org/pypi/nonebot-plugin-all4one)
 
 ## 安装
@@ -38,6 +38,7 @@ poetry add git+https://github.com/nonepkg/nonebot-plugin-all4one
 
 ## TODO
 
+- [ ] Console -> OneBot V12
 - [ ] OneBot V11 -> OneBot V12
 - [ ] OneBot V12 -> OneBot V12
 - [ ] Telegram -> OneBot V12

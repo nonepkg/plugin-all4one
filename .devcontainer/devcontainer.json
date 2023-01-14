@@ -4,7 +4,7 @@
     "features": {
         "ghcr.io/devcontainers-contrib/features/pre-commit:2": {}
     },
-    "postCreateCommand": "mkdir -p __pypackages__ && pipx install pdm && pdm --pep582 >> ~/.bashrc && pdm plugin add pdm-vscode && pdm use python && pdm install && pre-commit install",
+    "postCreateCommand": "mkdir -p __pypackages__ && pipx install pdm && pdm --pep582 >> ~/.bashrc && pdm plugin add pdm-vscode && pdm use python && pre-commit install",
     "customizations": {
         "vscode": {
             "settings": {
