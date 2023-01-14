@@ -56,6 +56,11 @@ requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7
 summary = "Cross-platform colored terminal text."
 
 [[package]]
+name = "commonmark"
+version = "0.9.1"
+summary = "Python parser for the CommonMark Markdown spec"
+
+[[package]]
 name = "distlib"
 version = "0.3.6"
 summary = "Distribution utilities"
@@ -174,6 +179,16 @@ requires_python = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*
 summary = "Node.js virtual environment builder"
 dependencies = [
     "setuptools",
+]
+
+[[package]]
+name = "nonebot-adapter-console"
+version = "0.2.1"
+requires_python = ">=3.8.0,<4.0.0"
+summary = "console adapter for nonebot2"
+dependencies = [
+    "nonebot2<3.0.0,>=2.0.0-beta.1",
+    "textual==0.1.18",
 ]
 
 [[package]]
@@ -298,6 +313,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "pygments"
+version = "2.14.0"
+requires_python = ">=3.6"
+summary = "Pygments is a syntax highlighting package written in Python."
+
+[[package]]
 name = "pygtrie"
 version = "2.5.0"
 summary = "A pure Python trie data structure implementation."
@@ -330,6 +351,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "rich"
+version = "12.6.0"
+requires_python = ">=3.6.3,<4.0.0"
+summary = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
+dependencies = [
+    "commonmark<0.10.0,>=0.9.0",
+    "pygments<3.0.0,>=2.6.0",
+    "typing-extensions<5.0,>=4.0.0; python_version < \"3.9\"",
+]
+
+[[package]]
 name = "setuptools"
 version = "65.6.3"
 requires_python = ">=3.7"
@@ -349,6 +381,16 @@ summary = "The little ASGI library that shines."
 dependencies = [
     "anyio<5,>=3.4.0",
     "typing-extensions>=3.10.0; python_version < \"3.10\"",
+]
+
+[[package]]
+name = "textual"
+version = "0.1.18"
+requires_python = ">=3.7,<4.0"
+summary = "Text User Interface using Rich"
+dependencies = [
+    "rich<13.0.0,>=12.3.0",
+    "typing-extensions<5.0,>=4.0.0; python_version < \"3.9\"",
 ]
 
 [[package]]
@@ -469,7 +511,7 @@ dependencies = [
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:b4868ace50cac1b354e33a53c49e85788c855695691c2b229871553b69a2921a"
+content_hash = "sha256:ff40d8523e6e9f19cacc21f3aedd89d1f9a7ee3d3040311f63904a9bbecccdd2"
 
 [metadata.files]
 "aiofiles 0.8.0" = [
@@ -509,6 +551,10 @@ content_hash = "sha256:b4868ace50cac1b354e33a53c49e85788c855695691c2b229871553b6
 "colorama 0.4.6" = [
     {url = "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {url = "https://files.pythonhosted.org/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
+]
+"commonmark 0.9.1" = [
+    {url = "https://files.pythonhosted.org/packages/60/48/a60f593447e8f0894ebb7f6e6c1f25dafc5e89c5879fdc9360ae93ff83f0/commonmark-0.9.1.tar.gz", hash = "sha256:452f9dc859be7f06631ddcb328b6919c67984aca654e5fefb3914d54691aed60"},
+    {url = "https://files.pythonhosted.org/packages/b1/92/dfd892312d822f36c55366118b95d914e5f16de11044a27cf10a7d71bbbf/commonmark-0.9.1-py2.py3-none-any.whl", hash = "sha256:da2f38c92590f83de410ba1a3cbceafbc74fee9def35f9251ba9a971d6d66fd9"},
 ]
 "distlib 0.3.6" = [
     {url = "https://files.pythonhosted.org/packages/58/07/815476ae605bcc5f95c87a62b95e74a1bce0878bc7a3119bc2bf4178f175/distlib-0.3.6.tar.gz", hash = "sha256:14bad2d9b04d3a36127ac97f30b12a19268f211063d8f8ee4f47108896e11b46"},
@@ -763,6 +809,10 @@ content_hash = "sha256:b4868ace50cac1b354e33a53c49e85788c855695691c2b229871553b6
     {url = "https://files.pythonhosted.org/packages/96/a8/d3b5baead78adadacb99e7281b3e842126da825cf53df61688cfc8b8ff91/nodeenv-1.7.0-py2.py3-none-any.whl", hash = "sha256:27083a7b96a25f2f5e1d8cb4b6317ee8aeda3bdd121394e5ac54e498028a042e"},
     {url = "https://files.pythonhosted.org/packages/f3/9d/a28ecbd1721cd6c0ea65da6bfb2771d31c5d7e32d916a8f643b062530af3/nodeenv-1.7.0.tar.gz", hash = "sha256:e0e7f7dfb85fc5394c6fe1e8fa98131a2473e04311a45afb6508f7cf1836fa2b"},
 ]
+"nonebot-adapter-console 0.2.1" = [
+    {url = "https://files.pythonhosted.org/packages/86/3c/4dc412a131539ddbf313ec49f66102d18ca50b927c87124a22e46d1f9ed2/nonebot_adapter_console-0.2.1-py3-none-any.whl", hash = "sha256:9798eb10e213edd387d80086b4239195a6c7e5e294c210c43c33b41128eafe52"},
+    {url = "https://files.pythonhosted.org/packages/8b/94/fd7baef03ade9b7b6a0ff93fbf5165877c55a1b840bdedbbaea6a22d87af/nonebot-adapter-console-0.2.1.tar.gz", hash = "sha256:1b132f772c5d76fa63dd9c65337703d30fe3886b60ac6a8bb78cfbc2d678ed84"},
+]
 "nonebot-adapter-onebot 2.2.0" = [
     {url = "https://files.pythonhosted.org/packages/cb/47/9b761b330e0a5a2f485c9998343f49f24ae0146f74c212b4e45753e8b3bc/nonebot_adapter_onebot-2.2.0-py3-none-any.whl", hash = "sha256:ad7bfe1f8dc35b3338721590814572632caf7db3fd9c374d08ec51f064953aa2"},
     {url = "https://files.pythonhosted.org/packages/f0/a4/516ff69131e712d580e8494f4371cb9c5e5f1bbfeb90c6ebae559a07ac98/nonebot_adapter_onebot-2.2.0.tar.gz", hash = "sha256:c561009e98af3918c1964332740d86fca16197ed60edf1d16989e781814de377"},
@@ -841,6 +891,10 @@ content_hash = "sha256:b4868ace50cac1b354e33a53c49e85788c855695691c2b229871553b6
     {url = "https://files.pythonhosted.org/packages/ec/f2/c136265b246eb0411b293763e1b5e18a22de2d8d6a084e5c3d7b9e6e796e/pydantic-1.10.4-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:39f4a73e5342b25c2959529f07f026ef58147249f9b7431e1ba8414a36761f53"},
     {url = "https://files.pythonhosted.org/packages/f4/09/6efdaefc6e967f03af3ae3d5e63575036598eb0c740a43a69a77be054a5f/pydantic-1.10.4-cp38-cp38-win_amd64.whl", hash = "sha256:4b05697738e7d2040696b0a66d9f0a10bec0efa1883ca75ee9e55baf511909d6"},
 ]
+"pygments 2.14.0" = [
+    {url = "https://files.pythonhosted.org/packages/0b/42/d9d95cc461f098f204cd20c85642ae40fbff81f74c300341b8d0e0df14e0/Pygments-2.14.0-py3-none-any.whl", hash = "sha256:fa7bd7bd2771287c0de303af8bfdfc731f51bd2c6a47ab69d117138893b82717"},
+    {url = "https://files.pythonhosted.org/packages/da/6a/c427c06913204e24de28de5300d3f0e809933f376e0b7df95194b2bb3f71/Pygments-2.14.0.tar.gz", hash = "sha256:b3ed06a9e8ac9a9aae5a6f5dbe78a8a58655d17b43b93c078f094ddc476ae297"},
+]
 "pygtrie 2.5.0" = [
     {url = "https://files.pythonhosted.org/packages/b9/13/55deec25bf09383216fa7f1dfcdbfca40a04aa00b6d15a5cbf25af8fce5f/pygtrie-2.5.0.tar.gz", hash = "sha256:203514ad826eb403dab1d2e2ddd034e0d1534bbe4dbe0213bb0593f66beba4e2"},
     {url = "https://files.pythonhosted.org/packages/ec/cd/bd196b2cf014afb1009de8b0f05ecd54011d881944e62763f3c1b1e8ef37/pygtrie-2.5.0-py3-none-any.whl", hash = "sha256:8795cda8105493d5ae159a5bef313ff13156c5d4d72feddefacaad59f8c8ce16"},
@@ -895,6 +949,10 @@ content_hash = "sha256:b4868ace50cac1b354e33a53c49e85788c855695691c2b229871553b6
     {url = "https://files.pythonhosted.org/packages/79/30/5b1b6c28c105629cc12b33bdcbb0b11b5bb1880c6cfbd955f9e792921aa8/rfc3986-1.5.0.tar.gz", hash = "sha256:270aaf10d87d0d4e095063c65bf3ddbc6ee3d0b226328ce21e036f946e421835"},
     {url = "https://files.pythonhosted.org/packages/c4/e5/63ca2c4edf4e00657584608bee1001302bbf8c5f569340b78304f2f446cb/rfc3986-1.5.0-py2.py3-none-any.whl", hash = "sha256:a86d6e1f5b1dc238b218b012df0aa79409667bb209e58da56d0b94704e712a97"},
 ]
+"rich 12.6.0" = [
+    {url = "https://files.pythonhosted.org/packages/11/23/814edf09ec6470d52022b9e95c23c1bef77f0bc451761e1504ebd09606d3/rich-12.6.0.tar.gz", hash = "sha256:ba3a3775974105c221d31141f2c116f4fd65c5ceb0698657a11e9f295ec93fd0"},
+    {url = "https://files.pythonhosted.org/packages/32/60/81ac2e7d1e3b861ab478a72e3b20fc91c4302acd2274822e493758941829/rich-12.6.0-py3-none-any.whl", hash = "sha256:a4eb26484f2c82589bd9a17c73d32a010b1e29d89f1604cd9bf3a2097b81bb5e"},
+]
 "setuptools 65.6.3" = [
     {url = "https://files.pythonhosted.org/packages/b6/21/cb9a8d0b2c8597c83fce8e9c02884bce3d4951e41e807fc35791c6b23d9a/setuptools-65.6.3.tar.gz", hash = "sha256:a7620757bf984b58deaf32fc8a4577a9bbc0850cf92c20e1ce41c38c19e5fb75"},
     {url = "https://files.pythonhosted.org/packages/ef/e3/29d6e1a07e8d90ace4a522d9689d03e833b67b50d1588e693eec15f26251/setuptools-65.6.3-py3-none-any.whl", hash = "sha256:57f6f22bde4e042978bcd50176fdb381d7c21a9efa4041202288d3737a0c6a54"},
@@ -906,6 +964,10 @@ content_hash = "sha256:b4868ace50cac1b354e33a53c49e85788c855695691c2b229871553b6
 "starlette 0.22.0" = [
     {url = "https://files.pythonhosted.org/packages/1d/4e/30eda84159d5b3ad7fe663c40c49b16dd17436abe838f10a56c34bee44e8/starlette-0.22.0-py3-none-any.whl", hash = "sha256:b5eda991ad5f0ee5d8ce4c4540202a573bb6691ecd0c712262d0bc85cf8f2c50"},
     {url = "https://files.pythonhosted.org/packages/f7/ff/64bd3362f80e81402f21e0f1ba55f8801cd899ad3f2a1bcc4a94d284c786/starlette-0.22.0.tar.gz", hash = "sha256:b092cbc365bea34dd6840b42861bdabb2f507f8671e642e8272d2442e08ea4ff"},
+]
+"textual 0.1.18" = [
+    {url = "https://files.pythonhosted.org/packages/28/f7/4b9d17a2b53a46a95781106ffe29a7414dc8760d542bd430196d201d1a91/textual-0.1.18-py3-none-any.whl", hash = "sha256:59110935418c597c1c50876edfd6799ad5b59d51a91ca6744fc45e36eb89638e"},
+    {url = "https://files.pythonhosted.org/packages/8c/d1/c228993e8a21e24bb43a0376b2901b6f3f2033dae13e7f76d1103bb9b8a3/textual-0.1.18.tar.gz", hash = "sha256:b2883f8ed291de58b9aa73de6d24bbaae0174687487458a4eb2a7c188a2acf23"},
 ]
 "tomli 2.0.1" = [
     {url = "https://files.pythonhosted.org/packages/97/75/10a9ebee3fd790d20926a90a2547f0bf78f371b2f13aa822c759680ca7b9/tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},

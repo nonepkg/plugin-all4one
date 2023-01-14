@@ -10,7 +10,7 @@ from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
 from nonebot.adapters.onebot.v12.event import BotSelf, BotStatus
 
-middlewares_map = {"onebot": "onebot", "telegram": "telegram"}
+middlewares_map = {"telegram": "telegram", "console": "console"}
 
 _middlewares: Dict[str, Type["Middleware"]] = {}
 
@@ -25,7 +25,7 @@ def import_middlewares(*adapters):
                 _middlewares[adapter] = getattr(module, "Middleware")
             else:
                 logger.warning(f"Can not find middleware for Adapter {adapter}")
-        except AttributeError:
+        except Exception:
             logger.warning(f"Can not find middleware for Adapter {adapter}")
 
 
