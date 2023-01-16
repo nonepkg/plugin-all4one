@@ -1,7 +1,7 @@
 import asyncio
 import importlib
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Type, Literal, Optional, TypedDict
+from typing import Any, Dict, List, Type, Union, Literal, Optional, TypedDict
 
 from nonebot.log import logger
 from pydantic import Extra, BaseModel
@@ -90,7 +90,7 @@ class Middleware(ABC):
     async def get_version(
         self,
         **kwargs: Any,
-    ) -> Dict[Literal["impl", "version", "onebot_version"] | str, str]:
+    ) -> Dict[Union[Literal["impl", "version", "onebot_version"], str], str]:
         """获取版本信息
 
         参数:
@@ -121,14 +121,14 @@ class Middleware(ABC):
     async def send_message(
         self,
         *,
-        detail_type: Literal["private", "group", "channel"] | str,
+        detail_type: Union[Literal["private", "group", "channel"], str],
         user_id: Optional[str] = None,
         group_id: Optional[str] = None,
         guild_id: Optional[str] = None,
         channel_id: Optional[str] = None,
         message: Message,
         **kwargs: Any,
-    ) -> Dict[Literal["message_id", "time"] | str, Any]:
+    ) -> Dict[Union[Literal["message_id", "time"], str], Any]:
         """发送消息
 
         参数:
@@ -152,13 +152,13 @@ class Middleware(ABC):
 
     async def get_self_info(
         self, **kwargs: Any
-    ) -> Dict[Literal["user_id", "nickname"] | str, str]:
+    ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
         """获取机器人自身信息"""
         raise NotImplementedError
 
     async def get_user_info(
         self, *, user_id: str, **kwargs: Any
-    ) -> Dict[Literal["user_id", "nickname"] | str, str]:
+    ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
         """获取用户信息
 
         参数:
@@ -170,7 +170,7 @@ class Middleware(ABC):
     async def get_friend_list(
         self,
         **kwargs: Any,
-    ) -> List[Dict[Literal["user_id", "nickname"] | str, str]]:
+    ) -> List[Dict[Union[Literal["user_id", "nickname"], str], str]]:
         """获取好友列表
 
         参数:
@@ -180,7 +180,7 @@ class Middleware(ABC):
 
     async def get_group_info(
         self, *, group_id: str, **kwargs: Any
-    ) -> Dict[Literal["group_id", "group_name"] | str, str]:
+    ) -> Dict[Union[Literal["group_id", "group_name"], str], str]:
         """获取群信息
 
         参数:
@@ -192,7 +192,7 @@ class Middleware(ABC):
     async def get_group_list(
         self,
         **kwargs: Any,
-    ) -> List[Dict[Literal["group_id", "group_name"] | str, str]]:
+    ) -> List[Dict[Union[Literal["group_id", "group_name"], str], str]]:
         """获取群列表
 
         参数:
@@ -202,7 +202,7 @@ class Middleware(ABC):
 
     async def get_group_member_info(
         self, *, group_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[Literal["user_id", "nickname"] | str, str]:
+    ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
         """获取群成员信息
 
         参数:
@@ -214,7 +214,7 @@ class Middleware(ABC):
 
     async def get_group_member_list(
         self, *, group_id: str, **kwargs: Any
-    ) -> List[Dict[Literal["user_id", "nickname"] | str, str]]:
+    ) -> List[Dict[Union[Literal["user_id", "nickname"], str], str]]:
         """获取群成员列表
 
         参数:
@@ -246,7 +246,7 @@ class Middleware(ABC):
 
     async def get_guild_info(
         self, *, guild_id: str, **kwargs: Any
-    ) -> Dict[Literal["guild_id", "guild_name"] | str, str]:
+    ) -> Dict[Union[Literal["guild_id", "guild_name"], str], str]:
         """获取 Guild 信息
 
         参数:
@@ -258,7 +258,7 @@ class Middleware(ABC):
     async def get_guild_list(
         self,
         **kwargs: Any,
-    ) -> List[Dict[Literal["guild_id", "guild_name"] | str, str]]:
+    ) -> List[Dict[Union[Literal["guild_id", "guild_name"], str], str]]:
         """获取群组列表
 
         参数:
@@ -280,7 +280,7 @@ class Middleware(ABC):
 
     async def get_guild_member_info(
         self, *, guild_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[Literal["user_id", "nickname"] | str, str]:
+    ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
         """获取群组成员信息
 
         参数:
@@ -292,7 +292,7 @@ class Middleware(ABC):
 
     async def get_guild_member_list(
         self, *, guild_id: str, **kwargs: Any
-    ) -> List[Dict[Literal["user_id", "nickname"] | str, str]]:
+    ) -> List[Dict[Union[Literal["user_id", "nickname"], str], str]]:
         """获取群组成员列表
 
         参数:
@@ -312,7 +312,7 @@ class Middleware(ABC):
 
     async def get_channel_info(
         self, *, guild_id: str, channel_id: str, **kwargs: Any
-    ) -> Dict[Literal["channel_id", "channel_name"] | str, str]:
+    ) -> Dict[Union[Literal["channel_id", "channel_name"], str], str]:
         """获取频道信息
 
         参数:
@@ -324,7 +324,7 @@ class Middleware(ABC):
 
     async def get_channel_list(
         self, *, guild_id: str, **kwargs: Any
-    ) -> List[Dict[Literal["channel_id", "channel_name"] | str, str]]:
+    ) -> List[Dict[Union[Literal["channel_id", "channel_name"], str], str]]:
         """获取频道列表
 
         参数:
@@ -349,7 +349,7 @@ class Middleware(ABC):
     async def upload_file(
         self,
         *,
-        type: Literal["url", "path", "data"] | str,
+        type: Union[Literal["url", "path", "data"], str],
         name: str,
         url: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
@@ -357,7 +357,7 @@ class Middleware(ABC):
         data: Optional[bytes] = None,
         sha256: Optional[str] = None,
         **kwargs: Any,
-    ) -> Dict[Literal["file_id"] | str, str]:
+    ) -> Dict[Union[Literal["file_id"], str], str]:
         """上传文件
 
         参数:
@@ -383,7 +383,7 @@ class Middleware(ABC):
         size: Optional[int] = None,
         data: Optional[bytes] = None,
         **kwargs: Any,
-    ) -> Optional[Dict[Literal["file_id"] | str, str]]:
+    ) -> Optional[Dict[Union[Literal["file_id"], str], str]]:
         """分片上传文件
 
         参数:
@@ -402,10 +402,12 @@ class Middleware(ABC):
     async def get_file(
         self,
         *,
-        type: Literal["url", "path", "data"] | str,
+        type: Union[Literal["url", "path", "data"], str],
         file_id: str,
         **kwargs: Any,
-    ) -> Dict[Literal["name", "url", "headers", "path", "data", "sha256"] | str, str]:
+    ) -> Dict[
+        Union[Literal["name", "url", "headers", "path", "data", "sha256"], str], str
+    ]:
         """获取文件
 
         参数:
@@ -423,7 +425,7 @@ class Middleware(ABC):
         offset: Optional[int] = None,
         size: Optional[int] = None,
         **kwargs: Any,
-    ) -> Dict[Literal["name", "total_size", "sha256", "data"] | str, str]:
+    ) -> Dict[Union[Literal["name", "total_size", "sha256", "data"], str], str]:
         """分片获取文件
 
         参数:

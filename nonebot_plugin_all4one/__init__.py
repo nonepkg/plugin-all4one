@@ -9,7 +9,7 @@ from .obimpl import OneBotImplementation
 from .middlewares import import_middlewares
 
 driver = get_driver()
-onebot_implementation = OneBotImplementation(get_driver())
+onebot_implementation = OneBotImplementation(driver)
 
 
 @driver.on_startup

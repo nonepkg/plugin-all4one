@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List, Union, Literal
 
 from pydantic import parse_obj_as
 from nonebot.adapters.telegram.message import Entity
@@ -26,7 +26,7 @@ class Middleware(BaseMiddleware):
         if isinstance(event, PrivateMessageEvent):
             return OneBotPrivateMessageEvent(
                 id=str(event.telegram_model.update_id),
-                time=event.date,
+                time=event.date,  # type:ignore
                 type="message",
                 detail_type="private",
                 sub_type="",
@@ -50,18 +50,20 @@ class Middleware(BaseMiddleware):
     async def send_message(
         self,
         *,
-        detail_type: Literal["private", "group", "channel"] | str,
+        detail_type: Union[Literal["private", "group", "channel"], str],
         user_id: str = ...,
         group_id: str = ...,
         guild_id: str = ...,
         channel_id: str = ...,
         message: OneBotMessage,
         **kwargs: Any,
-    ) -> Dict[Literal["message_id", "time"] | str, Any]:
+    ) -> Dict[Union[Literal["message_id", "time"], str], Any]:
         if detail_type == "group":
             chat_id = group_id
         elif detail_type == "private":
             chat_id = user_id
+        else:
+            chat_id = channel_id
         result = (
             await self.bot.send_message(
                 chat_id=chat_id,

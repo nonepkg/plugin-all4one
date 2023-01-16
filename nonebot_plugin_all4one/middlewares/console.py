@@ -1,10 +1,10 @@
 import time
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List, Union, Literal
 
 from pydantic import parse_obj_as
-from nonebot.adapters.console.bot import Bot, Event, Message, MessageEvent
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
+from nonebot.adapters.console.bot import Bot, Event, Message, MessageEvent
 from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
 from nonebot.adapters.onebot.v12.event import (
     PrivateMessageEvent as OneBotPrivateMessageEvent,
@@ -51,14 +51,14 @@ class Middleware(BaseMiddleware):
     async def send_message(
         self,
         *,
-        detail_type: Literal["private", "group", "channel"] | str,
+        detail_type: Union[Literal["private", "group", "channel"], str],
         user_id: str = ...,
         group_id: str = ...,
         guild_id: str = ...,
         channel_id: str = ...,
         message: OneBotMessage,
         **kwargs: Any,
-    ) -> Dict[Literal["message_id", "time"] | str, Any]:
+    ) -> Dict[Union[Literal["message_id", "time"], str], Any]:
         print(str(parse_obj_as(OneBotMessage, message)))
         await self.bot.send_message(
             message=str(parse_obj_as(OneBotMessage, message)),
