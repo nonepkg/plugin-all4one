@@ -33,6 +33,11 @@ def import_middlewares(*adapters: str):
             logger.warning(f"Can not load middleware for Adapter {adapter}")
 
 
+def supported_action(method):
+    method.is_supported = True
+    return method
+
+
 class Middleware(ABC):
     def __init__(self, bot: Bot):
         self.bot = bot
@@ -71,7 +76,12 @@ class Middleware(ABC):
         参数:
             kwargs: 扩展字段
         """
-        raise NotImplementedError
+        return [
+            method
+            for method in dir(self)
+            if callable(getattr(self, method))
+            and hasattr(getattr(self, method), "is_supported")
+        ]
 
     async def get_status(self, **kwargs: Any) -> BotStatus:
         """获取运行状态

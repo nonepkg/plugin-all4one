@@ -21,7 +21,7 @@ from nonebot.adapters.onebot.v11.event import (
     GroupIncreaseNoticeEvent,
 )
 
-from .. import Middleware as BaseMiddleware
+from .. import Middleware as BaseMiddleware, supported_action
 
 
 class Middleware(BaseMiddleware):
@@ -137,6 +137,7 @@ class Middleware(BaseMiddleware):
                 message_list.append(OneBotMessageSegment.image(segment.data["file"]))
         return OneBotMessage(message_list)
 
+    @supported_action
     async def send_message(
         self,
         *,

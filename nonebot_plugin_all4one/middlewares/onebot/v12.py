@@ -29,9 +29,9 @@ class Middleware(BaseMiddleware):
     def __getattribute__(self, __name: str) -> Any:
         if (
             not __name.startswith("__")
-            and hasattr(BaseMiddleware, __name)
             and __name not in BaseMiddleware.__abstractmethods__
-            and __name != "get_bot_self"
+            and __name not in ("events", "get_bot_self")
+            and not hasattr(object.__getattribute__(self, __name), "is_supported")
         ):
             return partial(object.__getattribute__(self, "bot").call_api, __name)
         else:
