@@ -49,4 +49,5 @@ poetry add git+https://github.com/nonepkg/nonebot-plugin-all4one
 All4One 的出现离不开以下项目：
 
 - [nonebot-adapter-onebot](https://github.com/nonebot/adapter-onebot) 复用代码
+- [zhamao-robot/go-cqhttp-adapter-plugin](https://github.com/zhamao-robot/go-cqhttp-adapter-plugin) OneBot V11 -> V12 逻辑参考
 - [nonebot-plugin-params](https://github.com/iyume/nonebot-plugin-params) 灵感来源
