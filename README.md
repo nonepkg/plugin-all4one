@@ -39,9 +39,9 @@ poetry add git+https://github.com/nonepkg/nonebot-plugin-all4one
 ## TODO
 
 - [x] Console -> OneBot V12
-- [ ] OneBot V11 -> OneBot V12
-- [ ] OneBot V12 -> OneBot V12
-- [ ] Telegram -> OneBot V12
+- [ ] OneBot V11 -> OneBot V12 DEMO
+- [x] OneBot V12 -> OneBot V12
+- [ ] Telegram -> OneBot V12 DEMO
 - [ ] Kaiheila -> OneBot V12
 
 ## 鸣谢

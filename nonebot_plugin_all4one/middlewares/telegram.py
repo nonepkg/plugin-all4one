@@ -1,12 +1,11 @@
 from typing import Any, Dict, List, Union, Literal
 
 from pydantic import parse_obj_as
-from nonebot.adapters.telegram.message import Entity
 from nonebot.adapters.telegram import Bot, Event, Message
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
 from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
-from nonebot.adapters.telegram.event import GroupMessageEvent, PrivateMessageEvent
+from nonebot.adapters.telegram.event import PrivateMessageEvent
 from nonebot.adapters.onebot.v12.event import (
     PrivateMessageEvent as OneBotPrivateMessageEvent,
 )
@@ -15,7 +14,7 @@ from . import Middleware as BaseMiddleware
 
 
 class Middleware(BaseMiddleware):
-    def __init__(self, bot: "Bot"):
+    def __init__(self, bot: Bot):
         self.bot = bot
         self.events: List[OneBotEvent] = []
 

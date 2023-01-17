@@ -1,16 +1,12 @@
 import json
-import time
 import asyncio
 from datetime import datetime
 from functools import partial
-from typing import Any, Dict, List
+from typing import Any, Dict
 
-from pydantic import parse_obj_as
-from nonebot.adapters import Bot, Event
+from nonebot.adapters import Bot
 from pydantic.json import pydantic_encoder
-from nonebot import Driver, get_bot, get_driver
-from nonebot.adapters.onebot.v12.message import Message
-from nonebot.adapters.onebot.v12 import PrivateMessageEvent
+from nonebot import Driver
 from nonebot.drivers import (
     URL,
     Request,
@@ -46,7 +42,7 @@ class OneBotImplementation:
         return Response(200)
 
     def bot_connect(self, bot: Bot) -> None:
-        middleware = _middlewares[bot.type.split(maxsplit=1)[0].lower()](bot)
+        middleware = _middlewares[bot.type](bot)
         self.middleswares[bot.self_id] = middleware
         if isinstance(self.driver, ReverseDriver):
             self.driver.setup_http_server(
@@ -63,6 +59,8 @@ class OneBotImplementation:
                 while True:
                     try:
                         event = middle.events.pop()
+                        if event.type == "meta":
+                            continue
                         request = Request(
                             "POST",
                             f"http://127.0.0.1:4000/onebot/v12/http/",
@@ -78,7 +76,7 @@ class OneBotImplementation:
                                 else pydantic_encoder(v)
                             ),
                         )
-                        await self.driver.request(request)
+                        await self.driver.request(request)  # type: ignore
                     except IndexError:
                         pass
                     except Exception as e:

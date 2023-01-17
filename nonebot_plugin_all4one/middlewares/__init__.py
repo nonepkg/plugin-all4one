@@ -1,22 +1,26 @@
 import asyncio
 import importlib
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Type, Union, Literal, Optional, TypedDict
+from typing import Any, Dict, List, Type, Union, Literal, Optional
 
 from nonebot.log import logger
-from pydantic import Extra, BaseModel
-from nonebot.adapters import Bot, Event, Adapter, Message
+from nonebot.adapters import Bot, Event, Message
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
 from nonebot.adapters.onebot.v12.event import BotSelf, BotStatus
 
-middlewares_map = {"telegram": "telegram", "console": "console"}
+middlewares_map = {
+    "Telegram": "telegram",
+    "Console": "console",
+    "OneBot V12": "onebot.v12",
+    "OneBot V11": "onebot.v11",
+}
 
 _middlewares: Dict[str, Type["Middleware"]] = {}
 
 
-def import_middlewares(*adapters):
-    for adapter in set(adapter.split(maxsplit=1)[0].lower() for adapter in adapters):
+def import_middlewares(*adapters: str):
+    for adapter in adapters:
         try:
             if adapter in middlewares_map:
                 module = importlib.import_module(
@@ -26,11 +30,11 @@ def import_middlewares(*adapters):
             else:
                 logger.warning(f"Can not find middleware for Adapter {adapter}")
         except Exception:
-            logger.warning(f"Can not find middleware for Adapter {adapter}")
+            logger.warning(f"Can not load middleware for Adapter {adapter}")
 
 
 class Middleware(ABC):
-    def __init__(self, bot: "Bot"):
+    def __init__(self, bot: Bot):
         self.bot = bot
         self.events: List[OneBotEvent] = []
 

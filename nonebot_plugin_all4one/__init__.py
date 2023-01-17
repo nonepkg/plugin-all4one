@@ -1,6 +1,4 @@
-import time
-
-from nonebot import get_driver
+from nonebot import on, get_driver
 from nonebot.adapters import Bot, Event
 from nonebot.exception import IgnoredException
 from nonebot.message import event_preprocessor
@@ -22,6 +20,9 @@ async def _(bot: Bot):
     if bot.self_id.startswith("a4o@"):
         return
     onebot_implementation.bot_connect(bot)
+
+
+on(priority=1, block=False)
 
 
 @event_preprocessor
