@@ -38,7 +38,7 @@ poetry add git+https://github.com/nonepkg/nonebot-plugin-all4one
 
 ## TODO
 
-- [=] Console -> OneBot V12 由于该适配器阻塞 FastAPI 启动，只能收不能发
+- [x] Console -> OneBot V12
 - [ ] OneBot V11 -> OneBot V12
 - [ ] OneBot V12 -> OneBot V12
 - [ ] Telegram -> OneBot V12

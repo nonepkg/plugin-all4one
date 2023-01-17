@@ -59,7 +59,6 @@ class Middleware(BaseMiddleware):
         message: OneBotMessage,
         **kwargs: Any,
     ) -> Dict[Union[Literal["message_id", "time"], str], Any]:
-        print(str(parse_obj_as(OneBotMessage, message)))
         await self.bot.send_message(
             message=str(parse_obj_as(OneBotMessage, message)),
         )
