@@ -33,7 +33,7 @@ pip install nonebot-plugin-all4one
 ### 从 GitHub 安装（不推荐）
 
 ```sh
-poetry add git+https://github.com/nonepkg/nonebot-plugin-all4one
+pdm add git+https://github.com/nonepkg/nonebot-plugin-all4one
 ```
 
 ## TODO

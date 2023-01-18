@@ -14,7 +14,11 @@ console = ["nonebot-adapter-console>=0.2.2"]
 
 [tool.pdm.dev-dependencies]
 pre-commit = ["pycln", "isort", "black", "nonemoji", "pre-commit"]
-nonebot = ["httpx>=0.23.3,<1.0.0", "fastapi>=0.88.0,!=0.89.0,<1.0.0"]
+nonebot = [
+    "httpx>=0.23.3,<1.0.0",
+    "fastapi>=0.88.0,!=0.89.0,<1.0.0",
+    "websockets>=10.4",
+]
 
 [tool.black]
 line-length = 88
