@@ -4,7 +4,7 @@ import asyncio
 from datetime import datetime
 from functools import partial
 from contextlib import asynccontextmanager
-from typing import Dict, Optional, AsyncGenerator, cast
+from typing import Dict, List, Optional, AsyncGenerator, cast
 
 import msgpack
 from nonebot import Driver
@@ -28,18 +28,18 @@ from nonebot.drivers import (
 
 from ..middlewares import Middleware, _middlewares
 from .config import (
-    Config,
     HTTPConfig,
     WebsocketConfig,
+    ConnectionConfig,
     HTTPWebhookConfig,
     WebsocketReverseConfig,
 )
 
 
 class OneBotImplementation:
-    def __init__(self, driver: Driver):
+    def __init__(self, driver: Driver, connections: List[ConnectionConfig]):
         self.driver = driver
-        self.config = Config(**self.driver.config.dict())
+        self.connections = connections
         self.middleswares: Dict[str, Middleware] = {}
         self.tasks: Dict[str, asyncio.Task] = {}
         self.setup()
@@ -191,8 +191,8 @@ class OneBotImplementation:
     def bot_connect(self, bot: Bot) -> None:
         middleware = _middlewares[bot.type](bot)
         self.middleswares[bot.self_id] = middleware
-        if self.config.obimpl_connections:
-            for conn in self.config.obimpl_connections:
+        if self.connections:
+            for conn in self.connections:
                 if isinstance(conn, HTTPConfig):
                     self.setup_http_server(
                         HTTPServerSetup(
@@ -318,8 +318,8 @@ class OneBotImplementation:
 
     def bot_disconnect(self, bot: Bot) -> None:
         self.middleswares.pop(bot.self_id, None)
-        task = self.tasks[bot.self_id]
-        if not task.done():
+        task = self.tasks.get(bot.self_id, None)
+        if task and not task.done():
             task.cancel()
 
     def setup(self):
