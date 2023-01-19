@@ -3,8 +3,8 @@ import uuid
 import asyncio
 from datetime import datetime
 from functools import partial
-from typing import Dict, AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Dict, Optional, AsyncGenerator, cast
 
 import msgpack
 from nonebot import Driver
@@ -13,6 +13,7 @@ from nonebot.adapters import Bot
 from nonebot.utils import escape_tag
 from pydantic.json import pydantic_encoder
 from nonebot.exception import WebSocketClosed
+from nonebot.adapters.onebot.utils import get_auth_bearer
 from nonebot.adapters.onebot.v12.event import ImplVersion, ConnectMetaEvent
 from nonebot.drivers import (
     URL,
@@ -69,6 +70,21 @@ class OneBotImplementation:
         async with self.driver.websocket(setup) as ws:
             yield ws
 
+    def _check_access_token(
+        self, request: Request, access_token: str
+    ) -> Optional[Response]:
+        token = get_auth_bearer(request.headers.get("Authorization"))
+        if token is None:
+            token = request.url.query.get("access_token")
+
+        if access_token and access_token != token:
+            msg = (
+                "Authorization Header is invalid"
+                if token
+                else "Missing Authorization Header"
+            )
+            return Response(401, content=msg)
+
     async def _ws_send(self, middleware: Middleware, websocket: WebSocket) -> None:
         try:
             while True:
@@ -105,7 +121,12 @@ class OneBotImplementation:
                 resp = {"status": "ok", "retcode": 0, "data": resp, "message": ""}
                 if "echo" in data:
                     resp["echo"] = data["echo"]
-                await websocket.send(json.dumps(resp))
+                resp = (
+                    json.dumps(resp)
+                    if isinstance(raw_data, str)
+                    else msgpack.packb(resp)
+                )
+                await websocket.send(resp)  # type:ignore
         except WebSocketClosed:
             logger.log(
                 "WARNING",
@@ -119,22 +140,38 @@ class OneBotImplementation:
                 e,
             )
 
-    async def _handle_http(self, middleware: Middleware, request: Request) -> Response:
+    async def _handle_http(
+        self, middleware: Middleware, conn: HTTPConfig, request: Request
+    ) -> Response:
+        if response := self._check_access_token(request, conn.access_token):
+            return response
         try:
             if request.content:
-                data = json.loads(request.content)
+                if request.headers.get("Content-Type") == "application/msgpack":
+                    data = msgpack.unpackb(request.content)
+                elif request.headers.get("Content-Type") == "application/json":
+                    data = json.loads(request.content)
+                else:
+                    return Response(415, content="Invalid Content-Type")
                 resp = await getattr(middleware, data["action"])(**data["params"])
-                return Response(
-                    200,
-                    content=json.dumps(
-                        {"status": "ok", "retcode": 0, "data": resp, "message": ""}
-                    ),
-                )
+                resp = {"status": "ok", "retcode": 0, "data": resp, "message": ""}
+                if "echo" in data:
+                    resp["echo"] = data["echo"]
+                if request.headers.get("Content-Type") == "application/json":
+                    return Response(200, content=json.dumps(resp))
+                else:
+                    return Response(200, content=msgpack.packb(resp))
         except Exception as e:
             print(e)
-        return Response(200)
+        return Response(204)
 
-    async def _handle_ws(self, middleware: Middleware, websocket: WebSocket) -> None:
+    async def _handle_ws(
+        self, middleware: Middleware, conn: WebsocketConfig, websocket: WebSocket
+    ) -> None:
+        if response := self._check_access_token(websocket.request, conn.access_token):
+            content = cast(str, response.content)
+            await websocket.close(1008, content)
+            return
         await websocket.accept()
         await websocket.send(
             ConnectMetaEvent(
@@ -162,19 +199,19 @@ class OneBotImplementation:
                             URL(f"/obimpl/{bot.self_id}/"),
                             "POST",
                             "OneBotImpl",
-                            partial(self._handle_http, middleware),
+                            partial(self._handle_http, middleware, conn),
                         )
                     )
                 elif isinstance(conn, HTTPWebhookConfig):
                     self.tasks[bot.self_id] = asyncio.create_task(
-                        self._http_webhook(middleware, URL(conn.url))
+                        self._http_webhook(middleware, conn)
                     )
                 elif isinstance(conn, WebsocketConfig):
                     self.setup_websocket_server(
                         WebSocketServerSetup(
                             URL(f"/obimpl/{bot.self_id}/"),
                             "OneBotImpl",
-                            partial(self._handle_ws, middleware),
+                            partial(self._handle_ws, middleware, conn),
                         )
                     )
                 elif isinstance(conn, WebsocketReverseConfig):
@@ -182,26 +219,42 @@ class OneBotImplementation:
                         self._websocket_rev(middleware, conn)
                     )
 
-    async def _http_webhook(self, middleware: Middleware, url: URL):
+    async def _http_webhook(self, middleware: Middleware, conn: HTTPWebhookConfig):
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "OneBot/12 NoneBot Plugin All4One/0.1.0",
+            "X-OneBot-Version": "12",
+            "X-Impl": "nonebot-plugin-all4one",
+        }
+        if conn.access_token:
+            headers["Authorization"] = f"Bearer {conn.access_token}"
         while True:
             try:
                 event = middleware.events.pop()
                 request = Request(
                     "POST",
-                    url,
-                    headers={
-                        "Content-Type": "application/json",
-                        "User-Agent": "OneBot/12 NoneBot Plugin All4One/0.1.0",
-                        "X-OneBot-Version": "12",
-                        "X-Impl": "nonebot-plugin-all4one",
-                    },
+                    conn.url,
+                    headers=headers,
                     content=event.json(
-                        encoder=lambda v: v.timestamp()
+                        encoder=lambda v: int(v.timestamp())
                         if isinstance(v, datetime)
                         else pydantic_encoder(v)
                     ),
                 )
-                await self.driver.request(request)  # type: ignore
+                resp = await self.request(request)
+                if resp.status_code == 200:
+                    if resp.content:
+                        if resp.headers.get("Content-Type") == "application/msgpack":
+                            data = msgpack.unpackb(resp.content)
+                        elif resp.headers.get("Content-Type") == "application/json":
+                            data = json.loads(resp.content)
+                        else:
+                            logger.exception("Invalid Content-Type")
+                            continue
+                        for action in data:
+                            await getattr(middleware, action["action"])(
+                                **action["params"]
+                            )
             except IndexError:
                 pass
             except Exception as e:
@@ -211,14 +264,16 @@ class OneBotImplementation:
     async def _websocket_rev(
         self, middleware: Middleware, conn: WebsocketReverseConfig
     ) -> None:
+        headers = {
+            "User-Agent": "OneBot/12 NoneBot Plugin All4One/0.1.0",
+            "Sec-WebSocket-Protocol": "12.nonebot-plugin-all4one",
+        }
+        if conn.access_token:
+            headers["Authorization"] = f"Bearer {conn.access_token}"
         req = Request(
             "GET",
             conn.url,
-            headers={
-                "Content-Type": "application/json",
-                "User-Agent": "OneBot/12 NoneBot Plugin All4One/0.1.0",
-                "Sec-WebSocket-Protocol": "12.nonebot-plugin-all4one",
-            },
+            headers=headers,
             timeout=30.0,
         )
         while True:

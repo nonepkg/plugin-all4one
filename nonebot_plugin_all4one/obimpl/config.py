@@ -22,6 +22,7 @@ class HTTPConfig(BaseModel):
 class HTTPWebhookConfig(BaseModel):
     type: Literal[ConnectionType.HTTP_WEBHOOK]
     url: AnyUrl
+    access_token: str = ""
     timeout: int = 4
 
 
