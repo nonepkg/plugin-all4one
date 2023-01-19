@@ -93,7 +93,7 @@ class OneBotImplementation:
                     await websocket.send(event.json())
                 except IndexError:
                     pass
-                await asyncio.sleep(0.01)
+                await asyncio.sleep(0.05)
         except WebSocketClosed as e:
             logger.log(
                 "ERROR",
