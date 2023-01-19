@@ -1,4 +1,3 @@
-import time
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Union, Literal, Optional
@@ -27,8 +26,9 @@ from .. import Middleware as BaseMiddleware
 
 
 class Middleware(BaseMiddleware):
-    def __init__(self, bot: Bot):
+    def __init__(self, bot: Bot, has_prefix: bool):
         self.bot = bot
+        self.has_prefix = has_prefix
         self.events: List[OneBotEvent] = []
 
     def get_platform(self):
@@ -134,7 +134,10 @@ class Middleware(BaseMiddleware):
             if segment.type == "text":
                 message_list.append(OneBotMessageSegment.text(segment.data["text"]))
             elif segment.type == "at":
-                message_list.append(OneBotMessageSegment.mention(segment.data["qq"]))
+                qq = segment.data["qq"]
+                if self.has_prefix and qq == self.self_id:
+                    qq = f"a4o@{qq}"
+                message_list.append(OneBotMessageSegment.mention(qq))
             elif segment.type == "image":
                 message_list.append(OneBotMessageSegment.image(segment.data["file"]))
         return OneBotMessage(message_list)

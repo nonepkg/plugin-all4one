@@ -15,8 +15,9 @@ from . import Middleware as BaseMiddleware
 
 
 class Middleware(BaseMiddleware):
-    def __init__(self, bot: Bot):
+    def __init__(self, bot: Bot, has_prefix: bool):
         self.bot = bot
+        self.has_prefix = has_prefix
         self.events: List[OneBotEvent] = []
 
     def get_platform(self):

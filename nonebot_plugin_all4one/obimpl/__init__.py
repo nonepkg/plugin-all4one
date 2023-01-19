@@ -9,7 +9,6 @@ from typing import Dict, List, Optional, AsyncGenerator, cast
 import msgpack
 from nonebot import Driver
 from nonebot.log import logger
-from nonebot.adapters import Bot
 from nonebot.utils import escape_tag
 from pydantic.json import pydantic_encoder
 from nonebot.exception import WebSocketClosed
@@ -26,7 +25,7 @@ from nonebot.drivers import (
     WebSocketServerSetup,
 )
 
-from ..middlewares import Middleware, _middlewares
+from ..middlewares import Middleware
 from .config import (
     HTTPConfig,
     WebsocketConfig,
@@ -130,13 +129,13 @@ class OneBotImplementation:
         except WebSocketClosed:
             logger.log(
                 "WARNING",
-                f"WebSocket for Bot {escape_tag(middleware.bot.self_id)} closed by peer",
+                f"WebSocket for Bot {escape_tag(middleware.self_id)} closed by peer",
             )
         except Exception as e:
             logger.log(
                 "ERROR",
                 "<r><bg #f8bbd0>Error while process data from websocket "
-                f"for bot {escape_tag(middleware.bot.self_id)}.</bg #f8bbd0></r>",
+                f"for bot {escape_tag(middleware.self_id)}.</bg #f8bbd0></r>",
                 e,
             )
 
@@ -188,34 +187,33 @@ class OneBotImplementation:
         while not (t1.done() or t2.done()):
             await asyncio.sleep(0.01)
 
-    def bot_connect(self, bot: Bot) -> None:
-        middleware = _middlewares[bot.type](bot)
-        self.middleswares[bot.self_id] = middleware
+    def bot_connect(self, middleware: Middleware) -> None:
+        self.middleswares[middleware.self_id] = middleware
         if self.connections:
             for conn in self.connections:
                 if isinstance(conn, HTTPConfig):
                     self.setup_http_server(
                         HTTPServerSetup(
-                            URL(f"/obimpl/{bot.self_id}/"),
+                            URL(f"/obimpl/{middleware.self_id}/"),
                             "POST",
                             "OneBotImpl",
                             partial(self._handle_http, middleware, conn),
                         )
                     )
                 elif isinstance(conn, HTTPWebhookConfig):
-                    self.tasks[bot.self_id] = asyncio.create_task(
+                    self.tasks[middleware.self_id] = asyncio.create_task(
                         self._http_webhook(middleware, conn)
                     )
                 elif isinstance(conn, WebsocketConfig):
                     self.setup_websocket_server(
                         WebSocketServerSetup(
-                            URL(f"/obimpl/{bot.self_id}/"),
+                            URL(f"/obimpl/{middleware.self_id}/"),
                             "OneBotImpl",
                             partial(self._handle_ws, middleware, conn),
                         )
                     )
                 elif isinstance(conn, WebsocketReverseConfig):
-                    self.tasks[bot.self_id] = asyncio.create_task(
+                    self.tasks[middleware.self_id] = asyncio.create_task(
                         self._websocket_rev(middleware, conn)
                     )
 
@@ -316,9 +314,9 @@ class OneBotImplementation:
                 )
             await asyncio.sleep(conn.reconnect_interval)
 
-    def bot_disconnect(self, bot: Bot) -> None:
-        self.middleswares.pop(bot.self_id, None)
-        task = self.tasks.get(bot.self_id, None)
+    def bot_disconnect(self, middleware: Middleware) -> None:
+        self.middleswares.pop(middleware.self_id, None)
+        task = self.tasks.get(middleware.self_id, None)
         if task and not task.done():
             task.cancel()
 

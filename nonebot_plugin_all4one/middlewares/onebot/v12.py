@@ -1,15 +1,16 @@
 from typing import Any, List
 from functools import partial
 
-from nonebot.adapters.onebot.v12 import Bot, Event, Message
+from nonebot.adapters.onebot.v12 import Bot, Event
 from nonebot.adapters.onebot.v12.event import BotEvent, MessageEvent
 
 from .. import Middleware as BaseMiddleware
 
 
 class Middleware(BaseMiddleware):
-    def __init__(self, bot: Bot):
+    def __init__(self, bot: Bot, has_prefix: bool):
         self.bot = bot
+        self.has_prefix = has_prefix
         self.events: List[Event] = []
 
     def get_platform(self):

@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Type, Union, Literal, Optional
 from nonebot.log import logger
 from nonebot.adapters import Bot, Event, Message
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
-from nonebot.adapters.onebot.v12 import Message as OneBotMessage
 from nonebot.adapters.onebot.v12.event import BotSelf, BotStatus
 
 middlewares_map = {
@@ -39,12 +38,20 @@ def supported_action(method):
 
 
 class Middleware(ABC):
-    def __init__(self, bot: Bot):
+    def __init__(self, bot: Bot, has_prefix: bool):
         self.bot = bot
         self.events: List[OneBotEvent] = []
+        self.has_prefix = has_prefix
+
+    @property
+    def self_id(self) -> str:
+        return self.bot.self_id
 
     def get_bot_self(self) -> BotSelf:
-        return BotSelf(platform=self.get_platform(), user_id=f"a4o@{self.bot.self_id}")
+        return BotSelf(
+            platform=self.get_platform(),
+            user_id=f"a4o@{self.self_id}" if self.has_prefix else self.self_id,
+        )
 
     async def get_latest_events(
         self,

@@ -26,14 +26,16 @@ async def _():
 async def _(bot: Bot):
     if bot.self_id.startswith("a4o@"):
         return
-    onebot_implementation.bot_connect(bot)
+    middleware = _middlewares[bot.type](bot, a4o_config.self_id_prefix)
+    onebot_implementation.bot_connect(middleware)
 
 
 @driver.on_bot_disconnect
 async def _(bot: Bot):
     if bot.self_id.startswith("a4o@"):
         return
-    onebot_implementation.bot_disconnect(bot)
+    if middleware := onebot_implementation.middleswares.get(bot.self_id, None):
+        onebot_implementation.bot_disconnect(middleware)
 
 
 on(priority=1, block=False)
