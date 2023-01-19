@@ -1,7 +1,6 @@
 import json
 import uuid
 import asyncio
-import contextlib
 from typing import Any, Dict
 from datetime import datetime
 from functools import partial
@@ -35,6 +34,56 @@ class OneBotImplementation:
         self.tasks: Dict[str, asyncio.Task] = {}
         self.setup()
 
+    async def _ws_send(self, middleware: Middleware, websocket: WebSocket) -> None:
+        try:
+            while True:
+                try:
+                    event = middleware.events.pop()
+                    await websocket.send(event.json())
+                except IndexError:
+                    pass
+                await asyncio.sleep(0.01)
+        except WebSocketClosed as e:
+            logger.log(
+                "ERROR",
+                "<r><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></r>",
+                e,
+            )
+        except Exception as e:
+            logger.log(
+                "ERROR",
+                "<r><bg #f8bbd0>Error while process data from websocket"
+                ". Trying to reconnect...</bg #f8bbd0></r>",
+                e,
+            )
+
+    async def _ws_recv(self, middleware: Middleware, websocket: WebSocket) -> None:
+        try:
+            while True:
+                raw_data = await websocket.receive()
+                data = (
+                    json.loads(raw_data)
+                    if isinstance(raw_data, str)
+                    else msgpack.unpackb(raw_data)
+                )
+                resp = await getattr(middleware, data["action"])(**data["params"])
+                resp = {"status": "ok", "retcode": 0, "data": resp, "message": ""}
+                if "echo" in data:
+                    resp["echo"] = data["echo"]
+                await websocket.send(json.dumps(resp))
+        except WebSocketClosed:
+            logger.log(
+                "WARNING",
+                f"WebSocket for Bot {escape_tag(middleware.bot.self_id)} closed by peer",
+            )
+        except Exception as e:
+            logger.log(
+                "ERROR",
+                "<r><bg #f8bbd0>Error while process data from websocket "
+                f"for bot {escape_tag(middleware.bot.self_id)}.</bg #f8bbd0></r>",
+                e,
+            )
+
     async def _handle_http(self, middleware: Middleware, request: Request) -> Response:
         try:
             if request.content:
@@ -52,36 +101,20 @@ class OneBotImplementation:
 
     async def _handle_ws(self, middleware: Middleware, websocket: WebSocket) -> None:
         await websocket.accept()
-
-        try:
-            while True:
-                raw_data = await websocket.receive()
-                data = (
-                    json.loads(raw_data)
-                    if isinstance(raw_data, str)
-                    else msgpack.unpackb(raw_data)
-                )
-                resp = await getattr(middleware, data["action"])(**data["params"])
-                await websocket.send(
-                    json.dumps(
-                        {"status": "ok", "retcode": 0, "data": resp, "message": ""}
-                    )
-                )
-        except WebSocketClosed:
-            logger.log(
-                "WARNING",
-                f"WebSocket for Bot {escape_tag(middleware.bot.self_id)} closed by peer",
-            )
-        except Exception as e:
-            logger.log(
-                "ERROR",
-                "<r><bg #f8bbd0>Error while process data from websocket "
-                f"for bot {escape_tag(middleware.bot.self_id)}.</bg #f8bbd0></r>",
-                e,
-            )
-        finally:
-            with contextlib.suppress(Exception):
-                await websocket.close()
+        await websocket.send(
+            ConnectMetaEvent(
+                id=uuid.uuid4().hex,
+                time=datetime.now(),
+                type="meta",
+                detail_type="connect",
+                sub_type="",
+                version=ImplVersion(**await middleware.get_version()),
+            ).json()
+        )
+        t1 = asyncio.create_task(self._ws_send(middleware, websocket))
+        t2 = asyncio.create_task(self._ws_recv(middleware, websocket))
+        while not (t1.done() or t2.done()):
+            await asyncio.sleep(0.01)
 
     def bot_connect(self, bot: Bot) -> None:
         middleware = _middlewares[bot.type](bot)
@@ -154,26 +187,20 @@ class OneBotImplementation:
         while True:
             try:
                 async with self.driver.websocket(req) as ws:  # type:ignore
-                    logger.log(
-                        "DEBUG",
-                        f"WebSocket Connection to {escape_tag(str(url))} established",
-                    )
                     try:
-                        data = ConnectMetaEvent(
-                            id=uuid.uuid4().hex,
-                            time=datetime.now(),
-                            type="meta",
-                            detail_type="connect",
-                            sub_type="",
-                            version=ImplVersion(**await middleware.get_version()),
-                        ).json()
-                        await ws.send(data)
-                        while True:
-                            try:
-                                event = middleware.events.pop()
-                                await ws.send(event.json())
-                            except IndexError:
-                                pass
+                        await ws.send(
+                            ConnectMetaEvent(
+                                id=uuid.uuid4().hex,
+                                time=datetime.now(),
+                                type="meta",
+                                detail_type="connect",
+                                sub_type="",
+                                version=ImplVersion(**await middleware.get_version()),
+                            ).json()
+                        )
+                        t1 = asyncio.create_task(self._ws_send(middleware, ws))
+                        t2 = asyncio.create_task(self._ws_recv(middleware, ws))
+                        while not (t1.done() or t2.done()):
                             await asyncio.sleep(0.01)
                     except WebSocketClosed as e:
                         logger.log(
@@ -188,7 +215,6 @@ class OneBotImplementation:
                             f"{escape_tag(str(url))}. Trying to reconnect...</bg #f8bbd0></r>",
                             e,
                         )
-
             except Exception as e:
                 logger.log(
                     "ERROR",
@@ -196,7 +222,6 @@ class OneBotImplementation:
                     f"{escape_tag(str(url))}. Trying to reconnect...</bg #f8bbd0></r>",
                     e,
                 )
-                print(e)
 
             await asyncio.sleep(3.0)  # TODO 配置
 
