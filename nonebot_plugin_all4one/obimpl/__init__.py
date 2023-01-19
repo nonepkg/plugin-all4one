@@ -1,9 +1,10 @@
 import json
 import uuid
 import asyncio
-from typing import Any, Dict
 from datetime import datetime
 from functools import partial
+from typing import Dict, AsyncGenerator
+from contextlib import asynccontextmanager
 
 import msgpack
 from nonebot import Driver
@@ -25,14 +26,48 @@ from nonebot.drivers import (
 )
 
 from ..middlewares import Middleware, _middlewares
+from .config import (
+    Config,
+    HTTPConfig,
+    WebsocketConfig,
+    HTTPWebhookConfig,
+    WebsocketReverseConfig,
+)
 
 
 class OneBotImplementation:
-    def __init__(self, driver: Driver, **kwargs: Any):
-        self.driver: Driver = driver
+    def __init__(self, driver: Driver):
+        self.driver = driver
+        self.config = Config(**self.driver.config.dict())
         self.middleswares: Dict[str, Middleware] = {}
         self.tasks: Dict[str, asyncio.Task] = {}
         self.setup()
+
+    def setup_http_server(self, setup: HTTPServerSetup):
+        """设置一个 HTTP 服务器路由配置"""
+        if not isinstance(self.driver, ReverseDriver):
+            raise TypeError("Current driver does not support http server")
+        self.driver.setup_http_server(setup)
+
+    def setup_websocket_server(self, setup: WebSocketServerSetup):
+        """设置一个 WebSocket 服务器路由配置"""
+        if not isinstance(self.driver, ReverseDriver):
+            raise TypeError("Current driver does not support websocket server")
+        self.driver.setup_websocket_server(setup)
+
+    async def request(self, setup: Request) -> Response:
+        """进行一个 HTTP 客户端请求"""
+        if not isinstance(self.driver, ForwardDriver):
+            raise TypeError("Current driver does not support http client")
+        return await self.driver.request(setup)
+
+    @asynccontextmanager
+    async def websocket(self, setup: Request) -> AsyncGenerator[WebSocket, None]:
+        """建立一个 WebSocket 客户端连接请求"""
+        if not isinstance(self.driver, ForwardDriver):
+            raise TypeError("Current driver does not support websocket client")
+        async with self.driver.websocket(setup) as ws:
+            yield ws
 
     async def _ws_send(self, middleware: Middleware, websocket: WebSocket) -> None:
         try:
@@ -119,38 +154,38 @@ class OneBotImplementation:
     def bot_connect(self, bot: Bot) -> None:
         middleware = _middlewares[bot.type](bot)
         self.middleswares[bot.self_id] = middleware
-        if isinstance(self.driver, ReverseDriver):
-            self.driver.setup_http_server(
-                HTTPServerSetup(
-                    URL(f"/obimpl/{bot.self_id}/"),
-                    "POST",
-                    "OneBotImpl",
-                    partial(self._handle_http, middleware),
-                )
-            )
-            self.driver.setup_websocket_server(
-                WebSocketServerSetup(
-                    URL(f"/obimpl/{bot.self_id}/"),
-                    "OneBotImpl",
-                    partial(self._handle_ws, middleware),
-                )
-            )
-        if isinstance(self.driver, ForwardDriver):
-            # self.tasks[bot.self_id] = asyncio.create_task(
-            #    self._http_webhook(middleware)
-            # )
-            self.tasks[bot.self_id] = asyncio.create_task(
-                self._websocket_rev(
-                    middleware, URL("ws://127.0.0.1:4000/onebot/v12/ws")
-                )
-            )
+        if self.config.obimpl_connections:
+            for conn in self.config.obimpl_connections:
+                if isinstance(conn, HTTPConfig):
+                    self.setup_http_server(
+                        HTTPServerSetup(
+                            URL(f"/obimpl/{bot.self_id}/"),
+                            "POST",
+                            "OneBotImpl",
+                            partial(self._handle_http, middleware),
+                        )
+                    )
+                elif isinstance(conn, HTTPWebhookConfig):
+                    self.tasks[bot.self_id] = asyncio.create_task(
+                        self._http_webhook(middleware, URL(conn.url))
+                    )
+                elif isinstance(conn, WebsocketConfig):
+                    self.setup_websocket_server(
+                        WebSocketServerSetup(
+                            URL(f"/obimpl/{bot.self_id}/"),
+                            "OneBotImpl",
+                            partial(self._handle_ws, middleware),
+                        )
+                    )
+                elif isinstance(conn, WebsocketReverseConfig):
+                    self.tasks[bot.self_id] = asyncio.create_task(
+                        self._websocket_rev(middleware, conn)
+                    )
 
     async def _http_webhook(self, middleware: Middleware, url: URL):
         while True:
             try:
                 event = middleware.events.pop()
-                if event.type == "meta":
-                    continue
                 request = Request(
                     "POST",
                     url,
@@ -173,10 +208,12 @@ class OneBotImplementation:
                 print(e)
             await asyncio.sleep(0.01)
 
-    async def _websocket_rev(self, middleware: Middleware, url: URL) -> None:
+    async def _websocket_rev(
+        self, middleware: Middleware, conn: WebsocketReverseConfig
+    ) -> None:
         req = Request(
             "GET",
-            url,
+            conn.url,
             headers={
                 "Content-Type": "application/json",
                 "User-Agent": "OneBot/12 NoneBot Plugin All4One/0.1.0",
@@ -212,18 +249,17 @@ class OneBotImplementation:
                         logger.log(
                             "ERROR",
                             "<r><bg #f8bbd0>Error while process data from websocket"
-                            f"{escape_tag(str(url))}. Trying to reconnect...</bg #f8bbd0></r>",
+                            f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></r>",
                             e,
                         )
             except Exception as e:
                 logger.log(
                     "ERROR",
                     "<r><bg #f8bbd0>Error while setup websocket to "
-                    f"{escape_tag(str(url))}. Trying to reconnect...</bg #f8bbd0></r>",
+                    f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></r>",
                     e,
                 )
-
-            await asyncio.sleep(3.0)  # TODO 配置
+            await asyncio.sleep(conn.reconnect_interval)
 
     def bot_disconnect(self, bot: Bot) -> None:
         self.middleswares.pop(bot.self_id, None)
