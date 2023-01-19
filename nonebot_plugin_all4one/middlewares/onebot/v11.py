@@ -163,97 +163,130 @@ class Middleware(BaseMiddleware):
             "time": int(datetime.now().timestamp()),
         }
 
+    @supported_action
     async def delete_message(self, *, message_id: str, **kwargs: Any) -> None:
-        raise NotImplementedError
+        await self.bot.delete_msg(message_id=int(message_id))
 
+    @supported_action
     async def get_self_info(
         self, **kwargs: Any
     ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
-        raise NotImplementedError
+        result = await self.bot.get_login_info()
+        return {
+            "user_id": str(result["user_id"]),
+            "user_name": result["nickname"],
+            "user_displayname": "",
+        }
 
+    @supported_action
     async def get_user_info(
-        self, *, user_id: str, **kwargs: Any
+        self, *, user_id: str, no_cache: bool = False, **kwargs: Any
     ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
-        raise NotImplementedError
+        result = await self.bot.get_stranger_info(
+            user_id=int(user_id), no_cache=no_cache
+        )
+        resp = {
+            "user_id": str(result["user_id"]),
+            "user_name": result["nickname"],
+            "user_displayname": "",
+            "user_remark": "",
+        }
+        resp.update({f"qq.{k}": v for k, v in result.items() if k not in resp})
+        return resp
 
+    @supported_action
     async def get_friend_list(
         self,
         **kwargs: Any,
     ) -> List[Dict[Union[Literal["user_id", "nickname"], str], str]]:
-        raise NotImplementedError
+        result = await self.bot.get_friend_list()
+        resp = []
+        for friend in result:
+            friend_dict = {
+                "user_id": str(friend["user_id"]),
+                "user_name": friend["nickname"],
+                "user_displayname": "",
+                "user_remark": friend["remark"],
+            }
+            friend_dict.update(
+                {f"qq.{k}": v for k, v in friend.items() if k not in friend_dict}
+            )
+            resp.append(friend_dict)
+        return resp
 
+    @supported_action
     async def get_group_info(
-        self, *, group_id: str, **kwargs: Any
+        self, *, group_id: str, no_cache: bool = False, **kwargs: Any
     ) -> Dict[Union[Literal["group_id", "group_name"], str], str]:
-        raise NotImplementedError
+        result = await self.bot.get_group_info(
+            group_id=int(group_id), no_cache=no_cache
+        )
+        resp = {
+            "group_id": str(result["group_id"]),
+            "group_name": result["group_name"],
+        }
+        resp.update({f"qq.{k}": v for k, v in result.items() if k not in resp})
+        return resp
 
+    @supported_action
     async def get_group_list(
         self,
         **kwargs: Any,
     ) -> List[Dict[Union[Literal["group_id", "group_name"], str], str]]:
-        raise NotImplementedError
+        result = await self.bot.get_group_list()
+        resp = []
+        for group in result:
+            group_dict = {
+                "group_id": str(group["group_id"]),
+                "group_name": group["group_name"],
+            }
+            group_dict.update(
+                {f"qq.{k}": v for k, v in group.items() if k not in group}
+            )
+            resp.append(group_dict)
+        return resp
 
+    @supported_action
     async def get_group_member_info(
-        self, *, group_id: str, user_id: str, **kwargs: Any
+        self, *, group_id: str, user_id: str, no_cache: bool = False, **kwargs: Any
     ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
-        raise NotImplementedError
+        result = await self.bot.get_group_member_info(
+            group_id=int(group_id), user_id=int(user_id), no_cache=no_cache
+        )
+        resp = {
+            "user_id": str(result["user_id"]),
+            "user_name": result["nickname"],
+            "user_displayname": result["card"],
+        }
+        resp.update({f"qq.{k}": v for k, v in result.items() if k not in resp})
+        return resp
 
     async def get_group_member_list(
         self, *, group_id: str, **kwargs: Any
     ) -> List[Dict[Union[Literal["user_id", "nickname"], str], str]]:
-        raise NotImplementedError
+        result = await self.bot.get_group_member_list(group_id=int(group_id))
+        resp = []
+        for member in result:
+            tmp = {
+                "user_id": str(member["user_id"]),
+                "user_name": member["nickname"],
+                "user_displayname": member["card"],
+            }
+            tmp.update({f"qq.{k}": v for k, v in member.items() if k not in tmp})
+            resp.append(tmp)
+        return resp
 
+    @supported_action
     async def set_group_name(
         self, *, group_id: str, group_name: str, **kwargs: Any
     ) -> None:
-        raise NotImplementedError
+        await self.bot.set_group_name(group_id=int(group_id), group_name=group_name)
 
-    async def leave_group(self, *, group_id: str, **kwargs: Any) -> None:
-        raise NotImplementedError
-
-    async def get_guild_info(
-        self, *, guild_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["guild_id", "guild_name"], str], str]:
-        raise NotImplementedError
-
-    async def get_guild_list(
-        self,
-        **kwargs: Any,
-    ) -> List[Dict[Union[Literal["guild_id", "guild_name"], str], str]]:
-        raise NotImplementedError
-
-    async def set_guild_name(
-        self, *, guild_id: str, guild_name: str, **kwargs: Any
+    @supported_action
+    async def leave_group(
+        self, *, group_id: str, is_dismiss: bool = False, **kwargs: Any
     ) -> None:
-        raise NotImplementedError
-
-    async def get_guild_member_info(
-        self, *, guild_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
-        raise NotImplementedError
-
-    async def get_guild_member_list(
-        self, *, guild_id: str, **kwargs: Any
-    ) -> List[Dict[Union[Literal["user_id", "nickname"], str], str]]:
-        raise NotImplementedError
-
-    async def leave_guild(self, *, guild_id: str, **kwargs: Any) -> None:
-        raise NotImplementedError
-
-    async def get_channel_info(
-        self, *, guild_id: str, channel_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["channel_id", "channel_name"], str], str]:
-        raise NotImplementedError
-
-    async def get_channel_list(
-        self, *, guild_id: str, **kwargs: Any
-    ) -> List[Dict[Union[Literal["channel_id", "channel_name"], str], str]]:
-        raise NotImplementedError
-
-    async def set_channel_name(
-        self, *, guild_id: str, channel_id: str, channel_name: str, **kwargs: Any
-    ) -> None:
-        raise NotImplementedError
+        await self.bot.set_group_leave(group_id=int(group_id), is_dismiss=is_dismiss)
 
     async def upload_file(
         self,
