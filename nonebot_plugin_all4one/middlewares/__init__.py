@@ -124,14 +124,6 @@ class Middleware(ABC):
     def to_onebot_event(self, event: Event) -> OneBotEvent:
         raise NotImplementedError
 
-    @abstractmethod
-    def from_onebot_message(self, message: OneBotMessage) -> Message:
-        raise NotImplementedError
-
-    @abstractmethod
-    def to_onebot_message(self, message: Message) -> OneBotMessage:
-        raise NotImplementedError
-
     async def send_message(
         self,
         *,

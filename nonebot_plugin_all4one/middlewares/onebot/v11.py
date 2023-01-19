@@ -1,5 +1,6 @@
 import time
 import uuid
+from datetime import datetime
 from typing import Any, Dict, List, Union, Literal, Optional
 
 from nonebot.adapters.onebot.v11 import Bot, Event, Message
@@ -21,7 +22,8 @@ from nonebot.adapters.onebot.v11.event import (
     GroupIncreaseNoticeEvent,
 )
 
-from .. import Middleware as BaseMiddleware, supported_action
+from .. import supported_action
+from .. import Middleware as BaseMiddleware
 
 
 class Middleware(BaseMiddleware):
@@ -47,7 +49,7 @@ class Middleware(BaseMiddleware):
             "guild_id",
             "channel_id",
         )
-        good_to_be_ob12 = ("time", "sub_type", "to_me")
+        good_to_be_ob12 = ("time", "sub_type")
         event_dict = {
             f"qq.{k}": v
             for k, v in event.dict(
@@ -64,13 +66,13 @@ class Middleware(BaseMiddleware):
         event_dict.update(
             {k: str(v) for k, v in event.dict(include=set(should_be_str)).items()}
         )
-        event_dict["id"] = str(uuid.uuid4())
+        event_dict["id"] = uuid.uuid4().hex
         event_dict["type"] = event.post_type
         if not isinstance(event, MetaEvent):
             event_dict["self"] = self.get_bot_self().dict()
         if isinstance(event, MessageEvent):
             event_dict["detail_type"] = event.message_type
-            event_dict["message"] = self.to_onebot_message(event.message)
+            event_dict["message"] = self.to_onebot_message(event.original_message)
             event_dict["alt_message"] = event.raw_message
         elif isinstance(event, NoticeEvent):
             if isinstance(event, FriendRecallNoticeEvent):
@@ -153,7 +155,10 @@ class Middleware(BaseMiddleware):
             result = await self.bot.send_msg(group_id=int(group_id), message=message)
         elif user_id:
             result = await self.bot.send_msg(user_id=int(user_id), message=message)
-        return {"message_id": result["message_id"], "time": time.time()}  # type:ignore
+        return {
+            "message_id": result["message_id"],  # type: ignore
+            "time": int(datetime.now().timestamp()),
+        }
 
     async def delete_message(self, *, message_id: str, **kwargs: Any) -> None:
         raise NotImplementedError

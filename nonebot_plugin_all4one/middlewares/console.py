@@ -1,4 +1,4 @@
-import time
+from datetime import datetime
 from typing import Any, Dict, List, Union, Literal
 
 from pydantic import parse_obj_as
@@ -10,8 +10,8 @@ from nonebot.adapters.onebot.v12.event import (
     PrivateMessageEvent as OneBotPrivateMessageEvent,
 )
 
-from . import Middleware as BaseMiddleware
 from . import supported_action
+from . import Middleware as BaseMiddleware
 
 
 class Middleware(BaseMiddleware):
@@ -28,15 +28,13 @@ class Middleware(BaseMiddleware):
             self.id = self.id + 1
             return OneBotPrivateMessageEvent(
                 id=str(self.id),
-                time=time.time(),  # type: ignore
+                time=datetime.now(),
                 type="message",
                 detail_type="private",
                 sub_type="",
                 self=self.get_bot_self(),
                 message_id=str(self.id),
-                original_message=self.to_onebot_message(
-                    event.message
-                ),  # event.message,
+                original_message=self.to_onebot_message(event.message),
                 message=self.to_onebot_message(event.message),
                 alt_message=str(event.message),
                 user_id=event.user_info.user_id,
@@ -65,4 +63,4 @@ class Middleware(BaseMiddleware):
             message=str(parse_obj_as(OneBotMessage, message)),
         )
         self.id = self.id + 1
-        return {"message_id": str(self.id), "time": time.time()}
+        return {"message_id": str(self.id), "time": int(datetime.now().timestamp())}

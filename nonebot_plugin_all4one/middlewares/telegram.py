@@ -3,14 +3,15 @@ from typing import Any, Dict, List, Union, Literal
 from pydantic import parse_obj_as
 from nonebot.adapters.telegram import Bot, Event, Message
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
+from nonebot.adapters.telegram.event import PrivateMessageEvent
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
 from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
-from nonebot.adapters.telegram.event import PrivateMessageEvent
 from nonebot.adapters.onebot.v12.event import (
     PrivateMessageEvent as OneBotPrivateMessageEvent,
 )
 
-from . import Middleware as BaseMiddleware, supported_action
+from . import supported_action
+from . import Middleware as BaseMiddleware
 
 
 class Middleware(BaseMiddleware):
@@ -31,9 +32,7 @@ class Middleware(BaseMiddleware):
                 sub_type="",
                 self=self.get_bot_self(),
                 message_id=str(event.message_id),
-                original_message=self.to_onebot_message(
-                    event.message
-                ),  # event.message,
+                original_message=self.to_onebot_message(event.message),
                 message=self.to_onebot_message(event.message),
                 alt_message=str(event.message),
                 user_id=str(event.from_.id),
