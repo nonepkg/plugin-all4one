@@ -117,17 +117,6 @@ class Middleware(BaseMiddleware):
             return event_out
         raise NotImplementedError
 
-    def from_onebot_message(self, message: OneBotMessage) -> Message:
-        message_list = []
-        for segment in message:
-            if segment.type == "text":
-                message_list.append(MessageSegment.text(segment.data["text"]))
-            elif segment.type == "mention":
-                message_list.append(MessageSegment.at(segment.data["qq"]))
-            elif segment.type == "image":
-                message_list.append(MessageSegment.image(segment.data["file"]))
-        return Message(message_list)
-
     def to_onebot_message(self, message: Message) -> OneBotMessage:
         message_list = []
         for segment in message:
@@ -135,12 +124,42 @@ class Middleware(BaseMiddleware):
                 message_list.append(OneBotMessageSegment.text(segment.data["text"]))
             elif segment.type == "at":
                 qq = segment.data["qq"]
+                if qq == "all":
+                    message_list.append(OneBotMessageSegment.mention_all())
+                    continue
                 if self.has_prefix and qq == self.self_id:
                     qq = f"a4o@{qq}"
                 message_list.append(OneBotMessageSegment.mention(qq))
-            elif segment.type == "image":
-                message_list.append(OneBotMessageSegment.image(segment.data["file"]))
+            elif segment.type in ("image", "video"):
+                message_list.append(
+                    OneBotMessageSegment(
+                        segment.type, {"file_id": segment.data["file"]}
+                    )
+                )
+            elif segment.type == "record":
+                message_list.append(OneBotMessageSegment.voice(segment.data["file"]))
+            elif segment.type == "reply":
+                message_list.append(OneBotMessageSegment.reply(segment.data["id"]))
         return OneBotMessage(message_list)
+
+    def from_onebot_message(self, message: OneBotMessage) -> Message:
+        message_list = []
+        for segment in message:
+            if segment.type == "text":
+                message_list.append(MessageSegment.text(segment.data["text"]))
+            elif segment.type == "mention":
+                message_list.append(MessageSegment.at(segment.data["user_id"]))
+            elif segment.type == "mention_all":
+                message_list.append(MessageSegment.at("all"))
+            elif segment.type in ("image", "video"):
+                message_list.append(
+                    MessageSegment(segment.type, {"file": segment.data["file_id"]})
+                )
+            elif segment.type == "voice":
+                message_list.append(MessageSegment.record(segment.data["file_id"]))
+            elif segment.type == "reply":
+                message_list.append(MessageSegment.reply(segment.data["message_id"]))
+        return Message(message_list)
 
     @supported_action
     async def send_message(
@@ -287,28 +306,3 @@ class Middleware(BaseMiddleware):
         self, *, group_id: str, is_dismiss: bool = False, **kwargs: Any
     ) -> None:
         await self.bot.set_group_leave(group_id=int(group_id), is_dismiss=is_dismiss)
-
-    async def upload_file(
-        self,
-        *,
-        type: Union[Literal["url", "path", "data"], str],
-        name: str,
-        url: Optional[str] = None,
-        headers: Optional[Dict[str, str]] = None,
-        path: Optional[str] = None,
-        data: Optional[bytes] = None,
-        sha256: Optional[str] = None,
-        **kwargs: Any,
-    ) -> Dict[Union[Literal["file_id"], str], str]:
-        raise NotImplementedError
-
-    async def get_file(
-        self,
-        *,
-        type: Union[Literal["url", "path", "data"], str],
-        file_id: str,
-        **kwargs: Any,
-    ) -> Dict[
-        Union[Literal["name", "url", "headers", "path", "data", "sha256"], str], str
-    ]:
-        raise NotImplementedError
