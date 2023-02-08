@@ -38,7 +38,7 @@ class Middleware(BaseMiddleware):
                 original_message=self.to_onebot_message(event.message),
                 message=self.to_onebot_message(event.message),
                 alt_message=str(event.message),
-                user_id=event.user_info.user_id,
+                user_id=event.user.id,
             )
         raise NotImplementedError
 
@@ -60,8 +60,9 @@ class Middleware(BaseMiddleware):
         message: OneBotMessage,
         **kwargs: Any,
     ) -> Dict[Union[Literal["message_id", "time"], str], Any]:
-        await self.bot.send_message(
-            message=str(parse_obj_as(OneBotMessage, message)),
+        await self.bot.send_msg(
+            user_id=user_id,
+            message=self.from_onebot_message(parse_obj_as(OneBotMessage, message)),
         )
         self.id = self.id + 1
         return {"message_id": str(self.id), "time": int(datetime.now().timestamp())}
