@@ -139,7 +139,11 @@ class Middleware(BaseMiddleware):
             elif segment.type == "record":
                 message_list.append(OneBotMessageSegment.voice(segment.data["file"]))
             elif segment.type == "reply":
-                message_list.append(OneBotMessageSegment.reply(segment.data["id"]))
+                message_list.append(
+                    OneBotMessageSegment.reply(
+                        segment.data["id"], user_id=message["at", 0].data["qq"]
+                    )
+                )
         return OneBotMessage(message_list)
 
     def from_onebot_message(self, message: OneBotMessage) -> Message:
