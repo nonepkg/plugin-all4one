@@ -34,7 +34,7 @@ class Middleware(BaseMiddleware):
     def get_platform(self):
         return "qq"
 
-    def to_onebot_event(self, event: Event) -> OneBotEvent:
+    def to_onebot_event(self, event: Event):
         replaced_by_detail_type = (
             "notice_type",
             "message_type",
@@ -55,7 +55,6 @@ class Middleware(BaseMiddleware):
             for k, v in event.dict(
                 exclude=set(
                     replaced_by_detail_type
-                    + should_be_str
                     + should_be_str
                     + good_to_be_ob12
                     + ("self_id", "post_type")
@@ -114,7 +113,8 @@ class Middleware(BaseMiddleware):
             event_dict["sub_type"] = getattr(event, "sub_type", "")
         event_dict.setdefault("sub_type", "")
         if event_out := OneBotAdapter.json_to_event(event_dict, "qq"):
-            return event_out
+            self.events.append(event_out)
+            return
         raise NotImplementedError
 
     def to_onebot_message(self, message: Message) -> OneBotMessage:

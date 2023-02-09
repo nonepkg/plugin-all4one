@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, List, Union, Literal
+from typing import Any, Dict, List, Union, Literal, Optional
 
 from pydantic import parse_obj_as
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
@@ -24,22 +24,25 @@ class Middleware(BaseMiddleware):
     def get_platform(self):
         return "console"
 
-    def to_onebot_event(self, event: Event) -> OneBotEvent:
+    def to_onebot_event(self, event: Event):
         if isinstance(event, MessageEvent):
             self.id = self.id + 1
-            return OneBotPrivateMessageEvent(
-                id=str(self.id),
-                time=datetime.now(),
-                type="message",
-                detail_type="private",
-                sub_type="",
-                self=self.get_bot_self(),
-                message_id=str(self.id),
-                original_message=self.to_onebot_message(event.message),
-                message=self.to_onebot_message(event.message),
-                alt_message=str(event.message),
-                user_id=event.user.id,
+            self.events.append(
+                OneBotPrivateMessageEvent(
+                    id=str(self.id),
+                    time=datetime.now(),
+                    type="message",
+                    detail_type="private",
+                    sub_type="",
+                    self=self.get_bot_self(),
+                    message_id=str(self.id),
+                    original_message=self.to_onebot_message(event.message),
+                    message=self.to_onebot_message(event.message),
+                    alt_message=str(event.message),
+                    user_id=event.user.id,
+                )
             )
+            return
         raise NotImplementedError
 
     def from_onebot_message(self, message: OneBotMessage) -> Message:
@@ -53,10 +56,10 @@ class Middleware(BaseMiddleware):
         self,
         *,
         detail_type: Union[Literal["private", "group", "channel"], str],
-        user_id: str = ...,
-        group_id: str = ...,
-        guild_id: str = ...,
-        channel_id: str = ...,
+        user_id: str,
+        group_id: Optional[str] = None,
+        guild_id: Optional[str] = None,
+        channel_id: Optional[str] = None,
         message: OneBotMessage,
         **kwargs: Any,
     ) -> Dict[Union[Literal["message_id", "time"], str], Any]:

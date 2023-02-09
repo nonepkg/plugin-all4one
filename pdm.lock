@@ -219,7 +219,7 @@ dependencies = [
 
 [[package]]
 name = "nonebot-adapter-telegram"
-version = "0.1.0b6"
+version = "0.1.0b7"
 requires_python = ">=3.8,<4.0"
 summary = "Telegram Adapter for NoneBot2"
 dependencies = [
@@ -507,7 +507,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:27882e8772380884c15aac30a6642da01a2cc7cfeac449a92b6ab9c6a17b25cd"
+content_hash = "sha256:cdea09e7d183f810206448ca2f87dfa7a1d515ac7c83293cc1b447c35bf0b278"
 
 [metadata.files]
 "anyio 3.6.2" = [
@@ -791,9 +791,9 @@ content_hash = "sha256:27882e8772380884c15aac30a6642da01a2cc7cfeac449a92b6ab9c6a
     {url = "https://files.pythonhosted.org/packages/3b/e9/2e38ae0b991467a0360ef24d4da937287135600a91a890bf1f5ce051ec62/nonebot_adapter_onebot-2.2.1-py3-none-any.whl", hash = "sha256:db22c92a541f243ef427a7080096fb28751fec213bc75b111e2c9ed89e121d94"},
     {url = "https://files.pythonhosted.org/packages/d3/9d/459fd101cb6d87f9a7ddd738be218f3ff71525d71219b672268d7f716e92/nonebot_adapter_onebot-2.2.1.tar.gz", hash = "sha256:2f77ff2345cc98e493c3bf00a5fd7112cf20e66ebeac062bbb8de56b4d07040e"},
 ]
-"nonebot-adapter-telegram 0.1.0b6" = [
-    {url = "https://files.pythonhosted.org/packages/6e/77/87137c1d826fb40038a2797c2df0338c2e61abdc22964729e04ac0e2870b/nonebot_adapter_telegram-0.1.0b6-py3-none-any.whl", hash = "sha256:fff46ff8fd0742eb5e72c1ca6e2c0710d72ec5c2643177f9837385d33ba70cf3"},
-    {url = "https://files.pythonhosted.org/packages/93/4b/9b9686e9c8645d1af601a3d8b5ebe55c9c2c7405b8b0ba9acb0d3a6bec33/nonebot-adapter-telegram-0.1.0b6.tar.gz", hash = "sha256:b9a54a55f7babe9ce5ff81ddcf454252dbe0866b2d29fc9c2eaf630cbecd40a1"},
+"nonebot-adapter-telegram 0.1.0b7" = [
+    {url = "https://files.pythonhosted.org/packages/43/9b/af96deafb7396e33af9f2f59c96793fb5789ae1a76ebe7922ae2f81c2047/nonebot_adapter_telegram-0.1.0b7-py3-none-any.whl", hash = "sha256:976c8a82cae6d91ad9fd83ec159b7fd9258a557af50823d103b65b33f34c8287"},
+    {url = "https://files.pythonhosted.org/packages/de/b4/151cf94d4ce8721035a3d9311a914cf132ce2f3a6e1f979fcf5f26d52026/nonebot-adapter-telegram-0.1.0b7.tar.gz", hash = "sha256:88f9ebec6ee52ff371c165011844535838917478bcaa738840747c271f590a30"},
 ]
 "nonebot2 2.0.0rc3" = [
     {url = "https://files.pythonhosted.org/packages/89/8b/bda59ec1cb898627a2b121098a147e1b63f066031122470ef7582453a907/nonebot2-2.0.0rc3.tar.gz", hash = "sha256:a16da07b7c764d536cbdf9bcb86eb7cc21b1d254c966552ec5d20e0cb303cec2"},

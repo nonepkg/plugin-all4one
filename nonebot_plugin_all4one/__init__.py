@@ -44,7 +44,7 @@ on(priority=1, block=False)
 @event_preprocessor
 async def _(bot: Bot, event: Event):
     if middle := onebot_implementation.middleswares.get(bot.self_id, None):
-        middle.events.append(middle.to_onebot_event(event))
+        middle.to_onebot_event(event)
         if a4o_config.block_event:
             raise IgnoredException("All4One has transfer it to OneBot V12")
 

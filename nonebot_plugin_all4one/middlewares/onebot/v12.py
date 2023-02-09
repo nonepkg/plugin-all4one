@@ -16,12 +16,12 @@ class Middleware(BaseMiddleware):
     def get_platform(self):
         return self.bot.platform
 
-    def to_onebot_event(self, event: Event) -> Event:
+    def to_onebot_event(self, event: Event):
         if isinstance(event, BotEvent):
             event.self = self.get_bot_self()
         if isinstance(event, MessageEvent):
             event.message = event.original_message
-        return event
+        self.events.append(event)
 
     def __getattribute__(self, __name: str) -> Any:
         if (
