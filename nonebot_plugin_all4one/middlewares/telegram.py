@@ -98,7 +98,9 @@ class Middleware(BaseMiddleware):
                 message_list.append(OneBotMessageSegment.mention(segment.data["text"]))
             elif isinstance(segment, Entity):
                 message_list.append(OneBotMessageSegment.text(str(segment)))
-            elif segment.type in ("image", "voice", "audio", "video"):
+            elif segment.type == "photo":
+                message_list.append(OneBotMessageSegment.image(segment.data["file"]))
+            elif segment.type in ("voice", "audio", "video"):
                 message_list.append(
                     OneBotMessageSegment(
                         segment.type, {"file_id": segment.data["file"]}
