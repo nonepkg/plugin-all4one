@@ -2,7 +2,7 @@ from typing import Any, List
 from functools import partial
 
 from nonebot.adapters.onebot.v12 import Bot, Event
-from nonebot.adapters.onebot.v12.event import BotEvent, MessageEvent
+from nonebot.adapters.onebot.v12.event import MessageEvent
 
 from .. import Middleware as BaseMiddleware
 
@@ -14,8 +14,6 @@ class Middleware(BaseMiddleware):
         return self.bot.platform
 
     def to_onebot_event(self, event: Event) -> List[Event]:
-        if isinstance(event, BotEvent):
-            event.self = self.get_bot_self()
         if isinstance(event, MessageEvent):
             event.message = event.original_message
         return [event]

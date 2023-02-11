@@ -14,8 +14,9 @@ from nonebot.utils import escape_tag
 from pydantic.json import pydantic_encoder
 from nonebot.adapters.onebot.v12 import Event
 from nonebot.exception import WebSocketClosed
+from nonebot.adapters.console.event import MessageEvent
 from nonebot.adapters.onebot.utils import get_auth_bearer
-from nonebot.adapters.onebot.v12.event import ImplVersion, ConnectMetaEvent
+from nonebot.adapters.onebot.v12.event import BotEvent, ImplVersion, ConnectMetaEvent
 from nonebot.drivers import (
     URL,
     Request,
@@ -70,6 +71,18 @@ class OneBotImplementation:
         async with self.driver.websocket(setup) as ws:
             yield ws
 
+    def _prefix_self_id(self, event: Event, prefix: bool = False) -> Event:
+        if prefix:
+            print(event)
+            if isinstance(event, BotEvent):
+                event.self.user_id = "a4o@" + event.self.user_id
+
+            if isinstance(event, MessageEvent):
+                for msg in event.message:
+                    if msg.type == "mention":
+                        msg.data["user_id"] = "a4o@" + msg.data["user_id"]
+        return event
+
     def _check_access_token(
         self, request: Request, access_token: str
     ) -> Optional[Response]:
@@ -85,16 +98,18 @@ class OneBotImplementation:
             )
             return Response(401, content=msg)
 
-    async def _ws_send(self, middleware: Middleware, websocket: WebSocket) -> None:
+    async def _ws_send(
+        self, middleware: Middleware, websocket: WebSocket, self_id_prefix: bool = False
+    ) -> None:
         queue = middleware.new_queue()
         try:
             while True:
                 try:
                     event = await queue.get()
+                    event = self._prefix_self_id(event, self_id_prefix)
                     await websocket.send(event.json())
                 except IndexError:
                     pass
-                await asyncio.sleep(0.05)
         except WebSocketClosed as e:
             logger.log(
                 "ERROR",
@@ -164,15 +179,28 @@ class OneBotImplementation:
                     resp = []
                     if queue.empty():
                         if timeout > 0:
-                            resp.append(await asyncio.wait_for(queue.get(), timeout))
+                            resp.append(
+                                self._prefix_self_id(
+                                    await asyncio.wait_for(queue.get(), timeout),
+                                    conn.self_id_prefix,
+                                )
+                            )
                     else:
                         if limit > 0:
                             for _ in range(limit):
                                 if not queue.empty():
-                                    resp.append(await queue.get())
+                                    resp.append(
+                                        self._prefix_self_id(
+                                            await queue.get(), conn.self_id_prefix
+                                        )
+                                    )
                         else:
                             while not queue.empty():
-                                resp.append(await queue.get())
+                                resp.append(
+                                    self._prefix_self_id(
+                                        await queue.get(), conn.self_id_prefix
+                                    )
+                                )
                             await queue.join()
                 else:
                     resp = await getattr(middleware, data["action"])(**data["params"])
@@ -205,7 +233,9 @@ class OneBotImplementation:
                 version=ImplVersion(**await middleware.get_version()),
             ).json()
         )
-        t1 = asyncio.create_task(self._ws_send(middleware, websocket))
+        t1 = asyncio.create_task(
+            self._ws_send(middleware, websocket, conn.self_id_prefix)
+        )
         t2 = asyncio.create_task(self._ws_recv(middleware, websocket))
         while not (t1.done() or t2.done()):
             await asyncio.sleep(0.01)
@@ -215,36 +245,35 @@ class OneBotImplementation:
             return
         middleware = middleware(bot)
         self.middlewares[bot.self_id] = middleware
-        if self.connections:
-            for conn in self.connections:
-                if isinstance(conn, HTTPConfig):
-                    queue = None
-                    if conn.event_enabled:
-                        queue = middleware.new_queue(conn.event_buffer_size)
-                    self.setup_http_server(
-                        HTTPServerSetup(
-                            URL(f"/obimpl/{middleware.self_id}/"),
-                            "POST",
-                            "OneBotImpl",
-                            partial(self._handle_http, middleware, queue, conn),
-                        )
+        for conn in self.connections:
+            if isinstance(conn, HTTPConfig):
+                queue = None
+                if conn.event_enabled:
+                    queue = middleware.new_queue(conn.event_buffer_size)
+                self.setup_http_server(
+                    HTTPServerSetup(
+                        URL(f"/obimpl/{middleware.self_id}/"),
+                        "POST",
+                        "OneBotImpl",
+                        partial(self._handle_http, middleware, queue, conn),
                     )
-                elif isinstance(conn, HTTPWebhookConfig):
-                    middleware.tasks.append(
-                        asyncio.create_task(self._http_webhook(middleware, conn))
+                )
+            elif isinstance(conn, HTTPWebhookConfig):
+                middleware.tasks.append(
+                    asyncio.create_task(self._http_webhook(middleware, conn))
+                )
+            elif isinstance(conn, WebsocketConfig):
+                self.setup_websocket_server(
+                    WebSocketServerSetup(
+                        URL(f"/obimpl/{middleware.self_id}/"),
+                        "OneBotImpl",
+                        partial(self._handle_ws, middleware, conn),
                     )
-                elif isinstance(conn, WebsocketConfig):
-                    self.setup_websocket_server(
-                        WebSocketServerSetup(
-                            URL(f"/obimpl/{middleware.self_id}/"),
-                            "OneBotImpl",
-                            partial(self._handle_ws, middleware, conn),
-                        )
-                    )
-                elif isinstance(conn, WebsocketReverseConfig):
-                    middleware.tasks.append(
-                        asyncio.create_task(self._websocket_rev(middleware, conn))
-                    )
+                )
+            elif isinstance(conn, WebsocketReverseConfig):
+                middleware.tasks.append(
+                    asyncio.create_task(self._websocket_rev(middleware, conn))
+                )
 
     async def _http_webhook(self, middleware: Middleware, conn: HTTPWebhookConfig):
         headers = {
@@ -259,6 +288,7 @@ class OneBotImplementation:
         while True:
             try:
                 event = await queue.get()
+                event = self._prefix_self_id(event, conn.self_id_prefix)
                 request = Request(
                     "POST",
                     conn.url,
@@ -318,7 +348,9 @@ class OneBotImplementation:
                                 version=ImplVersion(**await middleware.get_version()),
                             ).json()
                         )
-                        t1 = asyncio.create_task(self._ws_send(middleware, ws))
+                        t1 = asyncio.create_task(
+                            self._ws_send(middleware, ws, conn.self_id_prefix)
+                        )
                         t2 = asyncio.create_task(self._ws_recv(middleware, ws))
                         while not (t1.done() or t2.done()):
                             await asyncio.sleep(0.01)

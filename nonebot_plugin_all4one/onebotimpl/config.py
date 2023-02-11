@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Union, Literal
+from typing import Literal
 
 from pydantic import AnyUrl, BaseModel
 from nonebot.adapters.onebot.v12.config import WSUrl
@@ -12,32 +12,32 @@ class ConnectionType(str, Enum):
     WEBSOCKET_REV = "websocket_rev"
 
 
-class HTTPConfig(BaseModel):
-    type: Literal[ConnectionType.HTTP]
+class ConnectionConfig(BaseModel):
+    type: ConnectionType
     access_token: str = ""
+    self_id_prefix: bool = False
+
+    class Config:
+        extra = "ignore"
+
+
+class HTTPConfig(ConnectionConfig):
+    type: Literal[ConnectionType.HTTP]
     event_enabled: bool = False
     event_buffer_size: int = 16
 
 
-class HTTPWebhookConfig(BaseModel):
+class HTTPWebhookConfig(ConnectionConfig):
     type: Literal[ConnectionType.HTTP_WEBHOOK]
     url: AnyUrl
-    access_token: str = ""
     timeout: int = 4
 
 
-class WebsocketConfig(BaseModel):
+class WebsocketConfig(ConnectionConfig):
     type: Literal[ConnectionType.WEBSOCKET]
-    access_token: str = ""
 
 
-class WebsocketReverseConfig(BaseModel):
+class WebsocketReverseConfig(ConnectionConfig):
     type: Literal[ConnectionType.WEBSOCKET_REV]
     url: WSUrl
-    access_token: str = ""
     reconnect_interval: int = 4
-
-
-ConnectionConfig = Union[
-    HTTPConfig, HTTPWebhookConfig, WebsocketConfig, WebsocketReverseConfig
-]

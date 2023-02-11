@@ -48,10 +48,10 @@ class Middleware(ABC):
     def self_id(self) -> str:
         return self.bot.self_id
 
-    def get_bot_self(self, has_prefix: bool = False) -> BotSelf:
+    def get_bot_self(self) -> BotSelf:
         return BotSelf(
             platform=self.get_platform(),
-            user_id=f"a4o@{self.self_id}" if has_prefix else self.self_id,
+            user_id=self.self_id,
         )
 
     def new_queue(self, maxsize: int = 0) -> Queue[OneBotEvent]:
