@@ -8,20 +8,17 @@ from .. import Middleware as BaseMiddleware
 
 
 class Middleware(BaseMiddleware):
-    def __init__(self, bot: Bot, has_prefix: bool):
-        self.bot = bot
-        self.has_prefix = has_prefix
-        self.events: List[Event] = []
+    bot: Bot
 
     def get_platform(self):
         return self.bot.platform
 
-    def to_onebot_event(self, event: Event):
+    def to_onebot_event(self, event: Event) -> List[Event]:
         if isinstance(event, BotEvent):
             event.self = self.get_bot_self()
         if isinstance(event, MessageEvent):
             event.message = event.original_message
-        self.events.append(event)
+        return [event]
 
     def __getattribute__(self, __name: str) -> Any:
         if (

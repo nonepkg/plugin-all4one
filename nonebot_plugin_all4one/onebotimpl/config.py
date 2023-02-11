@@ -15,7 +15,7 @@ class ConnectionType(str, Enum):
 class HTTPConfig(BaseModel):
     type: Literal[ConnectionType.HTTP]
     access_token: str = ""
-    event_enabled: bool = True
+    event_enabled: bool = False
     event_buffer_size: int = 16
 
 

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, List, Union, Literal, Optional
+from typing import Any, Dict, Union, Literal, Optional
 
 from pydantic import parse_obj_as
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
@@ -15,10 +15,10 @@ from . import Middleware as BaseMiddleware
 
 
 class Middleware(BaseMiddleware):
-    def __init__(self, bot: Bot, has_prefix: bool):
-        self.bot = bot
-        self.has_prefix = has_prefix
-        self.events: List[OneBotEvent] = []
+    bot: Bot
+
+    def __init__(self, bot: Bot):
+        super().__init__(bot)
         self.id = 0
 
     def get_platform(self):
@@ -27,7 +27,7 @@ class Middleware(BaseMiddleware):
     def to_onebot_event(self, event: Event):
         if isinstance(event, MessageEvent):
             self.id = self.id + 1
-            self.events.append(
+            return [
                 OneBotPrivateMessageEvent(
                     id=str(self.id),
                     time=datetime.now(),
@@ -41,8 +41,8 @@ class Middleware(BaseMiddleware):
                     alt_message=str(event.message),
                     user_id=event.user.id,
                 )
-            )
-            return
+            ]
+
         raise NotImplementedError
 
     def from_onebot_message(self, message: OneBotMessage) -> Message:

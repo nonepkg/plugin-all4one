@@ -9,8 +9,10 @@ from typing import Dict, List, Optional, AsyncGenerator, cast
 import msgpack
 from nonebot import Driver
 from nonebot.log import logger
+from nonebot.adapters import Bot
 from nonebot.utils import escape_tag
 from pydantic.json import pydantic_encoder
+from nonebot.adapters.onebot.v12 import Event
 from nonebot.exception import WebSocketClosed
 from nonebot.adapters.onebot.utils import get_auth_bearer
 from nonebot.adapters.onebot.v12.event import ImplVersion, ConnectMetaEvent
@@ -25,7 +27,7 @@ from nonebot.drivers import (
     WebSocketServerSetup,
 )
 
-from ..middlewares import Middleware
+from ..middlewares import Middleware, _middlewares
 from .config import (
     HTTPConfig,
     WebsocketConfig,
@@ -39,8 +41,7 @@ class OneBotImplementation:
     def __init__(self, driver: Driver, connections: List[ConnectionConfig]):
         self.driver = driver
         self.connections = connections
-        self.middleswares: Dict[str, Middleware] = {}
-        self.tasks: Dict[str, asyncio.Task] = {}
+        self.middlewares: Dict[str, Middleware] = {}
         self.setup()
 
     def setup_http_server(self, setup: HTTPServerSetup):
@@ -85,10 +86,11 @@ class OneBotImplementation:
             return Response(401, content=msg)
 
     async def _ws_send(self, middleware: Middleware, websocket: WebSocket) -> None:
+        queue = middleware.new_queue()
         try:
             while True:
                 try:
-                    event = middleware.events.pop()
+                    event = await queue.get()
                     await websocket.send(event.json())
                 except IndexError:
                     pass
@@ -140,7 +142,11 @@ class OneBotImplementation:
             )
 
     async def _handle_http(
-        self, middleware: Middleware, conn: HTTPConfig, request: Request
+        self,
+        middleware: Middleware,
+        queue: Optional[asyncio.Queue[Event]],
+        conn: HTTPConfig,
+        request: Request,
     ) -> Response:
         if response := self._check_access_token(request, conn.access_token):
             return response
@@ -152,7 +158,24 @@ class OneBotImplementation:
                     data = json.loads(request.content)
                 else:
                     return Response(415, content="Invalid Content-Type")
-                resp = await getattr(middleware, data["action"])(**data["params"])
+                if data["action"] == "get_latest_events" and queue:
+                    limit = int(data["params"].get("limit", 0))
+                    timeout = int(data["params"].get("timeout", 0))
+                    resp = []
+                    if queue.empty():
+                        if timeout > 0:
+                            resp.append(await asyncio.wait_for(queue.get(), timeout))
+                    else:
+                        if limit > 0:
+                            for _ in range(limit):
+                                if not queue.empty():
+                                    resp.append(await queue.get())
+                        else:
+                            while not queue.empty():
+                                resp.append(await queue.get())
+                            await queue.join()
+                else:
+                    resp = await getattr(middleware, data["action"])(**data["params"])
                 resp = {"status": "ok", "retcode": 0, "data": resp, "message": ""}
                 if "echo" in data:
                     resp["echo"] = data["echo"]
@@ -187,22 +210,28 @@ class OneBotImplementation:
         while not (t1.done() or t2.done()):
             await asyncio.sleep(0.01)
 
-    def bot_connect(self, middleware: Middleware) -> None:
-        self.middleswares[middleware.self_id] = middleware
+    def bot_connect(self, bot: Bot) -> None:
+        if (middleware := _middlewares.get(bot.type, None)) is None:
+            return
+        middleware = middleware(bot)
+        self.middlewares[bot.self_id] = middleware
         if self.connections:
             for conn in self.connections:
                 if isinstance(conn, HTTPConfig):
+                    queue = None
+                    if conn.event_enabled:
+                        queue = middleware.new_queue(conn.event_buffer_size)
                     self.setup_http_server(
                         HTTPServerSetup(
                             URL(f"/obimpl/{middleware.self_id}/"),
                             "POST",
                             "OneBotImpl",
-                            partial(self._handle_http, middleware, conn),
+                            partial(self._handle_http, middleware, queue, conn),
                         )
                     )
                 elif isinstance(conn, HTTPWebhookConfig):
-                    self.tasks[middleware.self_id] = asyncio.create_task(
-                        self._http_webhook(middleware, conn)
+                    middleware.tasks.append(
+                        asyncio.create_task(self._http_webhook(middleware, conn))
                     )
                 elif isinstance(conn, WebsocketConfig):
                     self.setup_websocket_server(
@@ -213,8 +242,8 @@ class OneBotImplementation:
                         )
                     )
                 elif isinstance(conn, WebsocketReverseConfig):
-                    self.tasks[middleware.self_id] = asyncio.create_task(
-                        self._websocket_rev(middleware, conn)
+                    middleware.tasks.append(
+                        asyncio.create_task(self._websocket_rev(middleware, conn))
                     )
 
     async def _http_webhook(self, middleware: Middleware, conn: HTTPWebhookConfig):
@@ -226,9 +255,10 @@ class OneBotImplementation:
         }
         if conn.access_token:
             headers["Authorization"] = f"Bearer {conn.access_token}"
+        queue = middleware.new_queue()
         while True:
             try:
-                event = middleware.events.pop()
+                event = await queue.get()
                 request = Request(
                     "POST",
                     conn.url,
@@ -314,16 +344,19 @@ class OneBotImplementation:
                 )
             await asyncio.sleep(conn.reconnect_interval)
 
-    def bot_disconnect(self, middleware: Middleware) -> None:
-        self.middleswares.pop(middleware.self_id, None)
-        task = self.tasks.get(middleware.self_id, None)
-        if task and not task.done():
-            task.cancel()
+    def bot_disconnect(self, bot: Bot) -> None:
+        if (middleware := self.middlewares.pop(bot.self_id, None)) is None:
+            return
+        for task in middleware.tasks:
+            if not task.done():
+                task.cancel()
 
     def setup(self):
         @self.driver.on_shutdown
         async def _():
-            for task in self.tasks.values():
-                if not task.done():
-                    task.cancel()
-            await asyncio.gather(*self.tasks.values(), return_exceptions=True)
+            for middleware in self.middlewares.values():
+                for task in middleware.tasks:
+                    if not task.done():
+                        task.cancel()
+                await asyncio.gather(*middleware.tasks, return_exceptions=True)
+                await asyncio.gather(*middleware.tasks, return_exceptions=True)

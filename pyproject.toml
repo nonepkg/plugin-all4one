@@ -9,7 +9,7 @@ readme = "README.md"
 license = { text = "MIT" }
 
 [project.optional-dependencies]
-telegram = ["nonebot-adapter-telegram>=0.1.0b7"]
+telegram = ["nonebot-adapter-telegram>=0.1.0b8"]
 console = ["nonebot-adapter-console>=0.3.2"]
 
 [tool.pdm.dev-dependencies]

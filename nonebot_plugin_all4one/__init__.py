@@ -5,14 +5,14 @@ from nonebot.exception import IgnoredException
 from nonebot.message import run_preprocessor, event_preprocessor
 
 from .config import Config
-from .obimpl import OneBotImplementation
+from .onebotimpl import OneBotImplementation
 from .middlewares import _middlewares, import_middlewares
 
 driver = get_driver()
 a4o_config = Config(**driver.config.dict())
 if not a4o_config.obimpl_connections:
     raise Exception("请至少配置一种连接方式！")
-onebot_implementation = OneBotImplementation(driver, a4o_config.obimpl_connections)
+obimpl = OneBotImplementation(driver, a4o_config.obimpl_connections)
 
 
 @driver.on_startup
@@ -26,16 +26,14 @@ async def _():
 async def _(bot: Bot):
     if bot.self_id.startswith("a4o@"):
         return
-    middleware = _middlewares[bot.type](bot, a4o_config.self_id_prefix)
-    onebot_implementation.bot_connect(middleware)
+    obimpl.bot_connect(bot)
 
 
 @driver.on_bot_disconnect
 async def _(bot: Bot):
     if bot.self_id.startswith("a4o@"):
         return
-    if middleware := onebot_implementation.middleswares.get(bot.self_id, None):
-        onebot_implementation.bot_disconnect(middleware)
+    obimpl.bot_disconnect(bot)
 
 
 on(priority=1, block=False)
@@ -43,8 +41,12 @@ on(priority=1, block=False)
 
 @event_preprocessor
 async def _(bot: Bot, event: Event):
-    if middle := onebot_implementation.middleswares.get(bot.self_id, None):
-        middle.to_onebot_event(event)
+    if middleware := obimpl.middlewares.get(bot.self_id, None):
+        for event in middleware.to_onebot_event(event):
+            for queue in middleware.queues:
+                if queue.full():
+                    await queue.get()
+                await queue.put(event)
         if a4o_config.block_event:
             raise IgnoredException("All4One has transfer it to OneBot V12")
 

@@ -1,5 +1,6 @@
 import asyncio
 import importlib
+from asyncio import Queue
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Type, Union, Literal, Optional
 
@@ -38,44 +39,25 @@ def supported_action(method):
 
 
 class Middleware(ABC):
-    def __init__(self, bot: Bot, has_prefix: bool):
+    def __init__(self, bot: Bot):
         self.bot = bot
-        self.events: List[OneBotEvent] = []
-        self.has_prefix = has_prefix
+        self.tasks: List[asyncio.Task] = []
+        self.queues: List[Queue[OneBotEvent]] = []
 
     @property
     def self_id(self) -> str:
         return self.bot.self_id
 
-    def get_bot_self(self) -> BotSelf:
+    def get_bot_self(self, has_prefix: bool = False) -> BotSelf:
         return BotSelf(
             platform=self.get_platform(),
-            user_id=f"a4o@{self.self_id}" if self.has_prefix else self.self_id,
+            user_id=f"a4o@{self.self_id}" if has_prefix else self.self_id,
         )
 
-    async def get_latest_events(
-        self,
-        *,
-        limit: int = 0,
-        timeout: int = 0,
-        **kwargs: Any,
-    ) -> List[OneBotEvent]:
-        """获取最新事件列表
-
-        参数:
-            limit: 获取的事件数量上限，0 表示不限制
-            timeout: 没有事件时要等待的秒数，0 表示使用短轮询，不等待
-            kwargs: 扩展字段
-        """
-        if self.events:
-            if limit == 0:
-                return self.events
-            events = self.events[:limit]
-            self.events = self.events[limit:]
-            return events
-        else:
-            await asyncio.sleep(timeout)
-            return []
+    def new_queue(self, maxsize: int = 0) -> Queue[OneBotEvent]:
+        queue = Queue(maxsize=maxsize)
+        self.queues.append(queue)
+        return queue
 
     async def get_supported_actions(self, **kwargs: Any) -> List[str]:
         """获取支持的动作列表
@@ -124,11 +106,11 @@ class Middleware(ABC):
         }
 
     @abstractmethod
-    def get_platform(self):
+    def get_platform(self) -> str:
         raise NotImplementedError
 
     @abstractmethod
-    def to_onebot_event(self, event: Event):
+    def to_onebot_event(self, event: Event) -> List[OneBotEvent]:
         raise NotImplementedError
 
     async def send_message(

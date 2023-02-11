@@ -60,12 +60,12 @@ summary = "Distribution utilities"
 
 [[package]]
 name = "fastapi"
-version = "0.90.0"
+version = "0.90.1"
 requires_python = ">=3.7"
 summary = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 dependencies = [
     "pydantic!=1.7,!=1.7.1,!=1.7.2,!=1.7.3,!=1.8,!=1.8.1,<2.0.0,>=1.6.2",
-    "starlette<=0.23.0,>=0.22.0",
+    "starlette<0.24.0,>=0.22.0",
 ]
 
 [[package]]
@@ -219,7 +219,7 @@ dependencies = [
 
 [[package]]
 name = "nonebot-adapter-telegram"
-version = "0.1.0b7"
+version = "0.1.0b8"
 requires_python = ">=3.8,<4.0"
 summary = "Telegram Adapter for NoneBot2"
 dependencies = [
@@ -507,7 +507,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:cdea09e7d183f810206448ca2f87dfa7a1d515ac7c83293cc1b447c35bf0b278"
+content_hash = "sha256:db908d36bc246ff2496b5a1ff51c9596d031ef34265bb0c8634673bad9f42362"
 
 [metadata.files]
 "anyio 3.6.2" = [
@@ -561,9 +561,9 @@ content_hash = "sha256:cdea09e7d183f810206448ca2f87dfa7a1d515ac7c83293cc1b447c35
     {url = "https://files.pythonhosted.org/packages/58/07/815476ae605bcc5f95c87a62b95e74a1bce0878bc7a3119bc2bf4178f175/distlib-0.3.6.tar.gz", hash = "sha256:14bad2d9b04d3a36127ac97f30b12a19268f211063d8f8ee4f47108896e11b46"},
     {url = "https://files.pythonhosted.org/packages/76/cb/6bbd2b10170ed991cf64e8c8b85e01f2fb38f95d1bc77617569e0b0b26ac/distlib-0.3.6-py2.py3-none-any.whl", hash = "sha256:f35c4b692542ca110de7ef0bea44d73981caeb34ca0b9b6b2e6d7790dda8f80e"},
 ]
-"fastapi 0.90.0" = [
-    {url = "https://files.pythonhosted.org/packages/0a/5d/bc9d118f2ab83d1a08afbf47d5e8cb73e73f7bb54cc441d88f2c605030e3/fastapi-0.90.0.tar.gz", hash = "sha256:8ebb3e1349f8f8a9932fb7cbc072e502c405298bc9145fdb2cca085a138f692b"},
-    {url = "https://files.pythonhosted.org/packages/9c/76/a127502eb94aed0ad863ead6a8c9ccdf1e77b7b3a840cdc78ba6fa3c3296/fastapi-0.90.0-py3-none-any.whl", hash = "sha256:e95fc14d7823db6b70c409288edec7823150e77d5c4a28da2794d3b24979eefe"},
+"fastapi 0.90.1" = [
+    {url = "https://files.pythonhosted.org/packages/2f/91/8abc12dcec2427c9631fdf15bff006ab5c6cba04b420d346b6c101740db8/fastapi-0.90.1-py3-none-any.whl", hash = "sha256:d4e4bd820204eeaa19879bf129bbce73db09bdc209d5d83a064b40b2b00557b0"},
+    {url = "https://files.pythonhosted.org/packages/82/e3/bae55c2b6c93bf20a3fddc7227500e49d5b7e8e58d351f0317ad0f9ce73f/fastapi-0.90.1.tar.gz", hash = "sha256:d17e85deb3a350b731467e7bf035e158faffa381310a1b7356421e916fcc64f2"},
 ]
 "filelock 3.9.0" = [
     {url = "https://files.pythonhosted.org/packages/0b/dc/eac02350f06c6ed78a655ceb04047df01b02c6b7ea3fc02d4df24ca87d24/filelock-3.9.0.tar.gz", hash = "sha256:7b319f24340b51f55a2bf7a12ac0755a9b03e718311dac567a0f4f7fabd2f5de"},
@@ -791,9 +791,9 @@ content_hash = "sha256:cdea09e7d183f810206448ca2f87dfa7a1d515ac7c83293cc1b447c35
     {url = "https://files.pythonhosted.org/packages/3b/e9/2e38ae0b991467a0360ef24d4da937287135600a91a890bf1f5ce051ec62/nonebot_adapter_onebot-2.2.1-py3-none-any.whl", hash = "sha256:db22c92a541f243ef427a7080096fb28751fec213bc75b111e2c9ed89e121d94"},
     {url = "https://files.pythonhosted.org/packages/d3/9d/459fd101cb6d87f9a7ddd738be218f3ff71525d71219b672268d7f716e92/nonebot_adapter_onebot-2.2.1.tar.gz", hash = "sha256:2f77ff2345cc98e493c3bf00a5fd7112cf20e66ebeac062bbb8de56b4d07040e"},
 ]
-"nonebot-adapter-telegram 0.1.0b7" = [
-    {url = "https://files.pythonhosted.org/packages/43/9b/af96deafb7396e33af9f2f59c96793fb5789ae1a76ebe7922ae2f81c2047/nonebot_adapter_telegram-0.1.0b7-py3-none-any.whl", hash = "sha256:976c8a82cae6d91ad9fd83ec159b7fd9258a557af50823d103b65b33f34c8287"},
-    {url = "https://files.pythonhosted.org/packages/de/b4/151cf94d4ce8721035a3d9311a914cf132ce2f3a6e1f979fcf5f26d52026/nonebot-adapter-telegram-0.1.0b7.tar.gz", hash = "sha256:88f9ebec6ee52ff371c165011844535838917478bcaa738840747c271f590a30"},
+"nonebot-adapter-telegram 0.1.0b8" = [
+    {url = "https://files.pythonhosted.org/packages/27/e0/179583bc848042cb23aa62aab68132a76b4cd312f0adbc6342aca6af0d77/nonebot_adapter_telegram-0.1.0b8-py3-none-any.whl", hash = "sha256:7c4d23077a0f2188edea54f42a3b004f3eaf4a4832728a31524c3ca1c732d1d8"},
+    {url = "https://files.pythonhosted.org/packages/39/63/352c95368189e3a1a9e243c03e6ff9d5aa229d35b74c7bd9917b194bcd0f/nonebot-adapter-telegram-0.1.0b8.tar.gz", hash = "sha256:748ede2d8a382c0b1c098c98972e9aceed7803b0c50e96891d4a6f0c73d6402a"},
 ]
 "nonebot2 2.0.0rc3" = [
     {url = "https://files.pythonhosted.org/packages/89/8b/bda59ec1cb898627a2b121098a147e1b63f066031122470ef7582453a907/nonebot2-2.0.0rc3.tar.gz", hash = "sha256:a16da07b7c764d536cbdf9bcb86eb7cc21b1d254c966552ec5d20e0cb303cec2"},

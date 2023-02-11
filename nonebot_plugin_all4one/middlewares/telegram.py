@@ -24,19 +24,16 @@ from . import Middleware as BaseMiddleware
 
 
 class Middleware(BaseMiddleware):
-    def __init__(self, bot: Bot, has_prefix: bool):
-        self.bot = bot
-        self.has_prefix = has_prefix
-        self.events: List[OneBotEvent] = []
+    bot: Bot
 
     def get_platform(self):
         return "telegram"
 
-    def to_onebot_event(self, event: Event):
+    def to_onebot_event(self, event: Event) -> List[OneBotEvent]:
         event_dict = {}
         event_dict["id"] = str(event.telegram_model.update_id)
         if (type := event.get_type()) not in ["message", "notice", "request"]:
-            return
+            return []
         event_dict["type"] = type
         event_dict["self"] = self.get_bot_self()
         if isinstance(event, MessageEvent):
@@ -73,10 +70,12 @@ class Middleware(BaseMiddleware):
                 event_dict["sub_type"] = "join"
                 event_dict["group_id"] = str(event.chat.id)
                 event_dict["operator_id"] = str(event.from_.id) if event.from_ else ""
+                event_list = []
                 for user in event.new_chat_members:
                     event_dict["user_id"] = user.id
-                    self.events.append(parse_obj_as(OneBotEvent, event_dict))
-                return
+                    if event_out := parse_obj_as(OneBotEvent, event_dict):
+                        event_list.append(event_out)
+                return event_list
             if isinstance(event, LeftChatMemberEvent):
                 event_dict["time"] = event.date
                 event_dict["detail_type"] = "group_member_decrease"
@@ -85,8 +84,7 @@ class Middleware(BaseMiddleware):
                 event_dict["user_id"] = event.left_chat_member.id
                 event_dict["operator_id"] = str(event.from_.id) if event.from_ else ""
         if event_out := parse_obj_as(OneBotEvent, event_dict):
-            self.events.append(event_out)
-            return
+            return [event_out]
         raise NotImplementedError
 
     def to_onebot_message(self, message: Message) -> OneBotMessage:

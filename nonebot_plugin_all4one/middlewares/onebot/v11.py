@@ -26,15 +26,12 @@ from .. import Middleware as BaseMiddleware
 
 
 class Middleware(BaseMiddleware):
-    def __init__(self, bot: Bot, has_prefix: bool):
-        self.bot = bot
-        self.has_prefix = has_prefix
-        self.events: List[OneBotEvent] = []
+    bot: Bot
 
     def get_platform(self):
         return "qq"
 
-    def to_onebot_event(self, event: Event):
+    def to_onebot_event(self, event: Event) -> List[OneBotEvent]:
         replaced_by_detail_type = (
             "notice_type",
             "message_type",
@@ -113,8 +110,7 @@ class Middleware(BaseMiddleware):
             event_dict["sub_type"] = getattr(event, "sub_type", "")
         event_dict.setdefault("sub_type", "")
         if event_out := OneBotAdapter.json_to_event(event_dict, "qq"):
-            self.events.append(event_out)
-            return
+            return [event_out]
         raise NotImplementedError
 
     def to_onebot_message(self, message: Message) -> OneBotMessage:
@@ -127,8 +123,6 @@ class Middleware(BaseMiddleware):
                 if qq == "all":
                     message_list.append(OneBotMessageSegment.mention_all())
                     continue
-                if self.has_prefix and qq == self.self_id:
-                    qq = f"a4o@{qq}"
                 message_list.append(OneBotMessageSegment.mention(qq))
             elif segment.type in ("image", "video"):
                 message_list.append(
