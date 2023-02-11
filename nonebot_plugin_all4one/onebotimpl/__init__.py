@@ -12,10 +12,9 @@ from nonebot.log import logger
 from nonebot.adapters import Bot
 from nonebot.utils import escape_tag
 from pydantic.json import pydantic_encoder
-from nonebot.adapters.onebot.v12 import Event
 from nonebot.exception import WebSocketClosed
-from nonebot.adapters.console.event import MessageEvent
 from nonebot.adapters.onebot.utils import get_auth_bearer
+from nonebot.adapters.onebot.v12 import Event, MessageEvent
 from nonebot.adapters.onebot.v12.event import BotEvent, ImplVersion, ConnectMetaEvent
 from nonebot.drivers import (
     URL,
@@ -73,10 +72,8 @@ class OneBotImplementation:
 
     def _prefix_self_id(self, event: Event, prefix: bool = False) -> Event:
         if prefix:
-            print(event)
             if isinstance(event, BotEvent):
                 event.self.user_id = "a4o@" + event.self.user_id
-
             if isinstance(event, MessageEvent):
                 for msg in event.message:
                     if msg.type == "mention":
