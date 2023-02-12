@@ -120,6 +120,8 @@ class OneBotImplementation:
                 ". Trying to reconnect...</bg #f8bbd0></r>",
                 e,
             )
+        finally:
+            middleware.queues.remove(queue)
 
     async def _ws_recv(self, middleware: Middleware, websocket: WebSocket) -> None:
         try:
@@ -234,8 +236,8 @@ class OneBotImplementation:
             self._ws_send(middleware, websocket, conn.self_id_prefix)
         )
         t2 = asyncio.create_task(self._ws_recv(middleware, websocket))
-        while not (t1.done() or t2.done()):
-            await asyncio.sleep(0.01)
+        await t2
+        t1.cancel()
 
     def bot_connect(self, bot: Bot) -> None:
         if (middleware := _middlewares.get(bot.type, None)) is None:
@@ -314,7 +316,6 @@ class OneBotImplementation:
                 pass
             except Exception as e:
                 print(e)
-            await asyncio.sleep(0.01)
 
     async def _websocket_rev(
         self, middleware: Middleware, conn: WebsocketReverseConfig
@@ -349,8 +350,8 @@ class OneBotImplementation:
                             self._ws_send(middleware, ws, conn.self_id_prefix)
                         )
                         t2 = asyncio.create_task(self._ws_recv(middleware, ws))
-                        while not (t1.done() or t2.done()):
-                            await asyncio.sleep(0.01)
+                        await t2
+                        t1.cancel()
                     except WebSocketClosed as e:
                         logger.log(
                             "ERROR",
@@ -387,5 +388,4 @@ class OneBotImplementation:
                 for task in middleware.tasks:
                     if not task.done():
                         task.cancel()
-                await asyncio.gather(*middleware.tasks, return_exceptions=True)
                 await asyncio.gather(*middleware.tasks, return_exceptions=True)
