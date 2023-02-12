@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from nonebot import on, get_driver
 from nonebot.matcher import Matcher
 from nonebot.adapters import Bot, Event
@@ -46,7 +48,7 @@ async def _(bot: Bot, event: Event):
             for queue in middleware.queues:
                 if queue.full():
                     await queue.get()
-                await queue.put(event)
+                await queue.put(deepcopy(event))
         if a4o_config.block_event:
             raise IgnoredException("All4One has transfer it to OneBot V12")
 
