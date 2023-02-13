@@ -98,8 +98,9 @@ class Middleware(BaseMiddleware):
         result = await self.bot.post_messages(
             channel_id=int(channel_id),  # type: ignore
             content=content,
+            msg_id=kwargs.get("event_id"),
         )
-        # 返回的时间可能是 None
+        # 如果是主动消息，返回的时间会是 None
         time = (
             result.timestamp.timestamp()
             if result.timestamp
