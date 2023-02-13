@@ -28,14 +28,14 @@ async def _():
 async def _(bot: Bot):
     if bot.self_id.startswith("a4o@"):
         return
-    obimpl.bot_connect(bot)
+    await obimpl.bot_connect(bot)
 
 
 @driver.on_bot_disconnect
 async def _(bot: Bot):
     if bot.self_id.startswith("a4o@"):
         return
-    obimpl.bot_disconnect(bot)
+    await obimpl.bot_disconnect(bot)
 
 
 on(priority=1, block=False)

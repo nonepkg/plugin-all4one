@@ -1,13 +1,18 @@
 import asyncio
 import importlib
-from asyncio import Queue
 from abc import ABC, abstractmethod
+from asyncio import Queue as BaseQueue
 from typing import Any, Dict, List, Type, Union, Literal, Optional
 
 from nonebot.log import logger
 from nonebot.adapters import Bot, Event, Message
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
-from nonebot.adapters.onebot.v12.event import BotSelf, BotStatus
+from nonebot.adapters.onebot.v12.event import (
+    BotSelf,
+    BotEvent,
+    MessageEvent,
+    StatusUpdateMetaEvent,
+)
 
 middlewares_map = {
     "Telegram": "telegram",
@@ -39,11 +44,29 @@ def supported_action(method):
     return method
 
 
+class Queue(BaseQueue):
+    def __init__(
+        self,
+        middleware: "Middleware",
+        maxsize: int = 0,
+        self_id_prefix: bool = False,
+    ):
+        super().__init__(maxsize=maxsize)
+        self.self_id_prefix = self_id_prefix
+        self.middleware = middleware
+
+    async def get(self):
+        event = await super().get()
+        if self.self_id_prefix:
+            self.middleware.prefix_self_id(event)
+        return event
+
+
 class Middleware(ABC):
     def __init__(self, bot: Bot):
         self.bot = bot
         self.tasks: List[asyncio.Task] = []
-        self.queues: List[Queue[OneBotEvent]] = []
+        self.queues: List[asyncio.Queue[OneBotEvent]] = []
 
     @property
     def self_id(self) -> str:
@@ -55,56 +78,26 @@ class Middleware(ABC):
             user_id=self.self_id,
         )
 
-    def new_queue(self, maxsize: int = 0) -> Queue[OneBotEvent]:
-        queue = Queue(maxsize=maxsize)
+    def new_queue(
+        self,
+        self_id_prefix: bool = False,
+        maxsize: int = 0,
+    ) -> asyncio.Queue[OneBotEvent]:
+        queue = Queue(self, maxsize=maxsize, self_id_prefix=self_id_prefix)
         self.queues.append(queue)
         return queue
 
-    async def get_supported_actions(self, **kwargs: Any) -> List[str]:
-        """获取支持的动作列表
-
-        参数:
-            kwargs: 扩展字段
-        """
-        return [
-            method
-            for method in dir(self)
-            if callable(getattr(self, method))
-            and hasattr(getattr(self, method), "is_supported")
-        ]
-
-    async def get_status(self, **kwargs: Any) -> BotStatus:
-        """获取运行状态
-
-        参数:
-            kwargs: 扩展字段
-        """
-        return BotStatus(
-            **{
-                "good": True,
-                "bots": [
-                    {
-                        "self": self.get_bot_self(),
-                        "online": True,
-                    },
-                ],
-            }
-        )
-
-    async def get_version(
-        self,
-        **kwargs: Any,
-    ) -> Dict[Union[Literal["impl", "version", "onebot_version"], str], str]:
-        """获取版本信息
-
-        参数:
-            kwargs: 扩展字段
-        """
-        return {
-            "impl": "nonebot-plugin-all4one",
-            "version": "0.1.0",
-            "onebot_version": "12",
-        }
+    def prefix_self_id(self, event: Event) -> Event:
+        if isinstance(event, BotEvent):
+            event.self.user_id = "a4o@" + event.self.user_id
+        if isinstance(event, StatusUpdateMetaEvent):
+            for bot in event.status.bots:
+                bot.self.user_id = "a4o@" + bot.self.user_id
+        if isinstance(event, MessageEvent):
+            for msg in event.message:
+                if msg.type == "mention" and msg.data["user_id"] == self.self_id:
+                    msg.data["user_id"] = "a4o@" + msg.data["user_id"]
+        return event
 
     @abstractmethod
     def get_platform(self) -> str:
