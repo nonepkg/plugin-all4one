@@ -1,7 +1,11 @@
+from pathlib import Path
+from base64 import b64decode
 from datetime import datetime
 from typing import Any, Dict, List, Union, Literal, Optional
 
 from pydantic import parse_obj_as
+from nonebot.drivers import Request, ForwardDriver
+import nonebot.adapters.onebot.v12.exception as ob_exception
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
@@ -18,6 +22,9 @@ from nonebot.adapters.qqguild import (
 
 from . import supported_action
 from . import Middleware as BaseMiddleware
+
+DATA_PATH = Path(__file__).parent.parent.parent / "data" / "qqguild"
+DATA_PATH.mkdir(parents=True, exist_ok=True)
 
 
 class Middleware(BaseMiddleware):
@@ -95,15 +102,67 @@ class Middleware(BaseMiddleware):
         qqguild_message = Message(message_list)
         content = qqguild_message.extract_content() or None
 
-        result = await self.bot.post_messages(
-            channel_id=int(channel_id),  # type: ignore
-            content=content,
-            msg_id=kwargs.get("event_id"),
-        )
-        # 如果是主动消息，返回的时间会是 None
+        if file_image := (message["image"] or None):
+            with open(DATA_PATH / file_image[-1].data["file_id"], "rb") as f:
+                file_image = f.read()
+
+        try:
+            result = await self.bot.post_messages(
+                channel_id=int(channel_id),  # type: ignore
+                content=content,
+                msg_id=kwargs.get("event_id"),
+                file_image=file_image,  # type: ignore
+            )
+        except Exception as e:
+            raise e
+        # FIXME: 如果是主动消息，返回的时间会是 None
+        # 暂时不清楚原因，先用当前时间代替
         time = (
             result.timestamp.timestamp()
             if result.timestamp
             else datetime.now().timestamp()
         )
         return {"message_id": str(result.id), "time": time}
+
+    @supported_action
+    async def upload_file(
+        self,
+        *,
+        type: Union[Literal["url", "path", "data"], str],
+        name: str,
+        url: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
+        path: Optional[str] = None,
+        data: Optional[bytes] = None,
+        sha256: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Dict[Union[Literal["file_id"], str], str]:
+        if type == "url":
+            if not url:
+                raise ob_exception.BadParam("failed", 10003, "url 不能为空", None)
+            driver = self.bot.adapter.driver
+            if not isinstance(driver, ForwardDriver):
+                raise NotImplementedError
+            result = await driver.request(Request("GET", url, headers=headers))
+            if result.status_code != 200:
+                raise ob_exception.ExecutionError("failed", 33001, "文件下载失败", None)
+            data = result.content  # type: ignore
+        elif type == "path":
+            if not path:
+                raise ob_exception.BadParam("failed", 10003, "path 不能为空", None)
+            with open(path, "rb") as f:
+                data = f.read()
+        elif type == "data":
+            if not data:
+                raise ob_exception.BadParam("failed", 10003, "data 不能为空", None)
+            if isinstance(data, str):
+                data = b64decode(data)
+        else:
+            raise ob_exception.BadParam("failed", 10003, "不支持的类型", None)
+
+        if not data:
+            raise ob_exception.ExecutionError("failed", 35001, "文件为空", None)
+
+        with open(DATA_PATH / name, "wb") as f:
+            f.write(data)
+        return {"file_id": name}
