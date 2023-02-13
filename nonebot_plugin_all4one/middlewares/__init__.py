@@ -12,6 +12,7 @@ from nonebot.adapters.onebot.v12.event import BotSelf, BotStatus
 middlewares_map = {
     "Telegram": "telegram",
     "Console": "console",
+    "QQ Guild": "qqguild",
     "OneBot V12": "onebot.v12",
     "OneBot V11": "onebot.v11",
 }
