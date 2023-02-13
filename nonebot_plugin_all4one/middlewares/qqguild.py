@@ -1,6 +1,6 @@
 from pathlib import Path
-from base64 import b64decode
 from datetime import datetime
+from base64 import b64decode, b64encode
 from typing import Any, Dict, List, Union, Literal, Optional
 
 from pydantic import parse_obj_as
@@ -73,7 +73,25 @@ class Middleware(BaseMiddleware):
                 message_list.append(
                     OneBotMessageSegment.mention(segment.data["user_id"])
                 )
+            elif segment.type == "attachment":
+                # 直接将网址当作 file_id
+                file_id = segment.data["url"]
+                message_list.append(OneBotMessageSegment.image(file_id))
         return OneBotMessage(message_list)
+
+    async def _download_file(
+        self, url: str, headers: Optional[Dict[str, str]] = None
+    ) -> bytes:
+        driver = self.bot.adapter.driver
+        if not isinstance(driver, ForwardDriver):
+            raise NotImplementedError
+        try:
+            result = await driver.request(Request("GET", url, headers=headers))
+        except Exception as e:
+            raise e
+        if result.status_code != 200:
+            raise ob_exception.ExecutionError("failed", 33001, "文件下载失败", None)
+        return result.content  # type: ignore
 
     @supported_action
     async def send_message(
@@ -140,29 +158,68 @@ class Middleware(BaseMiddleware):
         if type == "url":
             if not url:
                 raise ob_exception.BadParam("failed", 10003, "url 不能为空", None)
-            driver = self.bot.adapter.driver
-            if not isinstance(driver, ForwardDriver):
-                raise NotImplementedError
-            result = await driver.request(Request("GET", url, headers=headers))
-            if result.status_code != 200:
-                raise ob_exception.ExecutionError("failed", 33001, "文件下载失败", None)
-            data = result.content  # type: ignore
+            data = await self._download_file(url, headers)
         elif type == "path":
             if not path:
                 raise ob_exception.BadParam("failed", 10003, "path 不能为空", None)
-            with open(path, "rb") as f:
-                data = f.read()
+            try:
+                with open(path, "rb") as f:
+                    data = f.read()
+            except:
+                raise ob_exception.ExecutionError("failed", 32001, "文件读取失败", None)
         elif type == "data":
             if not data:
                 raise ob_exception.BadParam("failed", 10003, "data 不能为空", None)
             if isinstance(data, str):
                 data = b64decode(data)
         else:
-            raise ob_exception.BadParam("failed", 10003, "不支持的类型", None)
+            raise ob_exception.UnsupportedParam("failed", 10004, "不支持的类型", None)
 
         if not data:
             raise ob_exception.ExecutionError("failed", 35001, "文件为空", None)
-
-        with open(DATA_PATH / name, "wb") as f:
-            f.write(data)
+        try:
+            with open(DATA_PATH / name, "wb") as f:
+                f.write(data)
+        except:
+            raise ob_exception.ExecutionError("failed", 32001, "文件保存失败", None)
         return {"file_id": name}
+
+    @supported_action
+    async def get_file(
+        self,
+        *,
+        type: Union[Literal["url", "path", "data"], str],
+        file_id: str,
+        **kwargs: Any,
+    ) -> Dict[
+        Union[Literal["name", "url", "headers", "path", "data", "sha256"], str], str
+    ]:
+        if type == "url":
+            if file_id.startswith("gchat.qpic.cn"):
+                return {"url": f"https://{file_id}"}
+            else:
+                raise ob_exception.UnsupportedParam("failed", 10004, "不支持的类型", None)
+
+        if file_id.startswith("gchat.qpic.cn"):
+            # file_id 是 网址的时候，需要先下载
+            # 因为本地并没有保存相应的文件
+            data = await self._download_file(f"https://{file_id}")
+            if type == "data":
+                return {"data": b64encode(data).decode()}
+            if type == "path":
+                try:
+                    with open(DATA_PATH / file_id, "wb") as f:
+                        f.write(data)
+                except:
+                    raise ob_exception.FileSystemError("failed", 32001, "文件保存失败", None)
+                return {"path": str(DATA_PATH / file_id)}
+        else:
+            if type == "path":
+                return {"path": str(DATA_PATH / file_id)}
+            if type == "data":
+                try:
+                    with open(DATA_PATH / file_id, "rb") as f:
+                        return {"data": b64encode(f.read()).decode()}
+                except:
+                    raise ob_exception.FileSystemError("failed", 32001, "文件读取出错", None)
+        raise ob_exception.UnsupportedParam("failed", 10004, "不支持的类型", None)
