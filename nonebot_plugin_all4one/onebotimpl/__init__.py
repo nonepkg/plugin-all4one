@@ -1,10 +1,11 @@
 import json
 import uuid
 import asyncio
+import importlib
 from datetime import datetime
 from functools import partial
 from contextlib import asynccontextmanager
-from typing import Any, Dict, List, Union, Literal, Optional, AsyncGenerator, cast
+from typing import Any, Dict, List, Type, Union, Literal, Optional, AsyncGenerator, cast
 
 import msgpack
 from nonebot import Driver
@@ -12,20 +13,15 @@ from nonebot.log import logger
 from nonebot.adapters import Bot
 from nonebot.utils import escape_tag
 from pydantic.json import pydantic_encoder
+from nonebot.adapters.onebot.v12 import Event
 from nonebot.exception import WebSocketClosed
 from nonebot.adapters.onebot.utils import get_auth_bearer
-from nonebot.adapters.onebot.v12 import Event, MessageEvent
-from nonebot.adapters.onebot.v12.exception import (
-    UnsupportedAction,
-    ActionFailedWithRetcode,
-)
+from nonebot.adapters.onebot.v12.exception import ActionFailedWithRetcode
 from nonebot.adapters.onebot.v12.event import (
     Status,
-    BotEvent,
     BotStatus,
     ImplVersion,
     ConnectMetaEvent,
-    StatusUpdateMetaEvent,
 )
 from nonebot.drivers import (
     URL,
@@ -38,20 +34,21 @@ from nonebot.drivers import (
     WebSocketServerSetup,
 )
 
-from ..middlewares import Middleware, _middlewares
+from ..middlewares import MIDDLEWARE_MAP, Middleware
 from .config import (
+    Config,
     HTTPConfig,
     WebsocketConfig,
-    ConnectionConfig,
     HTTPWebhookConfig,
     WebsocketReverseConfig,
 )
 
 
 class OneBotImplementation:
-    def __init__(self, driver: Driver, connections: List[ConnectionConfig]):
+    def __init__(self, driver: Driver):
         self.driver = driver
-        self.connections = connections
+        self.config = Config(**self.driver.config.dict())
+        self._middlewares: Dict[str, Type[Middleware]] = {}
         self.middlewares: Dict[str, Middleware] = {}
         self.setup()
 
@@ -80,6 +77,19 @@ class OneBotImplementation:
             raise TypeError("Current driver does not support websocket client")
         async with self.driver.websocket(setup) as ws:
             yield ws
+
+    def register_middleware(self, middleware: Type[Middleware]):
+        """注册一个中间件"""
+        name = middleware.get_name()
+        if name in self._middlewares:
+            logger.opt(colors=True).debug(
+                f'Middleware "<y>{escape_tag(name)}</y>" already exists'
+            )
+            return
+        self._middlewares[name] = middleware
+        logger.opt(colors=True).debug(
+            f'Succeeded to load middleware "<y>{escape_tag(name)}</y>"'
+        )
 
     async def _call_api(self, middleware: Middleware, api: str, **kwargs: Any) -> Any:
         try:
@@ -193,13 +203,13 @@ class OneBotImplementation:
                 event = await queue.get()
                 await websocket.send(event.json())
         except WebSocketClosed as e:
-            logger.log(
+            logger.opt(colors=True).log(
                 "ERROR",
                 "<r><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></r>",
                 e,
             )
         except Exception as e:
-            logger.log(
+            logger.opt(colors=True).log(
                 "ERROR",
                 "<r><bg #f8bbd0>Error while process data from websocket"
                 ". Trying to reconnect...</bg #f8bbd0></r>",
@@ -229,12 +239,12 @@ class OneBotImplementation:
                 )
                 await websocket.send(resp)  # type:ignore
         except WebSocketClosed:
-            logger.log(
+            logger.opt(colors=True).log(
                 "WARNING",
                 f"WebSocket for Bot {escape_tag(middleware.self_id)} closed by peer",
             )
         except Exception as e:
-            logger.log(
+            logger.opt(colors=True).log(
                 "ERROR",
                 "<r><bg #f8bbd0>Error while process data from websocket "
                 f"for bot {escape_tag(middleware.self_id)}.</bg #f8bbd0></r>",
@@ -300,11 +310,11 @@ class OneBotImplementation:
         t1.cancel()
 
     async def bot_connect(self, bot: Bot) -> None:
-        if (middleware := _middlewares.get(bot.type, None)) is None:
+        if (middleware := self._middlewares.get(bot.type, None)) is None:
             return
         middleware = middleware(bot)
         self.middlewares[bot.self_id] = middleware
-        for conn in self.connections:
+        for conn in self.config.obimpl_connections:
             if isinstance(conn, HTTPConfig):
                 queue = None
                 if conn.event_enabled:
@@ -412,20 +422,20 @@ class OneBotImplementation:
                         await t2
                         t1.cancel()
                     except WebSocketClosed as e:
-                        logger.log(
+                        logger.opt(colors=True).log(
                             "ERROR",
                             "<r><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></r>",
                             e,
                         )
                     except Exception as e:
-                        logger.log(
+                        logger.opt(colors=True).log(
                             "ERROR",
                             "<r><bg #f8bbd0>Error while process data from websocket"
                             f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></r>",
                             e,
                         )
             except Exception as e:
-                logger.log(
+                logger.opt(colors=True).log(
                     "ERROR",
                     "<r><bg #f8bbd0>Error while setup websocket to "
                     f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></r>",
@@ -442,6 +452,28 @@ class OneBotImplementation:
         await asyncio.gather(*middleware.tasks)
 
     def setup(self):
+        @self.driver.on_startup
+        async def _():
+            adapters = (
+                self.driver._adapters.keys()
+                if self.config.middlewares is None
+                else self.config.middlewares
+            )
+
+            for adapter in adapters:
+                try:
+                    if adapter in MIDDLEWARE_MAP:
+                        module = importlib.import_module(
+                            f"nonebot_plugin_all4one.middlewares.{MIDDLEWARE_MAP[adapter]}"
+                        )
+                        self.register_middleware(getattr(module, "Middleware"))
+                    else:
+                        logger.warning(f"Can not find middleware for Adapter {adapter}")
+                except Exception as e:
+                    logger.warning(
+                        f"Can not load middleware for Adapter {adapter}: {e}"
+                    )
+
         @self.driver.on_shutdown
         async def _():
             for middleware in self.middlewares.values():
@@ -449,3 +481,15 @@ class OneBotImplementation:
                     if not task.done():
                         task.cancel()
                 await asyncio.gather(*middleware.tasks, return_exceptions=True)
+
+        @self.driver.on_bot_connect
+        async def _(bot: Bot):
+            if bot.self_id.startswith("a4o@"):
+                return
+            await self.bot_connect(bot)
+
+        @self.driver.on_bot_disconnect
+        async def _(bot: Bot):
+            if bot.self_id.startswith("a4o@"):
+                return
+            await self.bot_disconnect(bot)

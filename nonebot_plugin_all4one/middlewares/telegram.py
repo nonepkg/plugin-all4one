@@ -1,11 +1,11 @@
 from typing import Any, Dict, List, Union, Literal, Optional
 
 from pydantic import parse_obj_as
-from nonebot.adapters.telegram import Bot, Event, Message
 from nonebot.adapters.telegram.message import File, Entity
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
+from nonebot.adapters.telegram import Bot, Event, Adapter, Message
 from nonebot.adapters.telegram.model import Message as TelegramMessage
 from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
 from nonebot.adapters.telegram.event import (
@@ -26,6 +26,10 @@ from . import Middleware as BaseMiddleware
 
 class Middleware(BaseMiddleware):
     bot: Bot
+
+    @staticmethod
+    def get_name():
+        return Adapter.get_name()
 
     def get_platform(self):
         return "telegram"

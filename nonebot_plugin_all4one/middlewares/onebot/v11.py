@@ -7,8 +7,8 @@ from nonebot.adapters.onebot.v11.message import MessageSegment
 from nonebot.adapters.onebot.v12 import ActionFailedWithRetcode
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
-from nonebot.adapters.onebot.v11 import Bot, Event, Message, ActionFailed
 from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
+from nonebot.adapters.onebot.v11 import Bot, Event, Adapter, Message, ActionFailed
 from nonebot.adapters.onebot.v11.event import (
     MetaEvent,
     NoticeEvent,
@@ -39,6 +39,10 @@ class Middleware(BaseMiddleware):
                 message=e.info["msg"],
                 data={},
             )
+
+    @staticmethod
+    def get_name():
+        return Adapter.get_name()
 
     def get_platform(self):
         return "qq"

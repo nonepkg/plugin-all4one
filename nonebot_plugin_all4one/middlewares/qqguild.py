@@ -13,6 +13,7 @@ from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
 from nonebot.adapters.qqguild import (
     Bot,
     Event,
+    Adapter,
     Message,
     MessageEvent,
     MessageSegment,
@@ -29,6 +30,10 @@ DATA_PATH.mkdir(parents=True, exist_ok=True)
 
 class Middleware(BaseMiddleware):
     bot: Bot
+
+    @staticmethod
+    def get_name():
+        return Adapter.get_name()
 
     def get_platform(self):
         return "qqguild"

@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any, Dict, Union, Literal, Optional
 
 from pydantic import parse_obj_as
+from nonebot.adapters.console import Adapter
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
 from nonebot.adapters.console.bot import Bot, Event, Message, MessageEvent
@@ -20,6 +21,10 @@ class Middleware(BaseMiddleware):
     def __init__(self, bot: Bot):
         super().__init__(bot)
         self.id = 0
+
+    @staticmethod
+    def get_name():
+        return Adapter.get_name()
 
     def get_platform(self):
         return "console"

@@ -8,7 +8,7 @@ from asyncio import Queue as BaseQueue
 from typing import Any, Set, Dict, List, Type, Union, Literal, Optional
 
 from nonebot.log import logger
-from nonebot.adapters import Bot, Event, Message
+from nonebot.adapters import Bot, Event, Adapter, Message
 from nonebot.adapters.onebot.v12 import UnsupportedAction
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12.event import (
@@ -20,29 +20,13 @@ from nonebot.adapters.onebot.v12.event import (
     StatusUpdateMetaEvent,
 )
 
-middlewares_map = {
+MIDDLEWARE_MAP = {
     "Telegram": "telegram",
     "Console": "console",
     "QQ Guild": "qqguild",
     "OneBot V12": "onebot.v12",
     "OneBot V11": "onebot.v11",
 }
-
-_middlewares: Dict[str, Type["Middleware"]] = {}
-
-
-def import_middlewares(*adapters: str):
-    for adapter in adapters:
-        try:
-            if adapter in middlewares_map:
-                module = importlib.import_module(
-                    f"nonebot_plugin_all4one.middlewares.{middlewares_map[adapter]}"
-                )
-                _middlewares[adapter] = getattr(module, "Middleware")
-            else:
-                logger.warning(f"Can not find middleware for Adapter {adapter}")
-        except Exception as e:
-            logger.warning(f"Can not load middleware for Adapter {adapter}: {e}")
 
 
 class supported_action:
@@ -53,7 +37,6 @@ class supported_action:
         owner.supported_actions.add(name)
 
     def __call__(self, *args, **kwargs):
-        print(args, kwargs)
         return self.fn(*args, **kwargs)
 
     def __get__(self, obj, objtype=None):
@@ -147,6 +130,12 @@ class Middleware(ABC):
                 if msg.type == "mention" and msg.data["user_id"] == self.self_id:
                     msg.data["user_id"] = "a4o@" + msg.data["user_id"]
         return event
+
+    @classmethod
+    @abstractmethod
+    def get_name(cls) -> str:
+        """对应协议适配器的名称"""
+        raise NotImplementedError
 
     @abstractmethod
     def get_platform(self) -> str:

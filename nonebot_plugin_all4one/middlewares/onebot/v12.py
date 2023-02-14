@@ -1,13 +1,17 @@
 from typing import Any, List
 
-from nonebot.adapters.onebot.v12 import Bot, Event
 from nonebot.adapters.onebot.v12.event import MessageEvent
+from nonebot.adapters.onebot.v12 import Bot, Event, Adapter
 
 from .. import Middleware as BaseMiddleware
 
 
 class Middleware(BaseMiddleware):
     bot: Bot
+
+    @staticmethod
+    def get_name():
+        return Adapter.get_name()
 
     def get_platform(self):
         return self.bot.platform
