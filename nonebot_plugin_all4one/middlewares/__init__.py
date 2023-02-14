@@ -1,5 +1,4 @@
 import asyncio
-import importlib
 from uuid import uuid4
 from datetime import datetime
 from functools import partial
@@ -7,8 +6,7 @@ from abc import ABC, abstractmethod
 from asyncio import Queue as BaseQueue
 from typing import Any, Set, Dict, List, Type, Union, Literal, Optional
 
-from nonebot.log import logger
-from nonebot.adapters import Bot, Event, Adapter, Message
+from nonebot.adapters import Bot, Event, Message
 from nonebot.adapters.onebot.v12 import UnsupportedAction
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12.event import (
@@ -179,13 +177,16 @@ class Middleware(ABC):
 
     async def get_self_info(
         self, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
+    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
         """获取机器人自身信息"""
         raise NotImplementedError
 
     async def get_user_info(
         self, *, user_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
+    ) -> Dict[
+        Union[Literal["user_id", "user_name", "user_displayname", "user_remark"], str],
+        str,
+    ]:
         """获取用户信息
 
         参数:
@@ -197,7 +198,14 @@ class Middleware(ABC):
     async def get_friend_list(
         self,
         **kwargs: Any,
-    ) -> List[Dict[Union[Literal["user_id", "nickname"], str], str]]:
+    ) -> List[
+        Dict[
+            Union[
+                Literal["user_id", "user_name", "user_displayname", "user_remark"], str
+            ],
+            str,
+        ]
+    ]:
         """获取好友列表
 
         参数:
@@ -229,7 +237,7 @@ class Middleware(ABC):
 
     async def get_group_member_info(
         self, *, group_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
+    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
         """获取群成员信息
 
         参数:
@@ -241,7 +249,9 @@ class Middleware(ABC):
 
     async def get_group_member_list(
         self, *, group_id: str, **kwargs: Any
-    ) -> List[Dict[Union[Literal["user_id", "nickname"], str], str]]:
+    ) -> List[
+        Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]
+    ]:
         """获取群成员列表
 
         参数:
@@ -307,7 +317,7 @@ class Middleware(ABC):
 
     async def get_guild_member_info(
         self, *, guild_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
+    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
         """获取群组成员信息
 
         参数:
@@ -319,7 +329,9 @@ class Middleware(ABC):
 
     async def get_guild_member_list(
         self, *, guild_id: str, **kwargs: Any
-    ) -> List[Dict[Union[Literal["user_id", "nickname"], str], str]]:
+    ) -> List[
+        Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]
+    ]:
         """获取群组成员列表
 
         参数:
