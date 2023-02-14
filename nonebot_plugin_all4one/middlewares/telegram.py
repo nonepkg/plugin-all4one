@@ -94,7 +94,9 @@ class Middleware(BaseMiddleware):
             if segment.type == "text":
                 message_list.append(OneBotMessageSegment.text(segment.data["text"]))
             elif segment.type == "mention":
-                message_list.append(OneBotMessageSegment.mention(segment.data["text"]))
+                message_list.append(
+                    OneBotMessageSegment.mention(segment.data["text"][1:])
+                )
             elif isinstance(segment, Entity):
                 message_list.append(OneBotMessageSegment.text(str(segment)))
             elif segment.type == "photo":
