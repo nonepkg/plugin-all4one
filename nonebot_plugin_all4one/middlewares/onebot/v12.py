@@ -1,5 +1,4 @@
 from typing import Any, List
-from functools import partial
 
 from nonebot.adapters.onebot.v12 import Bot, Event
 from nonebot.adapters.onebot.v12.event import MessageEvent
@@ -18,13 +17,8 @@ class Middleware(BaseMiddleware):
             event.message = event.original_message
         return [event]
 
-    def __getattribute__(self, __name: str) -> Any:
-        if (
-            not __name.startswith("__")
-            and __name not in BaseMiddleware.__abstractmethods__
-            and __name not in ("events", "get_bot_self")
-            and not hasattr(object.__getattribute__(self, __name), "is_supported")
-        ):
-            return partial(object.__getattribute__(self, "bot").call_api, __name)
-        else:
-            return object.__getattribute__(self, __name)
+    async def get_supported_actions(self, **kwargs: Any) -> List[str]:
+        return await self.bot.get_supported_actions(**kwargs)
+
+    async def _call_api(self, api: str, **kwargs: Any) -> Any:
+        return await self.bot.call_api(api, **kwargs)

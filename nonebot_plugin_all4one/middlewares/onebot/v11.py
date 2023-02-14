@@ -2,11 +2,12 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Union, Literal, Optional
 
-from nonebot.adapters.onebot.v11 import Bot, Event, Message
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v11.message import MessageSegment
+from nonebot.adapters.onebot.v12 import ActionFailedWithRetcode
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
+from nonebot.adapters.onebot.v11 import Bot, Event, Message, ActionFailed
 from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
 from nonebot.adapters.onebot.v11.event import (
     MetaEvent,
@@ -27,6 +28,17 @@ from .. import Middleware as BaseMiddleware
 
 class Middleware(BaseMiddleware):
     bot: Bot
+
+    async def _call_api(self, api: str, **kwargs: Any) -> Any:
+        try:
+            return await super()._call_api(api, **kwargs)
+        except ActionFailed as e:
+            raise ActionFailedWithRetcode(
+                status="failed",
+                retcode=int(e.info["retcode"]),
+                message=e.info["msg"],
+                data={},
+            )
 
     def get_platform(self):
         return "qq"

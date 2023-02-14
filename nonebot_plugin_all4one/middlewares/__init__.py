@@ -2,12 +2,14 @@ import asyncio
 import importlib
 from uuid import uuid4
 from datetime import datetime
+from functools import partial
 from abc import ABC, abstractmethod
 from asyncio import Queue as BaseQueue
-from typing import Any, Dict, List, Type, Union, Literal, Optional
+from typing import Any, Set, Dict, List, Type, Union, Literal, Callable, Optional
 
 from nonebot.log import logger
 from nonebot.adapters import Bot, Event, Message
+from nonebot.adapters.onebot.v12 import UnsupportedAction
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12.event import (
     Status,
@@ -39,13 +41,23 @@ def import_middlewares(*adapters: str):
                 _middlewares[adapter] = getattr(module, "Middleware")
             else:
                 logger.warning(f"Can not find middleware for Adapter {adapter}")
-        except Exception:
-            logger.warning(f"Can not load middleware for Adapter {adapter}")
+        except Exception as e:
+            logger.warning(f"Can not load middleware for Adapter {adapter}: {e}")
 
 
-def supported_action(method):
-    method.is_supported = True
-    return method
+class supported_action:
+    def __init__(self, fn):
+        self.fn = fn
+
+    def __set_name__(self, owner: Type["Middleware"], name: str):
+        owner.supported_actions.add(name)
+
+    def __call__(self, *args, **kwargs):
+        print(args, kwargs)
+        return self.fn(*args, **kwargs)
+
+    def __get__(self, obj, objtype=None):
+        return partial(self.__call__, obj)
 
 
 class Queue(BaseQueue):
@@ -67,10 +79,30 @@ class Queue(BaseQueue):
 
 
 class Middleware(ABC):
+    supported_actions: Set[str] = set()
+
     def __init__(self, bot: Bot):
         self.bot = bot
         self.tasks: List[asyncio.Task] = []
         self.queues: List[asyncio.Queue[OneBotEvent]] = []
+
+    async def get_supported_actions(self, **kwargs: Any) -> List[str]:
+        """获取支持的动作列表
+
+        参数:
+            kwargs: 扩展字段
+        """
+        return list(self.supported_actions)
+
+    async def _call_api(self, api: str, **kwargs: Any) -> Any:
+        if api not in await self.get_supported_actions():
+            raise UnsupportedAction(
+                status="failed",
+                retcode=10002,
+                data={},
+                message=f"不支持动作请求 {api}",
+            )
+        return await getattr(self, api)(**kwargs)
 
     @property
     def self_id(self) -> str:

@@ -15,6 +15,10 @@ from pydantic.json import pydantic_encoder
 from nonebot.exception import WebSocketClosed
 from nonebot.adapters.onebot.utils import get_auth_bearer
 from nonebot.adapters.onebot.v12 import Event, MessageEvent
+from nonebot.adapters.onebot.v12.exception import (
+    UnsupportedAction,
+    ActionFailedWithRetcode,
+)
 from nonebot.adapters.onebot.v12.event import (
     Status,
     BotEvent,
@@ -78,16 +82,26 @@ class OneBotImplementation:
             yield ws
 
     async def _call_api(self, middleware: Middleware, api: str, **kwargs: Any) -> Any:
-        if api in (
-            "get_latest_events",
-            "get_supported_actions",
-            "get_status",
-            "get_version",
-        ):
-            resp = await getattr(self, api)(middleware=middleware, **kwargs)
-        else:
-            resp = await getattr(middleware, api)(**kwargs)
-        return {"status": "ok", "retcode": 0, "data": resp, "message": ""}
+        try:
+            if api in (
+                "get_latest_events",
+                "get_supported_actions",
+                "get_status",
+                "get_version",
+            ):
+                resp = await getattr(self, api)(middleware=middleware, **kwargs)
+            else:
+                resp = await middleware._call_api(api, **kwargs)
+            return {"status": "ok", "retcode": 0, "data": resp, "message": ""}
+        except ActionFailedWithRetcode as e:
+            return {
+                "status": "failed",
+                "retcode": e.retcode,
+                "data": e.data,
+                "message": e.message,
+            }
+        except Exception as e:
+            logger.debug(e)
 
     async def get_latest_events(
         self,
@@ -128,12 +142,7 @@ class OneBotImplementation:
         参数:
             kwargs: 扩展字段
         """
-        return [
-            method
-            for method in dir(middleware)
-            if callable(getattr(middleware, method))
-            and hasattr(getattr(middleware, method), "is_supported")
-        ]
+        return await middleware.get_supported_actions()
 
     async def get_status(self, middleware: Middleware, **kwargs: Any) -> Status:
         """获取运行状态
@@ -181,11 +190,8 @@ class OneBotImplementation:
         queue = middleware.new_queue(self_id_prefix)
         try:
             while True:
-                try:
-                    event = await queue.get()
-                    await websocket.send(event.json())
-                except IndexError:
-                    pass
+                event = await queue.get()
+                await websocket.send(event.json())
         except WebSocketClosed as e:
             logger.log(
                 "ERROR",
@@ -265,7 +271,7 @@ class OneBotImplementation:
                 else:
                     return Response(200, content=msgpack.packb(resp))
         except Exception as e:
-            print(e)
+            logger.debug(e)
         return Response(204)
 
     async def _handle_ws(
@@ -364,13 +370,11 @@ class OneBotImplementation:
                             logger.exception("Invalid Content-Type")
                             continue
                         for action in data:
-                            resp = await self._call_api(
+                            await self._call_api(
                                 middleware, action["action"], **action["params"]
                             )
-            except IndexError:
-                pass
             except Exception as e:
-                print(e)
+                logger.debug(e)
 
     async def _websocket_rev(
         self, middleware: Middleware, conn: WebsocketReverseConfig
