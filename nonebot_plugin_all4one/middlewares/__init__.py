@@ -1,5 +1,7 @@
 import asyncio
 import importlib
+from uuid import uuid4
+from datetime import datetime
 from abc import ABC, abstractmethod
 from asyncio import Queue as BaseQueue
 from typing import Any, Dict, List, Type, Union, Literal, Optional
@@ -8,8 +10,10 @@ from nonebot.log import logger
 from nonebot.adapters import Bot, Event, Message
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12.event import (
+    Status,
     BotSelf,
     BotEvent,
+    BotStatus,
     MessageEvent,
     StatusUpdateMetaEvent,
 )
@@ -84,6 +88,19 @@ class Middleware(ABC):
         maxsize: int = 0,
     ) -> asyncio.Queue[OneBotEvent]:
         queue = Queue(self, maxsize=maxsize, self_id_prefix=self_id_prefix)
+        queue.put_nowait(
+            StatusUpdateMetaEvent(
+                id=uuid4().hex,
+                time=datetime.now(),
+                type="meta",
+                detail_type="status_update",
+                sub_type="",
+                status=Status(
+                    good=True,
+                    bots=[BotStatus(self=self.get_bot_self(), online=True)],
+                ),
+            )
+        )  # TODO beta better way
         self.queues.append(queue)
         return queue
 
