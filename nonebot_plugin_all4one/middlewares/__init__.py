@@ -5,7 +5,7 @@ from datetime import datetime
 from functools import partial
 from abc import ABC, abstractmethod
 from asyncio import Queue as BaseQueue
-from typing import Any, Set, Dict, List, Type, Union, Literal, Callable, Optional
+from typing import Any, Set, Dict, List, Type, Union, Literal, Optional
 
 from nonebot.log import logger
 from nonebot.adapters import Bot, Event, Message

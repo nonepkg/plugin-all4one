@@ -23,7 +23,7 @@ from nonebot.adapters.qqguild import (
 from . import supported_action
 from . import Middleware as BaseMiddleware
 
-DATA_PATH = Path(__file__).parent.parent.parent / "data" / "qqguild"
+DATA_PATH = Path() / "data" / "qqguild"
 DATA_PATH.mkdir(parents=True, exist_ok=True)
 
 
