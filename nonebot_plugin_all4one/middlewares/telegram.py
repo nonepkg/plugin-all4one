@@ -189,3 +189,57 @@ class Middleware(BaseMiddleware):
         if isinstance(result, list):
             result = result[0]
         return {"message_id": str(result.message_id), "time": result.date}
+
+    @supported_action
+    async def get_self_info(
+        self, **kwargs: Any
+    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
+        result = await self.bot.get_me()
+        return {
+            "user_id": str(result.id),
+            "user_name": result.username,  # type: ignore
+            "user_displayname": result.first_name,
+        }
+
+    @supported_action
+    async def get_user_info(
+        self, *, user_id: str, **kwargs: Any
+    ) -> Dict[
+        Union[Literal["user_id", "user_name", "user_displayname", "user_remark"], str],
+        str,
+    ]:
+        result = await self.bot.get_chat(int(user_id))
+        return {
+            "user_id": str(result.id),
+            "user_name": result.username if result.username else "",
+            "user_displayname": result.first_name,  # type: ignore
+            "user_remark": "",
+        }
+
+    @supported_action
+    async def get_group_info(
+        self, *, group_id: str, **kwargs: Any
+    ) -> Dict[Union[Literal["group_id", "group_name"], str], str]:
+        result = await self.bot.get_chat(int(group_id))
+        return {"group_id": str(result.id), "group_name": result.title}  # type: ignore
+
+    @supported_action
+    async def get_group_member_info(
+        self, *, group_id: str, user_id: str, **kwargs: Any
+    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
+        result = await self.bot.get_chat_member(int(group_id), int(user_id))
+        return {
+            "user_id": str(result.user.id),
+            "user_name": result.user.username if result.user.username else "",
+            "user_displayname": result.user.first_name,
+        }
+
+    @supported_action
+    async def set_group_name(
+        self, *, group_id: str, group_name: str, **kwargs: Any
+    ) -> None:
+        await self.bot.set_chat_title(int(group_id), group_name)
+
+    @supported_action
+    async def leave_group(self, *, group_id: str, **kwargs: Any) -> None:
+        await self.bot.leave_chat(int(group_id))
