@@ -60,12 +60,12 @@ summary = "Distribution utilities"
 
 [[package]]
 name = "fastapi"
-version = "0.90.1"
+version = "0.91.0"
 requires_python = ">=3.7"
 summary = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 dependencies = [
     "pydantic!=1.7,!=1.7.1,!=1.7.2,!=1.7.3,!=1.8,!=1.8.1,<2.0.0,>=1.6.2",
-    "starlette<0.24.0,>=0.22.0",
+    "starlette<0.25.0,>=0.24.0",
 ]
 
 [[package]]
@@ -215,6 +215,16 @@ summary = "OneBot(CQHTTP) adapter for nonebot2"
 dependencies = [
     "msgpack<2.0.0,>=1.0.3",
     "nonebot2<3.0.0,>=2.0.0-beta.3",
+]
+
+[[package]]
+name = "nonebot-adapter-qqguild"
+version = "0.1.4"
+requires_python = ">=3.8,<4.0"
+summary = "QQ Guild adapter for nonebot2"
+dependencies = [
+    "nonebot2<3.0.0,>=2.0.0-beta.1",
+    "pydantic<2.0.0,>=1.9.0",
 ]
 
 [[package]]
@@ -395,7 +405,7 @@ summary = "Sniff out which async library your code is running under"
 
 [[package]]
 name = "starlette"
-version = "0.22.0"
+version = "0.24.0"
 requires_python = ">=3.7"
 summary = "The little ASGI library that shines."
 dependencies = [
@@ -507,7 +517,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:db908d36bc246ff2496b5a1ff51c9596d031ef34265bb0c8634673bad9f42362"
+content_hash = "sha256:41bae41f4ee8eb002abe65c8c1e8de7087a37abcbafca5c408e60d6c5a141b86"
 
 [metadata.files]
 "anyio 3.6.2" = [
@@ -561,9 +571,9 @@ content_hash = "sha256:db908d36bc246ff2496b5a1ff51c9596d031ef34265bb0c8634673bad
     {url = "https://files.pythonhosted.org/packages/58/07/815476ae605bcc5f95c87a62b95e74a1bce0878bc7a3119bc2bf4178f175/distlib-0.3.6.tar.gz", hash = "sha256:14bad2d9b04d3a36127ac97f30b12a19268f211063d8f8ee4f47108896e11b46"},
     {url = "https://files.pythonhosted.org/packages/76/cb/6bbd2b10170ed991cf64e8c8b85e01f2fb38f95d1bc77617569e0b0b26ac/distlib-0.3.6-py2.py3-none-any.whl", hash = "sha256:f35c4b692542ca110de7ef0bea44d73981caeb34ca0b9b6b2e6d7790dda8f80e"},
 ]
-"fastapi 0.90.1" = [
-    {url = "https://files.pythonhosted.org/packages/2f/91/8abc12dcec2427c9631fdf15bff006ab5c6cba04b420d346b6c101740db8/fastapi-0.90.1-py3-none-any.whl", hash = "sha256:d4e4bd820204eeaa19879bf129bbce73db09bdc209d5d83a064b40b2b00557b0"},
-    {url = "https://files.pythonhosted.org/packages/82/e3/bae55c2b6c93bf20a3fddc7227500e49d5b7e8e58d351f0317ad0f9ce73f/fastapi-0.90.1.tar.gz", hash = "sha256:d17e85deb3a350b731467e7bf035e158faffa381310a1b7356421e916fcc64f2"},
+"fastapi 0.91.0" = [
+    {url = "https://files.pythonhosted.org/packages/cb/64/6647600528d7bc9ed61562d4071741295c18e7a7254fa101b874b15f6d09/fastapi-0.91.0-py3-none-any.whl", hash = "sha256:8dc18f860755159b3c4b30577c61c821b98f382acfeb6d5a849f9fa6a5369789"},
+    {url = "https://files.pythonhosted.org/packages/dd/03/bf64108dfff38ed6d6201caca18bfeaf1edb3a8a2a4ab1702a7d092b3baf/fastapi-0.91.0.tar.gz", hash = "sha256:ff2fa93af3f2f982b07b5f96e8512565b3ef0e5f8f02469dbfd6bc27f6fd9a9e"},
 ]
 "filelock 3.9.0" = [
     {url = "https://files.pythonhosted.org/packages/0b/dc/eac02350f06c6ed78a655ceb04047df01b02c6b7ea3fc02d4df24ca87d24/filelock-3.9.0.tar.gz", hash = "sha256:7b319f24340b51f55a2bf7a12ac0755a9b03e718311dac567a0f4f7fabd2f5de"},
@@ -791,6 +801,10 @@ content_hash = "sha256:db908d36bc246ff2496b5a1ff51c9596d031ef34265bb0c8634673bad
     {url = "https://files.pythonhosted.org/packages/3b/e9/2e38ae0b991467a0360ef24d4da937287135600a91a890bf1f5ce051ec62/nonebot_adapter_onebot-2.2.1-py3-none-any.whl", hash = "sha256:db22c92a541f243ef427a7080096fb28751fec213bc75b111e2c9ed89e121d94"},
     {url = "https://files.pythonhosted.org/packages/d3/9d/459fd101cb6d87f9a7ddd738be218f3ff71525d71219b672268d7f716e92/nonebot_adapter_onebot-2.2.1.tar.gz", hash = "sha256:2f77ff2345cc98e493c3bf00a5fd7112cf20e66ebeac062bbb8de56b4d07040e"},
 ]
+"nonebot-adapter-qqguild 0.1.4" = [
+    {url = "https://files.pythonhosted.org/packages/36/8d/aeb2d848101a67b66812641e5187554bac01610159d3ef8c14a060039030/nonebot_adapter_qqguild-0.1.4.tar.gz", hash = "sha256:b51251c9e721a457aa6da2edb97f00d4b42f68b389af2e9e6b735617800d0e9e"},
+    {url = "https://files.pythonhosted.org/packages/fd/34/b5750652ecc37d2fe9dffca9ad0afe2731f74651e3ff88d2ecc16c825176/nonebot_adapter_qqguild-0.1.4-py3-none-any.whl", hash = "sha256:4942b392562dd493c40003adc3d5bfa04d4d8e2d7c3148158a625b804851e969"},
+]
 "nonebot-adapter-telegram 0.1.0b8" = [
     {url = "https://files.pythonhosted.org/packages/27/e0/179583bc848042cb23aa62aab68132a76b4cd312f0adbc6342aca6af0d77/nonebot_adapter_telegram-0.1.0b8-py3-none-any.whl", hash = "sha256:7c4d23077a0f2188edea54f42a3b004f3eaf4a4832728a31524c3ca1c732d1d8"},
     {url = "https://files.pythonhosted.org/packages/39/63/352c95368189e3a1a9e243c03e6ff9d5aa229d35b74c7bd9917b194bcd0f/nonebot-adapter-telegram-0.1.0b8.tar.gz", hash = "sha256:748ede2d8a382c0b1c098c98972e9aceed7803b0c50e96891d4a6f0c73d6402a"},
@@ -939,9 +953,9 @@ content_hash = "sha256:db908d36bc246ff2496b5a1ff51c9596d031ef34265bb0c8634673bad
     {url = "https://files.pythonhosted.org/packages/c3/a0/5dba8ed157b0136607c7f2151db695885606968d1fae123dc3391e0cfdbf/sniffio-1.3.0-py3-none-any.whl", hash = "sha256:eecefdce1e5bbfb7ad2eeaabf7c1eeb404d7757c379bd1f7e5cce9d8bf425384"},
     {url = "https://files.pythonhosted.org/packages/cd/50/d49c388cae4ec10e8109b1b833fd265511840706808576df3ada99ecb0ac/sniffio-1.3.0.tar.gz", hash = "sha256:e60305c5e5d314f5389259b7f22aaa33d8f7dee49763119234af3755c55b9101"},
 ]
-"starlette 0.22.0" = [
-    {url = "https://files.pythonhosted.org/packages/1d/4e/30eda84159d5b3ad7fe663c40c49b16dd17436abe838f10a56c34bee44e8/starlette-0.22.0-py3-none-any.whl", hash = "sha256:b5eda991ad5f0ee5d8ce4c4540202a573bb6691ecd0c712262d0bc85cf8f2c50"},
-    {url = "https://files.pythonhosted.org/packages/f7/ff/64bd3362f80e81402f21e0f1ba55f8801cd899ad3f2a1bcc4a94d284c786/starlette-0.22.0.tar.gz", hash = "sha256:b092cbc365bea34dd6840b42861bdabb2f507f8671e642e8272d2442e08ea4ff"},
+"starlette 0.24.0" = [
+    {url = "https://files.pythonhosted.org/packages/56/84/6992f18af8dd459745fb3d3a66ff58d1bfa89cbe81facf456223ce1a379c/starlette-0.24.0-py3-none-any.whl", hash = "sha256:75e2b24d71ff4f7cb9a3338f83d234c2d4135bf80f52aeb105c02a01d72a5df1"},
+    {url = "https://files.pythonhosted.org/packages/fc/b1/314fc4a9c937f5eac43ca2a5123aa886180482adb9a79716cd9f9c6365c5/starlette-0.24.0.tar.gz", hash = "sha256:7925947f177a19e906c6ace10f07c64c4f9fdf7d509caaac6589f7cc0cfd95f3"},
 ]
 "textual 0.10.1" = [
     {url = "https://files.pythonhosted.org/packages/09/b4/1bffcb47a7d9859e4a3dae84fcb60efde276d5d9309a0e3cb672defd4cf8/textual-0.10.1.tar.gz", hash = "sha256:928cfeec37c60b212963f484e806b25380afdddb5a2aecd888ce8c9b46f93553"},
