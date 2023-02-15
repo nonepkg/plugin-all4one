@@ -113,7 +113,7 @@ class Middleware(BaseMiddleware):
         **kwargs: Any,
     ) -> Dict[Union[Literal["message_id", "time"], str], Any]:
         if detail_type not in ["private", "channel"]:
-            raise NotImplementedError
+            raise ob_exception.UnsupportedParam("failed", 10004, "不支持的类型", None)
 
         message_list = []
         message = parse_obj_as(OneBotMessage, message)
