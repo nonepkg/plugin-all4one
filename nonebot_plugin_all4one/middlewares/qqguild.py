@@ -58,6 +58,8 @@ class Middleware(BaseMiddleware):
             if isinstance(event, DirectMessageCreateEvent):
                 event_dict["detail_type"] = "private"
                 event_dict["user_id"] = event.get_user_id()
+                # 发送私信还需要临时频道 id
+                event_dict["guild_id"] = event.guild_id
             elif isinstance(event, MessageCreateEvent):
                 event_dict["detail_type"] = "channel"
                 event_dict["guild_id"] = event.guild_id
@@ -110,8 +112,8 @@ class Middleware(BaseMiddleware):
         message: OneBotMessage,
         **kwargs: Any,
     ) -> Dict[Union[Literal["message_id", "time"], str], Any]:
-        if detail_type != "channel":
-            raise NotImplementedError
+        if detail_type not in ["private", "channel"]:
+            raise ob_exception.UnsupportedParam("failed", 10004, "不支持的类型", None)
 
         message_list = []
         message = parse_obj_as(OneBotMessage, message)
@@ -130,12 +132,20 @@ class Middleware(BaseMiddleware):
                 file_image = f.read()
 
         try:
-            result = await self.bot.post_messages(
-                channel_id=int(channel_id),  # type: ignore
-                content=content,
-                msg_id=kwargs.get("event_id"),
-                file_image=file_image,  # type: ignore
-            )
+            if detail_type == "private":
+                result = await self.bot.post_dms_messages(
+                    guild_id=int(guild_id),  # type: ignore
+                    content=content,
+                    msg_id=kwargs.get("event_id"),
+                    file_image=file_image,  # type: ignore
+                )
+            else:
+                result = await self.bot.post_messages(
+                    channel_id=int(channel_id),  # type: ignore
+                    content=content,
+                    msg_id=kwargs.get("event_id"),
+                    file_image=file_image,  # type: ignore
+                )
         except Exception as e:
             raise e
         # FIXME: 如果是主动消息，返回的时间会是 None
