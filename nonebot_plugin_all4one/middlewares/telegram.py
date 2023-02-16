@@ -78,7 +78,9 @@ class Middleware(BaseMiddleware):
                 event_list = []
                 for user in event.new_chat_members:
                     event_dict["user_id"] = user.id
-                    if event_out := OneBotAdapter.json_to_event(event_dict, "telegram"):
+                    if event_out := OneBotAdapter.json_to_event(
+                        event_dict, "nonebot-plugin-all4one"
+                    ):
                         event_list.append(event_out)
                 return event_list
             if isinstance(event, LeftChatMemberEvent):
@@ -88,7 +90,9 @@ class Middleware(BaseMiddleware):
                 event_dict["group_id"] = str(event.chat.id)
                 event_dict["user_id"] = event.left_chat_member.id
                 event_dict["operator_id"] = str(event.from_.id) if event.from_ else ""
-        if event_out := OneBotAdapter.json_to_event(event_dict, "telegram"):
+        if event_out := OneBotAdapter.json_to_event(
+            event_dict, "nonebot-plugin-all4one"
+        ):
             return [event_out]
         raise NotImplementedError
 

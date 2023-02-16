@@ -125,7 +125,9 @@ class Middleware(BaseMiddleware):
                 event_dict["detail_type"] = f"qq.{event.meta_event_type}"
             event_dict["sub_type"] = getattr(event, "sub_type", "")
         event_dict.setdefault("sub_type", "")
-        if event_out := OneBotAdapter.json_to_event(event_dict, "qq"):
+        if event_out := OneBotAdapter.json_to_event(
+            event_dict, "nonebot-plugin-all4one"
+        ):
             return [event_out]
         raise NotImplementedError
 
