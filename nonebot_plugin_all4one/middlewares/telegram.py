@@ -171,7 +171,9 @@ class Middleware(BaseMiddleware):
                 )
             elif segment.type == "mention_all":
                 pass  # TODO Should raise an error
-            elif segment.type in ("image", "voice", "audio", "video"):
+            elif segment.type == "image":
+                message_list.append(File.photo(segment.data["file_id"]))
+            elif segment.type in ("voice", "audio", "video"):
                 message_list.append(
                     File(segment.type, {"file": segment.data["file_id"]})
                 )
