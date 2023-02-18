@@ -6,8 +6,11 @@ from abc import ABC, abstractmethod
 from asyncio import Queue as BaseQueue
 from typing import Any, Set, Dict, List, Type, Union, Literal, Optional
 
+from anyio import open_file
+from httpx import AsyncClient
 from nonebot.adapters import Bot, Event, Message
 from nonebot.adapters.onebot.v12 import UnsupportedAction
+from nonebot.adapters.onebot.v12.exception import BadParam
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12.event import (
     Status,
@@ -17,6 +20,8 @@ from nonebot.adapters.onebot.v12.event import (
     MessageEvent,
     StatusUpdateMetaEvent,
 )
+
+from ..database import get_file, upload_file
 
 MIDDLEWARE_MAP = {
     "Telegram": "telegram",
@@ -385,6 +390,7 @@ class Middleware(ABC):
         """
         raise NotImplementedError
 
+    @supported_action
     async def upload_file(
         self,
         *,
@@ -409,7 +415,49 @@ class Middleware(ABC):
             sha256: 文件数据（原始二进制）的 SHA256 校验和，全小写，可选传入
             kwargs: 扩展字段
         """
-        raise NotImplementedError
+        if type == "url":
+            if url is None:
+                raise BadParam(
+                    status="failed",
+                    retcode=10003,
+                    message="url must be provided when type is url",
+                    data={},
+                )
+            async with AsyncClient() as client:
+                response = await client.get(url, headers=headers)
+                data = response.content
+        elif type == "path":
+            if path is None:
+                raise BadParam(
+                    status="failed",
+                    retcode=10003,
+                    message="path must be provided when type is path",
+                    data={},
+                )
+            async with await open_file(path, "rb") as f:
+                data = await f.read()
+        elif type == "data":
+            if data is None:
+                raise BadParam(
+                    status="failed",
+                    retcode=10003,
+                    message="data must be provided when type is data",
+                    data={},
+                )
+        else:
+            raise ValueError("type must be url, path or data")
+        return {
+            "file_id": await upload_file(
+                type=type,
+                name=name,
+                url=url,
+                headers=headers,
+                path=path,
+                data=data,
+                sha256=sha256,
+                **kwargs,
+            )
+        }
 
     async def upload_file_fragmented(
         self,
@@ -438,6 +486,7 @@ class Middleware(ABC):
         """
         raise NotImplementedError
 
+    @supported_action
     async def get_file(
         self,
         *,
@@ -454,7 +503,15 @@ class Middleware(ABC):
             file_id: 文件 ID
             kwargs: 扩展字段
         """
-        raise NotImplementedError
+        file = await get_file(file_id=file_id)
+        if type == "url":
+            result = {"url": file.url, "headers": file.headers}
+        elif type == "path":
+            result = {"path": file.path}
+        elif type == "data":
+            async with await open_file(file.path) as f:
+                result = {"data": await f.read()}
+        return {"name": file.name, "sha256": file.sha256, **result}
 
     async def get_file_fragmented(
         self,
