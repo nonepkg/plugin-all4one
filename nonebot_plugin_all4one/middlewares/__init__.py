@@ -4,7 +4,19 @@ from datetime import datetime
 from functools import partial
 from abc import ABC, abstractmethod
 from asyncio import Queue as BaseQueue
-from typing import Any, Set, Dict, List, Type, Union, Literal, Optional
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Set,
+    Dict,
+    List,
+    Type,
+    Union,
+    Generic,
+    Literal,
+    TypeVar,
+    Optional,
+)
 
 from anyio import open_file
 from httpx import AsyncClient
@@ -46,7 +58,19 @@ class supported_action:
         return partial(self.__call__, obj)
 
 
-class Queue(BaseQueue):
+_T = TypeVar("_T", bound=OneBotEvent)
+if TYPE_CHECKING:
+
+    class _Queue(BaseQueue[_T]):
+        pass
+
+else:
+
+    class _Queue(Generic[_T], BaseQueue):
+        pass
+
+
+class Queue(_Queue[_T]):
     def __init__(
         self,
         middleware: "Middleware",
@@ -70,7 +94,7 @@ class Middleware(ABC):
     def __init__(self, bot: Bot):
         self.bot = bot
         self.tasks: List[asyncio.Task] = []
-        self.queues: List[asyncio.Queue[OneBotEvent]] = []
+        self.queues: List[Queue[OneBotEvent]] = []
 
     async def get_supported_actions(self, **kwargs: Any) -> List[str]:
         """获取支持的动作列表
@@ -104,7 +128,7 @@ class Middleware(ABC):
         self,
         self_id_prefix: bool = False,
         maxsize: int = 0,
-    ) -> asyncio.Queue[OneBotEvent]:
+    ) -> Queue[OneBotEvent]:
         queue = Queue(self, maxsize=maxsize, self_id_prefix=self_id_prefix)
         queue.put_nowait(
             StatusUpdateMetaEvent(

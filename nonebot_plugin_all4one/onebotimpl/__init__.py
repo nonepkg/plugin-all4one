@@ -34,7 +34,7 @@ from nonebot.drivers import (
     WebSocketServerSetup,
 )
 
-from ..middlewares import MIDDLEWARE_MAP, Middleware
+from ..middlewares import MIDDLEWARE_MAP, Queue, Middleware
 from .config import (
     Config,
     HTTPConfig,
@@ -115,7 +115,7 @@ class OneBotImplementation:
 
     async def get_latest_events(
         self,
-        queue: asyncio.Queue[Event],
+        queue: Queue[Event],
         *,
         limit: int = 0,
         timeout: int = 0,
@@ -254,7 +254,7 @@ class OneBotImplementation:
     async def _handle_http(
         self,
         middleware: Middleware,
-        queue: Optional[asyncio.Queue[Event]],
+        queue: Optional[Queue[Event]],
         conn: HTTPConfig,
         request: Request,
     ) -> Response:
