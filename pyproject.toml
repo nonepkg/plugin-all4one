@@ -6,9 +6,7 @@ authors = [{ name = "Jigsaw", email = "j1g5aw@foxmail.com" }]
 dependencies = [
     "nonebot2<3.0.0,>=2.0.0rc2",
     "nonebot-adapter-onebot>=2.2.0",
-    "sqlmodel>=0.0.8",
-    "aiosqlite>=0.18.0",
-    "httpx>=0.23.3",
+    "nonebot-plugin-datastore>=0.5.8",
 ]
 requires-python = ">=3.8,<4.0"
 readme = "README.md"
@@ -49,6 +47,9 @@ all = false
 
 [tool.pyright]
 exclude = ["__pypackages__"]
+
+[tool.nonebot]
+plugins = ["nonebot_plugin_all4one"]
 
 [build-system]
 requires = ["pdm-pep517>=1.0.0"]
