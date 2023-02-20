@@ -38,7 +38,7 @@ class Middleware(BaseMiddleware):
     def get_platform(self):
         return "qqguild"
 
-    def to_onebot_event(self, event: Event) -> List[OneBotEvent]:
+    async def to_onebot_event(self, event: Event) -> List[OneBotEvent]:
         event_dict = {}
         if (type := event.get_type()) not in ["message", "notice", "request"]:
             return []

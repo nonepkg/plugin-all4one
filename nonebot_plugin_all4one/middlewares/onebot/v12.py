@@ -16,7 +16,7 @@ class Middleware(BaseMiddleware):
     def get_platform(self):
         return self.bot.platform
 
-    def to_onebot_event(self, event: Event) -> List[Event]:
+    async def to_onebot_event(self, event: Event) -> List[Event]:
         if isinstance(event, MessageEvent):
             event.message = event.original_message
         return [event]

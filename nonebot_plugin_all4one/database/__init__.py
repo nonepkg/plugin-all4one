@@ -4,6 +4,7 @@ from typing import Any, Dict, Union, Literal, Optional
 
 from anyio import open_file
 from httpx import AsyncClient
+from nonebot.adapters.onebot.v12 import BadParam
 from sqlmodel.ext.asyncio.session import AsyncEngine, AsyncSession
 from sqlmodel import JSON, Field, Column, SQLModel, select, create_engine
 
@@ -19,8 +20,8 @@ class File(SQLModel, table=True):
     src_id: Optional[str] = None
     url: Optional[str] = None
     headers: Optional[Dict[str, str]] = Field(default=None, sa_column=Column(JSON))
-    path: Optional[str] = None
-    sha256: Optional[str] = None
+    path: str
+    sha256: str
 
 
 DATA_PATH = Path() / "data" / "all4one"
@@ -29,25 +30,14 @@ FILE_PATH.mkdir(parents=True, exist_ok=True)
 DATA_PATH.mkdir(parents=True, exist_ok=True)
 
 SQLITE_URL = "sqlite:///data/all4one/file.db"
-AIOSQLITE_URL = "sqlite+aiosqlite:///data/all4one/file.db"
-
-engine = create_engine(SQLITE_URL, echo=True)
+engine = create_engine(SQLITE_URL)
 SQLModel.metadata.create_all(engine)
 
-async_engine = AsyncEngine(create_engine(AIOSQLITE_URL, echo=True))
+AIOSQLITE_URL = "sqlite+aiosqlite:///data/all4one/file.db"
+async_engine = AsyncEngine(create_engine(AIOSQLITE_URL))
 
 
-async def get_file(
-    file_id: str,
-    src: Optional[str] = None,
-) -> File:
-    """获取文件
-
-    参数:
-        type: 获取文件的方式，可以为 url、path、data 或扩展的方式
-        file_id: 文件 ID
-        kwargs: 扩展字段
-    """
+async def get_file(file_id: str, src: Optional[str] = None) -> File:
     async with AsyncSession(async_engine) as session:
         statement = select(File).where(File.sha256 == file_id).where(File.src == src)
         result = await session.execute(statement)
@@ -55,32 +45,56 @@ async def get_file(
             return file[0]
         else:
             result = await session.execute(select(File).where(File.sha256 == file_id))
-            return result.one()[0]
+            return result.first()[0]
 
 
 async def upload_file(
+    type: str,
     name: str,
-    data: bytes,
     src: Optional[str] = None,
     src_id: Optional[str] = None,
     url: Optional[str] = None,
     headers: Optional[Dict[str, str]] = None,
     path: Optional[str] = None,
+    data: Optional[bytes] = None,
     sha256: Optional[str] = None,
-    **kwargs: Any,
 ) -> str:
-    """上传文件
-
-    参数:
-        type: 上传文件的方式，可以为 url、path、data 或扩展的方式
-        name: 文件名
-        url: 文件 URL，当 type 为 url 时必须传入
-        headers: 下载 URL 时需要添加的 HTTP 请求头，可选传入
-        path: 文件路径，当 type 为 path 时必须传入
-        data: 文件数据，当 type 为 data 时必须传入
-        sha256: 文件数据（原始二进制）的 SHA256 校验和，全小写，可选传入
-        kwargs: 扩展字段
-    """
+    if type == "url":
+        if url is None:
+            raise BadParam(
+                status="failed",
+                retcode=10003,
+                message="url must be provided when type is url",
+                data={},
+            )
+        async with AsyncClient() as client:
+            response = await client.get(url, headers=headers)
+            data = response.content
+    elif type == "path":
+        if path is None:
+            raise BadParam(
+                status="failed",
+                retcode=10003,
+                message="path must be provided when type is path",
+                data={},
+            )
+        async with await open_file(path, "rb") as f:
+            data = await f.read()
+    elif type == "data":
+        if data is None:
+            raise BadParam(
+                status="failed",
+                retcode=10003,
+                message="data must be provided when type is data",
+                data={},
+            )
+    else:
+        raise BadParam(
+            status="failed",
+            retcode=10003,
+            message="type must be url, path or data",
+            data={},
+        )
     if sha256 is None:
         sha256 = get_sha256(data)
     if path is None:
@@ -95,7 +109,6 @@ async def upload_file(
         headers=headers,
         path=path,
         sha256=sha256,
-        **kwargs,
     )
     async with AsyncSession(async_engine) as session:
         session.add(file)

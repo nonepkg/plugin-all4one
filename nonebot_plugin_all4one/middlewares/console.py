@@ -29,7 +29,7 @@ class Middleware(BaseMiddleware):
     def get_platform(self):
         return "console"
 
-    def to_onebot_event(self, event: Event):
+    async def to_onebot_event(self, event: Event):
         if isinstance(event, MessageEvent):
             self.id = self.id + 1
             return [

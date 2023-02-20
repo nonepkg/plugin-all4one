@@ -19,7 +19,7 @@ on(priority=1, block=False)
 @event_preprocessor
 async def _(bot: Bot, event: Event):
     if middleware := obimpl.middlewares.get(bot.self_id, None):
-        for event in middleware.to_onebot_event(event):
+        for event in await middleware.to_onebot_event(event):
             for queue in middleware.queues:
                 if queue.full():
                     await queue.get()

@@ -22,6 +22,7 @@ from nonebot.adapters.telegram.event import (
 
 from . import supported_action
 from . import Middleware as BaseMiddleware
+from ..database import get_file, upload_file
 
 
 class Middleware(BaseMiddleware):
@@ -34,7 +35,7 @@ class Middleware(BaseMiddleware):
     def get_platform(self):
         return "telegram"
 
-    def to_onebot_event(self, event: Event) -> List[OneBotEvent]:
+    async def to_onebot_event(self, event: Event) -> List[OneBotEvent]:
         event_dict = {}
         event_dict["id"] = str(event.telegram_model.update_id)
         if (type := event.get_type()) not in ["message", "notice", "request"]:
@@ -46,7 +47,7 @@ class Middleware(BaseMiddleware):
             event_dict["detail_type"] = event.get_event_name().split(".")[1]
             event_dict["sub_type"] = ""
             event_dict["message_id"] = str(event.message_id)
-            event_dict["message"] = self.to_onebot_message(event.message)
+            event_dict["message"] = await self.to_onebot_message(event.message)
             event_dict["alt_message"] = str(event.message)
             if isinstance(event, PrivateMessageEvent):
                 event_dict["user_id"] = event.get_user_id()
@@ -96,7 +97,7 @@ class Middleware(BaseMiddleware):
             return [event_out]
         raise NotImplementedError
 
-    def to_onebot_message(self, message: Message) -> OneBotMessage:
+    async def to_onebot_message(self, message: Message) -> OneBotMessage:
         message_list = []
         for segment in message:
             if segment.type == "text":
@@ -117,6 +118,15 @@ class Middleware(BaseMiddleware):
                 )
             elif segment.type == "document":
                 message_list.append(OneBotMessageSegment.file(segment.data["file"]))
+        for segment in message_list:
+            file = await self.bot.get_file(segment.data["file_id"])
+            segment.data["file_id"] = await upload_file(
+                "url",
+                "",
+                self.get_platform(),
+                file.file_id,
+                f"https://api.telegram.org/file/bot{self.bot.bot_config.token}/{file.file_path}",
+            )
         return OneBotMessage(message_list)
 
     async def send(
@@ -179,6 +189,13 @@ class Middleware(BaseMiddleware):
                 )
             elif segment.type == "file":
                 message_list.append(File.document(segment.data["file_id"]))
+        for segment in message_list:
+            if isinstance(segment, File):
+                file = await get_file(segment.data["file_id"])
+                if file.src == self.get_platform() and file.src_id:
+                    segment.data["file"] = file.src_id
+                else:
+                    segment.data["file"] = file.path
         telegram_message = Message(message_list)
 
         reply_to_message_id = None

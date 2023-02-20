@@ -19,7 +19,6 @@ from typing import (
 )
 
 from anyio import open_file
-from httpx import AsyncClient
 from nonebot.adapters import Bot, Event, Message
 from nonebot.adapters.onebot.v12 import UnsupportedAction
 from nonebot.adapters.onebot.v12.exception import BadParam
@@ -169,7 +168,7 @@ class Middleware(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def to_onebot_event(self, event: Event) -> List[OneBotEvent]:
+    async def to_onebot_event(self, event: Event) -> List[OneBotEvent]:
         raise NotImplementedError
 
     async def send_message(
@@ -439,37 +438,6 @@ class Middleware(ABC):
             sha256: 文件数据（原始二进制）的 SHA256 校验和，全小写，可选传入
             kwargs: 扩展字段
         """
-        if type == "url":
-            if url is None:
-                raise BadParam(
-                    status="failed",
-                    retcode=10003,
-                    message="url must be provided when type is url",
-                    data={},
-                )
-            async with AsyncClient() as client:
-                response = await client.get(url, headers=headers)
-                data = response.content
-        elif type == "path":
-            if path is None:
-                raise BadParam(
-                    status="failed",
-                    retcode=10003,
-                    message="path must be provided when type is path",
-                    data={},
-                )
-            async with await open_file(path, "rb") as f:
-                data = await f.read()
-        elif type == "data":
-            if data is None:
-                raise BadParam(
-                    status="failed",
-                    retcode=10003,
-                    message="data must be provided when type is data",
-                    data={},
-                )
-        else:
-            raise ValueError("type must be url, path or data")
         return {
             "file_id": await upload_file(
                 type=type,
@@ -479,7 +447,6 @@ class Middleware(ABC):
                 path=path,
                 data=data,
                 sha256=sha256,
-                **kwargs,
             )
         }
 
@@ -518,7 +485,7 @@ class Middleware(ABC):
         file_id: str,
         **kwargs: Any,
     ) -> Dict[
-        Union[Literal["name", "url", "headers", "path", "data", "sha256"], str], str
+        Union[Literal["name", "url", "headers", "path", "data", "sha256"], str], Any
     ]:
         """获取文件
 
@@ -533,8 +500,15 @@ class Middleware(ABC):
         elif type == "path":
             result = {"path": file.path}
         elif type == "data":
-            async with await open_file(file.path) as f:
+            async with await open_file(file.path, "rb") as f:
                 result = {"data": await f.read()}
+        else:
+            raise BadParam(
+                status="failed",
+                retcode=10003,
+                message="type must be url, path or data",
+                data={},
+            )
         return {"name": file.name, "sha256": file.sha256, **result}
 
     async def get_file_fragmented(

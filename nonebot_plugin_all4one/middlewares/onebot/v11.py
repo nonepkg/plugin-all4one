@@ -2,6 +2,8 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Union, Literal, Optional
 
+from anyio import open_file
+from pydantic import parse_obj_as
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v11.message import MessageSegment
 from nonebot.adapters.onebot.v12 import ActionFailedWithRetcode
@@ -23,6 +25,7 @@ from nonebot.adapters.onebot.v11.event import (
 )
 
 from .. import supported_action
+from ...database import get_file
 from .. import Middleware as BaseMiddleware
 
 
@@ -47,7 +50,7 @@ class Middleware(BaseMiddleware):
     def get_platform(self):
         return "qq"
 
-    def to_onebot_event(self, event: Event) -> List[OneBotEvent]:
+    async def to_onebot_event(self, event: Event) -> List[OneBotEvent]:
         replaced_by_detail_type = (
             "notice_type",
             "message_type",
@@ -84,7 +87,7 @@ class Middleware(BaseMiddleware):
             event_dict["self"] = self.get_bot_self().dict()
         if isinstance(event, MessageEvent):
             event_dict["detail_type"] = event.message_type
-            event_dict["message"] = self.to_onebot_message(event.original_message)
+            event_dict["message"] = await self.to_onebot_message(event.original_message)
             event_dict["alt_message"] = event.raw_message
         elif isinstance(event, NoticeEvent):
             if isinstance(event, FriendRecallNoticeEvent):
@@ -131,7 +134,7 @@ class Middleware(BaseMiddleware):
             return [event_out]
         raise NotImplementedError
 
-    def to_onebot_message(self, message: Message) -> OneBotMessage:
+    async def to_onebot_message(self, message: Message) -> OneBotMessage:
         message_list = []
         for segment in message:
             if segment.type == "text":
@@ -158,7 +161,7 @@ class Middleware(BaseMiddleware):
                 )
         return OneBotMessage(message_list)
 
-    def from_onebot_message(self, message: OneBotMessage) -> Message:
+    async def from_onebot_message(self, message: OneBotMessage) -> Message:
         message_list = []
         for segment in message:
             if segment.type == "text":
@@ -167,11 +170,17 @@ class Middleware(BaseMiddleware):
                 message_list.append(MessageSegment.at(segment.data["user_id"]))
             elif segment.type == "mention_all":
                 message_list.append(MessageSegment.at("all"))
-            elif segment.type in ("image", "video"):
-                message_list.append(
-                    MessageSegment(segment.type, {"file": segment.data["file_id"]})
-                )
+            elif segment.type == "image":
+                file = await get_file(segment.data["file_id"], self.get_name())
+                async with await open_file(file.path, "rb") as f:
+                    data = await f.read()
+                message_list.append(MessageSegment.image(data))
+            elif segment.type == "video":
+                message_list.append(MessageSegment.video(segment.data["file_id"]))
             elif segment.type == "voice":
+                file = await get_file(segment.data["file_id"], self.get_name())
+                async with await open_file(file.path, "rb") as f:
+                    data = await f.read()
                 message_list.append(MessageSegment.record(segment.data["file_id"]))
             elif segment.type == "reply":
                 message_list.append(MessageSegment.reply(segment.data["message_id"]))
@@ -186,13 +195,18 @@ class Middleware(BaseMiddleware):
         group_id: Optional[str] = None,
         guild_id: Optional[str] = None,
         channel_id: Optional[str] = None,
-        message: Message,
+        message: OneBotMessage,
         **kwargs: Any,
     ) -> Dict[Union[Literal["message_id", "time"], str], Any]:
+        message = parse_obj_as(OneBotMessage, message)
         if group_id:
-            result = await self.bot.send_msg(group_id=int(group_id), message=message)
+            result = await self.bot.send_msg(
+                group_id=int(group_id), message=await self.from_onebot_message(message)
+            )
         elif user_id:
-            result = await self.bot.send_msg(user_id=int(user_id), message=message)
+            result = await self.bot.send_msg(
+                user_id=int(user_id), message=await self.from_onebot_message(message)
+            )
         return {
             "message_id": result["message_id"],  # type: ignore
             "time": int(datetime.now().timestamp()),
