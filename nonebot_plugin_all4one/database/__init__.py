@@ -5,6 +5,7 @@ from anyio import open_file
 from httpx import AsyncClient
 from nonebot.adapters.onebot.v12 import BadParam
 from sqlmodel import JSON, Field, Column, select
+from nonebot.adapters.onebot.v12.exception import DatabaseError
 from nonebot_plugin_datastore import create_session, get_plugin_data
 
 plugin_data = get_plugin_data()
@@ -39,7 +40,10 @@ async def get_file(file_id: str, src: Optional[str] = None) -> File:
             return file[0]
         else:
             result = await session.execute(select(File).where(File.sha256 == file_id))
-            return result.one()[0]
+            if file := result.first():
+                return file[0]
+            else:
+                raise DatabaseError("failed", 31001, "file not found", {})
 
 
 async def upload_file(
