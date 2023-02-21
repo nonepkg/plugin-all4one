@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Union, Literal, Optional
 
+from httpx import AsyncClient
 from pydantic import parse_obj_as
 from nonebot.adapters.onebot.v12 import UnsupportedSegment
 from nonebot.adapters.telegram.message import File, Entity
@@ -122,13 +123,18 @@ class Middleware(BaseMiddleware):
         for segment in message_list:
             if segment.type in ("image", "voice", "audio", "video", "file"):
                 file = await self.bot.get_file(segment.data["file_id"])
-                segment.data["file_id"] = await upload_file(
-                    "url",
-                    "",
-                    self.get_platform(),
-                    file.file_id,
-                    f"https://api.telegram.org/file/bot{self.bot.bot_config.token}/{file.file_path}",
-                )
+                async with AsyncClient() as client:
+                    segment.data["file_id"] = await upload_file(
+                        "data",
+                        str(file.file_path),
+                        self.get_platform(),
+                        file.file_id,
+                        data=(
+                            await client.get(
+                                f"https://api.telegram.org/file/bot{self.bot.bot_config.token}/{file.file_path}"
+                            )
+                        ).content,
+                    )
         return OneBotMessage(message_list)
 
     async def send(
@@ -193,7 +199,7 @@ class Middleware(BaseMiddleware):
                 message_list.append(File.document(segment.data["file_id"]))
         for segment in message_list:
             if isinstance(segment, File):
-                file = await get_file(segment.data["file_id"])
+                file = await get_file(segment.data["file"], self.get_platform())
                 if file.src == self.get_platform() and file.src_id:
                     segment.data["file"] = file.src_id
                 else:
