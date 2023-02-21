@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Union, Literal, Optional
 
 from pydantic import parse_obj_as
+from nonebot.adapters.onebot.v12 import UnsupportedSegment
 from nonebot.adapters.telegram.message import File, Entity
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
@@ -119,14 +120,15 @@ class Middleware(BaseMiddleware):
             elif segment.type == "document":
                 message_list.append(OneBotMessageSegment.file(segment.data["file"]))
         for segment in message_list:
-            file = await self.bot.get_file(segment.data["file_id"])
-            segment.data["file_id"] = await upload_file(
-                "url",
-                "",
-                self.get_platform(),
-                file.file_id,
-                f"https://api.telegram.org/file/bot{self.bot.bot_config.token}/{file.file_path}",
-            )
+            if segment.type in ("image", "voice", "audio", "video", "file"):
+                file = await self.bot.get_file(segment.data["file_id"])
+                segment.data["file_id"] = await upload_file(
+                    "url",
+                    "",
+                    self.get_platform(),
+                    file.file_id,
+                    f"https://api.telegram.org/file/bot{self.bot.bot_config.token}/{file.file_path}",
+                )
         return OneBotMessage(message_list)
 
     async def send(
@@ -180,7 +182,7 @@ class Middleware(BaseMiddleware):
                     Entity.text_mention(f"@{user_name}", segment.data["user_id"])
                 )
             elif segment.type == "mention_all":
-                pass  # TODO Should raise an error
+                raise UnsupportedSegment("failed", 10005, "不支持的消息段类型", {})
             elif segment.type == "image":
                 message_list.append(File.photo(segment.data["file_id"]))
             elif segment.type in ("voice", "audio", "video"):
