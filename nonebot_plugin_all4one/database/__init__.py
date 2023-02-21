@@ -1,19 +1,21 @@
-from pathlib import Path
 from hashlib import sha256
-from typing import Any, Dict, Union, Literal, Optional
+from typing import Dict, Optional
 
 from anyio import open_file
 from httpx import AsyncClient
 from nonebot.adapters.onebot.v12 import BadParam
-from sqlmodel.ext.asyncio.session import AsyncEngine, AsyncSession
-from sqlmodel import JSON, Field, Column, SQLModel, select, create_engine
+from sqlmodel import JSON, Field, Column, select
+from nonebot_plugin_datastore import create_session, get_plugin_data
+
+plugin_data = get_plugin_data()
+Model = plugin_data.Model
 
 
 def get_sha256(data: bytes) -> str:
     return sha256(data).hexdigest()
 
 
-class File(SQLModel, table=True):
+class File(Model, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     src: Optional[str] = None
@@ -24,28 +26,20 @@ class File(SQLModel, table=True):
     sha256: str
 
 
-DATA_PATH = Path() / "data" / "all4one"
+DATA_PATH = plugin_data.data_dir
 FILE_PATH = DATA_PATH / "file"
 FILE_PATH.mkdir(parents=True, exist_ok=True)
-DATA_PATH.mkdir(parents=True, exist_ok=True)
-
-SQLITE_URL = "sqlite:///data/all4one/file.db"
-engine = create_engine(SQLITE_URL)
-SQLModel.metadata.create_all(engine)
-
-AIOSQLITE_URL = "sqlite+aiosqlite:///data/all4one/file.db"
-async_engine = AsyncEngine(create_engine(AIOSQLITE_URL))
 
 
 async def get_file(file_id: str, src: Optional[str] = None) -> File:
-    async with AsyncSession(async_engine) as session:
+    async with create_session() as session:
         statement = select(File).where(File.sha256 == file_id).where(File.src == src)
         result = await session.execute(statement)
         if file := result.first():
             return file[0]
         else:
             result = await session.execute(select(File).where(File.sha256 == file_id))
-            return result.first()[0]
+            return result.one()[0]
 
 
 async def upload_file(
@@ -110,7 +104,6 @@ async def upload_file(
         path=path,
         sha256=sha256,
     )
-    async with AsyncSession(async_engine) as session:
+    async with create_session() as session, session.begin():
         session.add(file)
-        await session.commit()
     return sha256
