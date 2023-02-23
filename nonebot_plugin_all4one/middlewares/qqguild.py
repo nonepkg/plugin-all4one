@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Union, Literal, Optional
 
 from pydantic import parse_obj_as
+from nonebot.adapters.qqguild.api import MessageReference
 import nonebot.adapters.onebot.v12.exception as ob_exception
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
@@ -76,6 +77,10 @@ class Middleware(BaseMiddleware):
                 message_list.append(
                     OneBotMessageSegment.mention(segment.data["user_id"])
                 )
+            elif segment.type == "reference":
+                message_list.append(
+                    OneBotMessageSegment.reply(segment.data["reference"].message_id)
+                )
             elif segment.type == "attachment":
                 url = segment.data["url"]
                 http_url = f"https://{url}" if not url.startswith("https") else url
@@ -121,24 +126,26 @@ class Middleware(BaseMiddleware):
             file = await get_file(file_id=file_id, src=self.get_platform())
             with open(Path(file.path), "rb") as f:
                 file_image = f.read()
+        if reply := (message["reply"] or None):
+            message_id = reply[-1].data["message_id"]
+            message_reference = MessageReference(message_id=message_id)
 
-        try:
-            if detail_type == "private":
-                result = await self.bot.post_dms_messages(
-                    guild_id=int(guild_id),  # type: ignore
-                    content=content,
-                    msg_id=kwargs.get("event_id"),
-                    file_image=file_image,  # type: ignore
-                )
-            else:
-                result = await self.bot.post_messages(
-                    channel_id=int(channel_id),  # type: ignore
-                    content=content,
-                    msg_id=kwargs.get("event_id"),
-                    file_image=file_image,  # type: ignore
-                )
-        except Exception as e:
-            raise e
+        if detail_type == "private":
+            result = await self.bot.post_dms_messages(
+                guild_id=int(guild_id),  # type: ignore
+                content=content,
+                msg_id=kwargs.get("event_id"),
+                file_image=file_image,  # type: ignore
+                message_reference=message_reference,  # type: ignore
+            )
+        else:
+            result = await self.bot.post_messages(
+                channel_id=int(channel_id),  # type: ignore
+                content=content,
+                msg_id=kwargs.get("event_id"),
+                file_image=file_image,  # type: ignore
+                message_reference=message_reference,  # type: ignore
+            )
         # FIXME: 如果是主动消息，返回的时间会是 None
         # 暂时不清楚原因，先用当前时间代替
         time = (
