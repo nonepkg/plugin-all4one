@@ -16,6 +16,7 @@ from pydantic.json import pydantic_encoder
 from nonebot.adapters.onebot.v12 import Event
 from nonebot.exception import WebSocketClosed
 from nonebot.adapters.onebot.utils import get_auth_bearer
+from nonebot.adapters.onebot.v12.utils import CustomEncoder
 from nonebot.adapters.onebot.v12.exception import ActionFailedWithRetcode
 from nonebot.adapters.onebot.v12.event import (
     Status,
@@ -233,7 +234,7 @@ class OneBotImplementation:
                 if "echo" in data:
                     resp["echo"] = data["echo"]
                 resp = (
-                    json.dumps(resp)
+                    json.dumps(resp, cls=CustomEncoder)
                     if isinstance(raw_data, str)
                     else msgpack.packb(resp)
                 )
