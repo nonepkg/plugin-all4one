@@ -262,6 +262,12 @@ class Middleware(BaseMiddleware):
         return channels_list
 
     @supported_action
+    async def set_channel_name(
+        self, *, guild_id: str, channel_id: str, channel_name: str, **kwargs: Any
+    ) -> None:
+        await self.bot.patch_channel(channel_id=int(channel_id), name=channel_name)
+
+    @supported_action
     async def get_channel_member_info(
         self, *, guild_id: str, channel_id: str, user_id: str, **kwargs: Any
     ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
