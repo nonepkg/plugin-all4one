@@ -158,3 +158,136 @@ class Middleware(BaseMiddleware):
             else datetime.now().timestamp()
         )
         return {"message_id": str(result.id), "time": time}
+
+    @supported_action
+    async def get_guild_info(
+        self, *, guild_id: str, **kwargs: Any
+    ) -> Dict[Union[Literal["guild_id", "guild_name"], str], str]:
+        guild = await self.bot.get_guild(int(guild_id))
+
+        guild_dict = guild.dict()
+        guild_dict["guild_id"] = str(guild_dict["id"])
+        guild_dict["guild_name"] = guild_dict["name"]
+        return guild_dict
+
+    @supported_action
+    async def get_guild_list(
+        self, **kwargs: Any
+    ) -> List[Dict[Union[Literal["guild_id", "guild_name"], str], str]]:
+        """获取群列表"""
+        guilds = []
+
+        # 有分页，每页 100 个
+        # https://bot.q.qq.com/wiki/develop/api/openapi/user/guilds.html#%E5%8F%82%E6%95%B0
+        after = None
+        while result := await self.bot.guilds(after=after, limit=100):
+            guilds.extend(result)
+            if len(result) < 100:
+                break
+            after = str(result[-1].id)
+
+        guilds_list = []
+        for guild in guilds:
+            guild_dict = guild.dict()
+            guild_dict["guild_id"] = str(guild_dict["id"])
+            guild_dict["guild_name"] = guild_dict["name"]
+            guilds_list.append(guild_dict)
+        return guilds_list
+
+    @supported_action
+    async def get_guild_member_info(
+        self, *, guild_id: str, user_id: str, **kwargs: Any
+    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
+        result = await self.bot.get_member(int(guild_id), int(user_id))
+
+        return {
+            "user_id": str(result.user.id),  # type: ignore
+            "user_name": result.user.username,  # type: ignore
+            "user_displayname": result.nick,  # type: ignore
+        }
+
+    @supported_action
+    async def get_guild_member_list(
+        self, *, guild_id: str, **kwargs: Any
+    ) -> List[
+        Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]
+    ]:
+        members = []
+
+        # 有分页，每页 400 个
+        # https://bot.q.qq.com/wiki/develop/api/openapi/member/get_members.html#%E5%8F%82%E6%95%B0
+        after = "0"
+        while result := await self.bot.get_members(int(guild_id), after, 400):
+            members.extend(result)
+            if len(result) < 400:
+                break
+            after = str(result[-1].user.id)  # type: ignore
+
+        members_list = []
+        for member in members:
+            members_list.append(
+                {
+                    "user_id": str(member.user.id),  # type: ignore
+                    "user_name": member.user.username,  # type: ignore
+                    "user_displayname": member.nick,  # type: ignore
+                }
+            )
+        return members_list
+
+    @supported_action
+    async def get_channel_info(
+        self, *, guild_id: str, channel_id: str, **kwargs: Any
+    ) -> Dict[Union[Literal["channel_id", "channel_name"], str], str]:
+        result = await self.bot.get_channel(int(channel_id))
+
+        return {
+            "channel_id": str(result.id),
+            "channel_name": result.name,  # type: ignore
+        }
+
+    @supported_action
+    async def get_channel_list(
+        self, *, guild_id: str, **kwargs: Any
+    ) -> List[Dict[Union[Literal["channel_id", "channel_name"], str], str]]:
+        result = await self.bot.get_channels(int(guild_id))
+
+        channels_list = []
+        for channel in result:
+            channels_list.append(
+                {
+                    "channel_id": str(channel.id),
+                    "channel_name": channel.name,  # type: ignore
+                }
+            )
+        return channels_list
+
+    @supported_action
+    async def get_channel_member_info(
+        self, *, guild_id: str, channel_id: str, user_id: str, **kwargs: Any
+    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
+        result = await self.bot.get_member(int(guild_id), int(user_id))
+
+        return {
+            "user_id": str(result.user.id),  # type: ignore
+            "user_name": result.user.username,  # type: ignore
+            "user_displayname": result.nick,  # type: ignore
+        }
+
+    # @supported_action
+    # async def get_channel_member_list(
+    #     self, *, guild_id: str, channel_id: str, **kwargs: Any
+    # ) -> List[
+    #     Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]
+    # ]:
+    #     result = await self.bot.get_members(int(guild_id), "0", 400)
+
+    #     members_list = []
+    #     for member in result:
+    #         members_list.append(
+    #             {
+    #                 "user_id": str(member.user.id),  # type: ignore
+    #                 "user_name": member.user.username,  # type: ignore
+    #                 "user_displayname": member.nick,  # type: ignore
+    #             }
+    #         )
+    #     return members_list
