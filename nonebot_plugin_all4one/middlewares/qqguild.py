@@ -92,6 +92,8 @@ class Middleware(BaseMiddleware):
                     src_id=url,
                 )
                 message_list.append(OneBotMessageSegment.image(file_id))
+            elif segment.type == "mention_everyone":
+                message_list.append(OneBotMessageSegment.mention_all())
         return OneBotMessage(message_list)
 
     @supported_action
@@ -118,6 +120,8 @@ class Middleware(BaseMiddleware):
                 message_list.append(
                     MessageSegment.mention_user(int(segment.data["user_id"]))
                 )
+            elif segment.type == "mention_all":
+                message_list.append(MessageSegment.mention_everyone())
         qqguild_message = Message(message_list)
         content = qqguild_message.extract_content() or None
 
