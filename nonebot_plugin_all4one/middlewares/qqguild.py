@@ -130,6 +130,8 @@ class Middleware(BaseMiddleware):
             file = await get_file(file_id=file_id, src=self.get_platform())
             with open(Path(file.path), "rb") as f:
                 file_image = f.read()
+
+        message_reference = None
         if reply := (message["reply"] or None):
             message_id = reply[-1].data["message_id"]
             message_reference = MessageReference(message_id=message_id)
