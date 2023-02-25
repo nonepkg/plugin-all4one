@@ -29,6 +29,30 @@ class Middleware(BaseMiddleware):
     bot: Bot
 
     @staticmethod
+    def _to_ob_message_id(
+        *,
+        message_id: Optional[str],
+        guild_id: Optional[int],
+        channel_id: Optional[int],
+    ) -> str:
+        """转换成 OneBot 消息 id
+
+        由 message_id, guild_id, channel_id 组成
+        """
+        message = message_id if message_id else ""
+        guild = str(guild_id) if guild_id else ""
+        channel = str(channel_id) if channel_id else ""
+        return f"{message}-{guild}-{channel}"
+
+    @staticmethod
+    def _from_ob_message_id(
+        message_id: str,
+    ) -> tuple[str, Optional[int], Optional[int]]:
+        """从 OneBot 的消息 id 中解析出 message_id, guild_id, channel_id"""
+        message, guild, channel = message_id.split("-")
+        return message, int(guild) if guild else None, int(channel) if channel else None
+
+    @staticmethod
     def get_name():
         return Adapter.get_name()
 
@@ -49,8 +73,12 @@ class Middleware(BaseMiddleware):
                 else datetime.now().timestamp()
             )
             event_dict["sub_type"] = ""
-            event_dict["message_id"] = event.id
-            event_dict["message"] = await self.to_onebot_message(event.get_message())
+            event_dict["message_id"] = self._to_ob_message_id(
+                message_id=event.id,
+                guild_id=event.guild_id,
+                channel_id=event.channel_id,
+            )
+            event_dict["message"] = await self.to_onebot_message(event)
             event_dict["alt_message"] = str(event.get_message())
             if isinstance(event, DirectMessageCreateEvent):
                 event_dict["detail_type"] = "private"
@@ -68,7 +96,9 @@ class Middleware(BaseMiddleware):
             return [event_out]
         raise NotImplementedError
 
-    async def to_onebot_message(self, message: Message) -> OneBotMessage:
+    async def to_onebot_message(self, event: MessageEvent) -> OneBotMessage:
+        message = event.get_message()
+
         message_list = []
         for segment in message:
             if segment.type == "text":
@@ -79,7 +109,13 @@ class Middleware(BaseMiddleware):
                 )
             elif segment.type == "reference":
                 message_list.append(
-                    OneBotMessageSegment.reply(segment.data["reference"].message_id)
+                    OneBotMessageSegment.reply(
+                        self._to_ob_message_id(
+                            message_id=segment.data["reference"].message_id,
+                            guild_id=event.guild_id,
+                            channel_id=event.channel_id,
+                        )
+                    )
                 )
             elif segment.type == "attachment":
                 url = segment.data["url"]
@@ -134,6 +170,7 @@ class Middleware(BaseMiddleware):
         message_reference = None
         if reply := (message["reply"] or None):
             message_id = reply[-1].data["message_id"]
+            message_id, _, _ = self._from_ob_message_id(message_id)
             message_reference = MessageReference(message_id=message_id)
 
         if detail_type == "private":
@@ -159,7 +196,14 @@ class Middleware(BaseMiddleware):
             if result.timestamp
             else datetime.now().timestamp()
         )
-        return {"message_id": str(result.id), "time": time}
+        return {
+            "message_id": self._to_ob_message_id(
+                message_id=result.id,
+                guild_id=result.guild_id,
+                channel_id=result.channel_id,
+            ),
+            "time": time,
+        }
 
     @supported_action
     async def get_guild_info(
@@ -299,3 +343,15 @@ class Middleware(BaseMiddleware):
     #             }
     #         )
     #     return members_list
+
+    @supported_action
+    async def delete_message(self, *, message_id: str, **kwargs: Any) -> None:
+        message, _, channel = self._from_ob_message_id(message_id)
+        if channel is None or message is None:
+            raise ob_exception.BadParam("failed", 10003, "消息 ID 缺少需要的部分", None)
+        try:
+            await self.bot.delete_message_of_id(
+                channel_id=channel, message_id=message, **kwargs
+            )
+        except Exception as e:
+            raise ob_exception.PlatformError("failed", 34001, str(e), None)
