@@ -9,14 +9,21 @@ from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
 from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
+from nonebot.adapters.qqguild.event import GuildMemberAddEvent, GuildMemberRemoveEvent
 from nonebot.adapters.qqguild import (
     Bot,
     Event,
     Adapter,
     Message,
+    ChannelEvent,
     MessageEvent,
     MessageSegment,
+    GuildMemberEvent,
+    ChannelCreateEvent,
+    ChannelDeleteEvent,
+    ChannelUpdateEvent,
     MessageCreateEvent,
+    GuildMemberUpdateEvent,
     DirectMessageCreateEvent,
 )
 
@@ -90,6 +97,42 @@ class Middleware(BaseMiddleware):
                 event_dict["guild_id"] = event.guild_id
                 event_dict["channel_id"] = event.channel_id
                 event_dict["user_id"] = event.get_user_id()
+        # 频道成员事件
+        # https://bot.q.qq.com/wiki/develop/api/gateway/guild_member.html
+        elif isinstance(event, GuildMemberEvent):
+            # 随便拼了个 id
+            event_dict["id"] = f"{event.guild_id}-{event.op_user_id}"
+            event_dict["time"] = (
+                event.joined_at.timestamp()
+                if event.joined_at
+                else datetime.now().timestamp()
+            )
+            event_dict["guild_id"] = event.guild_id
+            event_dict["user_id"] = event.get_user_id()
+            event_dict["operator_id"] = event.op_user_id
+            if isinstance(event, GuildMemberAddEvent):
+                event_dict["detail_type"] = "guild_member_increase"
+                event_dict["sub_type"] = ""
+            elif isinstance(event, GuildMemberRemoveEvent):
+                event_dict["detail_type"] = "guild_member_decrease"
+                event_dict["sub_type"] = ""
+            elif isinstance(event, GuildMemberUpdateEvent):
+                event_dict["detail_type"] = "guild_member_update"
+                event_dict["sub_type"] = ""
+        # 子频道事件
+        # https://bot.q.qq.com/wiki/develop/api/gateway/channel.html
+        elif isinstance(event, ChannelEvent):
+            event_dict["id"] = event.id
+            event_dict["time"] = datetime.now().timestamp()
+            event_dict["guild_id"] = event.guild_id
+            event_dict["operator_id"] = event.op_user_id
+            if isinstance(event, ChannelCreateEvent):
+                event_dict["detail_type"] = "channel_create"
+            elif isinstance(event, ChannelDeleteEvent):
+                event_dict["detail_type"] = "channel_delete"
+            elif isinstance(event, ChannelUpdateEvent):
+                event_dict["detail_type"] = "channel_update"
+
         if event_out := OneBotAdapter.json_to_event(
             event_dict, "nonebot-plugin-all4one"
         ):
