@@ -150,13 +150,17 @@ class Middleware(BaseMiddleware):
                     OneBotMessageSegment.mention(segment.data["user_id"])
                 )
             elif segment.type == "reference":
+                message_id = segment.data["reference"].message_id
+                resp = await self.bot.get_message_of_id(channel_id=event.channel_id, message_id=message_id)  # type: ignore
+                user_id = resp.author.id  # type: ignore
                 message_list.append(
                     OneBotMessageSegment.reply(
                         self._to_ob_message_id(
-                            message_id=segment.data["reference"].message_id,
+                            message_id=message_id,
                             guild_id=event.guild_id,
                             channel_id=event.channel_id,
-                        )
+                        ),
+                        user_id=user_id,
                     )
                 )
             elif segment.type == "attachment":
