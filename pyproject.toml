@@ -15,7 +15,7 @@ license = { text = "AGPL-3.0-only" }
 [project.optional-dependencies]
 telegram = ["nonebot-adapter-telegram>=0.1.0b8"]
 console = ["nonebot-adapter-console>=0.3.2"]
-qqguild = ["nonebot-adapter-qqguild>=0.1.4"]
+qqguild = ["nonebot-adapter-qqguild>=0.2.0"]
 
 [tool.pdm.dev-dependencies]
 pre-commit = ["pycln", "isort", "black", "nonemoji", "pre-commit"]
@@ -50,6 +50,7 @@ exclude = ["__pypackages__"]
 
 [tool.nonebot]
 plugins = ["nonebot_plugin_all4one"]
+adapters = [{name = "QQ 频道", module_name = "nonebot.adapters.qqguild", project_link = "nonebot-adapter-qqguild", desc = "QQ 频道官方机器人"}]
 
 [build-system]
 requires = ["pdm-pep517>=1.0.0"]

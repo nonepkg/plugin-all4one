@@ -1,4 +1,5 @@
 from hashlib import sha256
+from base64 import b64decode
 from typing import Dict, Optional
 
 from anyio import open_file
@@ -86,6 +87,10 @@ async def upload_file(
                 message="data must be provided when type is data",
                 data={},
             )
+        # 如果是 JSON 格式，bytes 编码为 base64
+        # https://12.onebot.dev/connect/data-protocol/basic-types/#_5
+        if isinstance(data, str):
+            data = b64decode(data)
     else:
         raise BadParam(
             status="failed",
