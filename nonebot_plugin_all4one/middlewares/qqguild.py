@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Union, Literal, Optional
 from pydantic import parse_obj_as
 from nonebot.adapters.qqguild.api import MessageReference
 import nonebot.adapters.onebot.v12.exception as ob_exception
+from nonebot.adapters.qqguild.exception import ActionFailed
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
@@ -396,5 +397,5 @@ class Middleware(BaseMiddleware):
             await self.bot.delete_message_of_id(
                 channel_id=channel, message_id=message, **kwargs
             )
-        except Exception as e:
-            raise ob_exception.PlatformError("failed", 34001, str(e), None)
+        except ActionFailed as e:
+            raise ob_exception.PlatformError("failed", 34001, e.message or "", None)
