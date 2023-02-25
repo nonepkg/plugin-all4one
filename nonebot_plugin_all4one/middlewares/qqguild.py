@@ -1,6 +1,6 @@
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Dict, List, Union, Literal, Optional, cast
+from typing import Any, Dict, List, Union, Literal, Optional
 
 from pydantic import parse_obj_as
 from nonebot.adapters.qqguild.api.model import Member
