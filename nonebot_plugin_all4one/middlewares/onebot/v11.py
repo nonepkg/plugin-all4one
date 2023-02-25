@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Union, Literal, Optional
 
 from anyio import open_file
+from httpx import AsyncClient
 from pydantic import parse_obj_as
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v11.message import MessageSegment
@@ -25,8 +26,8 @@ from nonebot.adapters.onebot.v11.event import (
 )
 
 from .. import supported_action
-from ...database import get_file
 from .. import Middleware as BaseMiddleware
+from ...database import get_file, upload_file
 
 
 class Middleware(BaseMiddleware):
@@ -145,14 +146,20 @@ class Middleware(BaseMiddleware):
                     message_list.append(OneBotMessageSegment.mention_all())
                     continue
                 message_list.append(OneBotMessageSegment.mention(qq))
-            elif segment.type in ("image", "video"):
-                message_list.append(
-                    OneBotMessageSegment(
-                        segment.type, {"file_id": segment.data["file"]}
+            elif segment.type == "image":
+                file = await self.bot.get_image(file=segment.data["file"])
+                async with AsyncClient() as client:
+                    message_list.append(
+                        OneBotMessageSegment.image(
+                            await upload_file(
+                                "data",
+                                file["filename"],
+                                self.get_name(),
+                                segment.data["file"],
+                                data=(await client.get(file["url"])).content,
+                            )
+                        )
                     )
-                )
-            elif segment.type == "record":
-                message_list.append(OneBotMessageSegment.voice(segment.data["file"]))
             elif segment.type == "reply":
                 message_list.append(
                     OneBotMessageSegment.reply(
@@ -177,6 +184,9 @@ class Middleware(BaseMiddleware):
                 message_list.append(MessageSegment.image(data))
             elif segment.type == "video":
                 message_list.append(MessageSegment.video(segment.data["file_id"]))
+                file = await get_file(segment.data["file_id"], self.get_name())
+                if file.url:
+                    message_list.append(MessageSegment.video(file.url))
             elif segment.type == "voice":
                 file = await get_file(segment.data["file_id"], self.get_name())
                 async with await open_file(file.path, "rb") as f:
