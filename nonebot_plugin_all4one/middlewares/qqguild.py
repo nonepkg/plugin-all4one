@@ -435,7 +435,7 @@ class Middleware(BaseMiddleware):
         if channel is None or message is None:
             raise ob_exception.BadParam("failed", 10003, "消息 ID 缺少需要的部分", None)
         try:
-            await self.bot.delete_message_of_id(
+            await self.bot.delete_message(
                 channel_id=channel, message_id=message, **kwargs
             )
         except ActionFailed as e:
