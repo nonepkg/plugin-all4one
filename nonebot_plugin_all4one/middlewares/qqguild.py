@@ -1,6 +1,6 @@
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Dict, List, Union, Literal, Optional
+from typing import Any, Dict, List, Union, Literal, Optional, cast
 
 from pydantic import parse_obj_as
 from nonebot.adapters.qqguild.api.model import Member
@@ -36,6 +36,14 @@ from ..database import get_file, upload_file
 
 class Middleware(BaseMiddleware):
     bot: Bot
+
+    @property
+    def self_id(self) -> str:
+        """OneBot 12 通过 self_id 来判断是否是 to_me 的消息
+
+        QQ 频道 at 机器人时为 bot.self_info.id，所以需要用这个 id，而不是 bot.self_id
+        """
+        return str(self.bot.self_info.id)
 
     @staticmethod
     def _to_ob_message_id(
@@ -142,6 +150,9 @@ class Middleware(BaseMiddleware):
         message = event.get_message()
 
         message_list = []
+        # NoneBot 适配器会处理 mention 和 reply 机器人的消息段，转化成 to_me
+        if event.to_me:
+            message_list.append(OneBotMessageSegment.mention(self.self_id))
         for segment in message:
             if segment.type == "text":
                 message_list.append(OneBotMessageSegment.text(segment.data["text"]))
