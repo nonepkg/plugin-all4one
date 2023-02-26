@@ -19,7 +19,9 @@ async def test_to_onebot_event(app: App):
     event = MessageCreateEvent.parse_obj(test_events[0])
 
     async with app.test_api() as ctx:
-        bot = ctx.create_bot(base=Bot, self_id=bot_info.id, bot_info=bot_info)
+        bot = ctx.create_bot(
+            base=Bot, self_id=bot_info.id, auto_connect=False, bot_info=bot_info
+        )
         bot._self_info = User(id=333333, username="bot")  # type: ignore
         middleware = Middleware(bot)
         event = await middleware.to_onebot_event(event)
