@@ -476,9 +476,39 @@ class Middleware(ABC):
             sha256: 文件数据（原始二进制）的 SHA256 校验和，全小写，可选传入
             kwargs: 扩展字段
         """
+        if type == "url":
+            if url is None:
+                raise BadParam(
+                    status="failed",
+                    retcode=10003,
+                    message="url must be provided when type is url",
+                    data={},
+                )
+        elif type == "path":
+            if path is None:
+                raise BadParam(
+                    status="failed",
+                    retcode=10003,
+                    message="path must be provided when type is path",
+                    data={},
+                )
+        elif type == "data":
+            if data is None:
+                raise BadParam(
+                    status="failed",
+                    retcode=10003,
+                    message="data must be provided when type is data",
+                    data={},
+                )
+        else:
+            raise BadParam(
+                status="failed",
+                retcode=10003,
+                message="type must be url, path or data",
+                data={},
+            )
         return {
             "file_id": await upload_file(
-                type=type,
                 name=name,
                 url=url,
                 headers=headers,
@@ -537,7 +567,7 @@ class Middleware(ABC):
             result = {"url": file.url, "headers": file.headers}
         elif type == "path":
             result = {"path": file.path}
-        elif type == "data":
+        elif type == "data" and file.path:
             async with await open_file(file.path, "rb") as f:
                 result = {"data": await f.read()}
         else:

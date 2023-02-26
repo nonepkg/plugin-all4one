@@ -152,7 +152,6 @@ class Middleware(BaseMiddleware):
                     message_list.append(
                         OneBotMessageSegment.image(
                             await upload_file(
-                                "data",
                                 file["filename"],
                                 self.get_name(),
                                 segment.data["file"],
@@ -160,6 +159,19 @@ class Middleware(BaseMiddleware):
                             )
                         )
                     )
+            elif segment.type in ("video", "record"):
+                message_list.append(
+                    OneBotMessageSegment(
+                        "video" if segment.type == "video" else "voice",
+                        {
+                            "file": await upload_file(
+                                "",
+                                self.get_name(),
+                                segment.data["file"],
+                            )
+                        },
+                    )
+                )
             elif segment.type == "reply":
                 message_list.append(
                     OneBotMessageSegment.reply(
@@ -179,19 +191,26 @@ class Middleware(BaseMiddleware):
                 message_list.append(MessageSegment.at("all"))
             elif segment.type == "image":
                 file = await get_file(segment.data["file_id"], self.get_name())
-                async with await open_file(file.path, "rb") as f:
-                    data = await f.read()
-                message_list.append(MessageSegment.image(data))
+                if file.src_id:
+                    message_list.append(MessageSegment.image(file.src_id))
+                elif file.path:
+                    async with await open_file(file.path, "rb") as f:
+                        data = await f.read()
+                    message_list.append(MessageSegment.image(data))
             elif segment.type == "video":
-                message_list.append(MessageSegment.video(segment.data["file_id"]))
                 file = await get_file(segment.data["file_id"], self.get_name())
-                if file.url:
+                if file.src_id:
+                    message_list.append(MessageSegment.video(file.src_id))
+                elif file.url:
                     message_list.append(MessageSegment.video(file.url))
             elif segment.type == "voice":
                 file = await get_file(segment.data["file_id"], self.get_name())
-                async with await open_file(file.path, "rb") as f:
-                    data = await f.read()
-                message_list.append(MessageSegment.record(segment.data["file_id"]))
+                if file.src_id:
+                    message_list.append(MessageSegment.record(file.src_id))
+                elif file.path:
+                    async with await open_file(file.path, "rb") as f:
+                        data = await f.read()
+                    message_list.append(MessageSegment.record(data))
             elif segment.type == "reply":
                 message_list.append(MessageSegment.reply(segment.data["message_id"]))
         return Message(message_list)

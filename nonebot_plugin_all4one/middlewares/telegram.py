@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Dict, List, Union, Literal, Optional
 
 from httpx import AsyncClient
@@ -125,15 +126,10 @@ class Middleware(BaseMiddleware):
                 file = await self.bot.get_file(segment.data["file_id"])
                 async with AsyncClient() as client:
                     segment.data["file_id"] = await upload_file(
-                        "data",
-                        str(file.file_path),
+                        Path(file.file_path).name,  # type:ignore
                         self.get_platform(),
                         file.file_id,
-                        data=(
-                            await client.get(
-                                f"https://api.telegram.org/file/bot{self.bot.bot_config.token}/{file.file_path}"
-                            )
-                        ).content,
+                        url=f"https://api.telegram.org/file/bot{self.bot.bot_config.token}/{file.file_path}",
                     )
         return OneBotMessage(message_list)
 
@@ -200,7 +196,7 @@ class Middleware(BaseMiddleware):
         for segment in message_list:
             if isinstance(segment, File):
                 file = await get_file(segment.data["file"], self.get_platform())
-                if file.src == self.get_platform() and file.src_id:
+                if file.src_id:
                     segment.data["file"] = file.src_id
                 else:
                     segment.data["file"] = file.path

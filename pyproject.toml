@@ -61,7 +61,7 @@ all = false
 reportShadowedImports = false
 pythonVersion = "3.8"
 pythonPlatform = "All"
-exclude = ["__pypackages__"]
+exclude = ["__pypackages__", "nonebot_plugin_all4one/migrations"]
 
 [build-system]
 requires = ["pdm-pep517>=1.0.0"]

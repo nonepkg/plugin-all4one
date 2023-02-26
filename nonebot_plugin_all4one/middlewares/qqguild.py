@@ -2,6 +2,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict, List, Tuple, Union, Literal, Optional
 
+from anyio import open_file
 from pydantic import parse_obj_as
 from nonebot.adapters.qqguild.api.model import Member
 from nonebot.adapters.qqguild.api import MessageReference
@@ -175,7 +176,6 @@ class Middleware(BaseMiddleware):
                 url = segment.data["url"]
                 http_url = f"https://{url}" if not url.startswith("https") else url
                 file_id = await upload_file(
-                    type="url",
                     name=url,
                     url=http_url,
                     src=self.get_platform(),
@@ -218,9 +218,9 @@ class Middleware(BaseMiddleware):
         if file_image := (message["image"] or None):
             file_id = file_image[-1].data["file_id"]
             file = await get_file(file_id=file_id, src=self.get_platform())
-            with open(Path(file.path), "rb") as f:
-                file_image = f.read()
-
+            if file.path:
+                async with await open_file(Path(file.path), "rb") as f:
+                    file_image = await f.read()
         message_reference = None
         if reply := (message["reply"] or None):
             message_id = reply[-1].data["message_id"]
