@@ -1,6 +1,6 @@
 import pytest
 import nonebot
-from nonebug import NONEBOT_INIT_KWARGS
+from nonebug import NONEBOT_INIT_KWARGS, App
 from nonebot.adapters.console import Adapter as ConsoleAdapter
 from nonebot.adapters.qqguild import Adapter as QQGuildAdapter
 from nonebot.adapters.telegram import Adapter as TelegramAdapter
@@ -22,6 +22,8 @@ def load_adapters(nonebug_init: None):
     driver.register_adapter(ConsoleAdapter)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def load_plugins(nonebug_init: None):
-    nonebot.load_plugins("nonebot_plugin_all4one")
+@pytest.fixture
+def app(nonebug_init: None):
+    nonebot.require("nonebot_plugin_all4one")
+
+    return App()
