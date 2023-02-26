@@ -1,0 +1,37 @@
+[
+    {
+        "id": "08d7effc90dd9892bac80110df907838840548efd9eb9f06",
+        "channel_id": 1000000,
+        "guild_id": 11111111111111111111,
+        "content": "/help",
+        "timestamp": "2023-02-26T13:23:59+08:00",
+        "edited_timestamp": null,
+        "mention_everyone": null,
+        "author": {
+            "id": 22222222222222222222,
+            "username": "uy/sun",
+            "avatar": "https://qqchannel-profile-1111111111.file.myqcloud.com/22222222222222222222?t=1653314204",
+            "bot": false,
+            "union_openid": null,
+            "union_user_account": null
+        },
+        "attachments": null,
+        "embeds": null,
+        "mentions": null,
+        "member": {
+            "user": null,
+            "nick": "uy/sun",
+            "roles": [
+                2,
+                16
+            ],
+            "joined_at": "2022-03-21T11:41:16+08:00"
+        },
+        "ark": null,
+        "seq": 644,
+        "seq_in_channel": "644",
+        "message_reference": null,
+        "to_me": false,
+        "reply": null
+    }
+]
