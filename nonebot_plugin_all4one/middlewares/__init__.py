@@ -15,6 +15,7 @@ from typing import (
     Generic,
     Literal,
     TypeVar,
+    ClassVar,
     Optional,
 )
 
@@ -88,7 +89,7 @@ class Queue(_Queue[_T]):
 
 
 class Middleware(ABC):
-    supported_actions: Set[str] = set()
+    supported_actions: ClassVar[Set[str]] = set()
 
     def __init__(self, bot: Bot):
         self.bot = bot
@@ -390,12 +391,13 @@ class Middleware(ABC):
         raise NotImplementedError
 
     async def get_channel_list(
-        self, *, guild_id: str, **kwargs: Any
+        self, *, guild_id: str, joined_only: bool = False, **kwargs: Any
     ) -> List[Dict[Union[Literal["channel_id", "channel_name"], str], str]]:
         """获取频道列表
 
         参数:
             guild_id: 群组 ID
+            joined_only: 只获取机器人账号已加入的频道列表
             kwargs: 扩展字段
         """
         raise NotImplementedError
@@ -409,6 +411,42 @@ class Middleware(ABC):
             guild_id: 群组 ID
             channel_id: 频道 ID
             channel_name: 频道名称
+            kwargs: 扩展字段
+        """
+        raise NotImplementedError
+
+    async def get_channel_member_info(
+        self, *, guild_id: str, channel_id: str, user_id: str, **kwargs: Any
+    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
+        """获取频道成员信息
+        参数:
+            guild_id: 群组 ID
+            channel_id: 频道 ID
+            user_id: 用户 ID
+            kwargs: 扩展字段
+        """
+        raise NotImplementedError
+
+    async def get_channel_member_list(
+        self, *, guild_id: str, channel_id: str, **kwargs: Any
+    ) -> List[
+        Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]
+    ]:
+        """获取频道成员列表
+        参数:
+            guild_id: 群组 ID
+            channel_id: 频道 ID
+            kwargs: 扩展字段
+        """
+        raise NotImplementedError
+
+    async def leave_channel(
+        self, *, guild_id: str, channel_id: str, **kwargs: Any
+    ) -> None:
+        """退出频道
+        参数:
+            guild_id: 群组 ID
+            channel_id: 频道 ID
             kwargs: 扩展字段
         """
         raise NotImplementedError

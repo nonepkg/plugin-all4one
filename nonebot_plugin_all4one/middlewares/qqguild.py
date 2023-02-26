@@ -1,6 +1,6 @@
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Dict, List, Union, Literal, Optional
+from typing import Any, Dict, List, Tuple, Union, Literal, Optional
 
 from pydantic import parse_obj_as
 from nonebot.adapters.qqguild.api.model import Member
@@ -64,7 +64,7 @@ class Middleware(BaseMiddleware):
     @staticmethod
     def _from_ob_message_id(
         message_id: str,
-    ) -> tuple[str, Optional[int], Optional[int]]:
+    ) -> Tuple[str, Optional[int], Optional[int]]:
         """从 OneBot 的消息 id 中解析出 message_id, guild_id, channel_id"""
         message, guild, channel = message_id.split("-")
         return message, int(guild) if guild else None, int(channel) if channel else None
