@@ -150,7 +150,18 @@ class Middleware(BaseMiddleware):
         message = event.get_message()
 
         message_list = []
-        # NoneBot 适配器会处理 mention 和 reply 机器人的消息段，转化成 to_me
+        # 适配器会处理 mention 和 reply 机器人的消息段，转化成 to_me 和 reply
+        if event.reply:
+            message_list.append(
+                OneBotMessageSegment.reply(
+                    self._to_ob_message_id(
+                        message_id=event.message_reference.message_id,  # type: ignore
+                        guild_id=event.guild_id,
+                        channel_id=event.channel_id,
+                    ),
+                    user_id=event.reply.message.author.id,  # type: ignore
+                )
+            )
         if event.to_me:
             message_list.append(OneBotMessageSegment.mention(self.self_id))
         for segment in message:
@@ -159,20 +170,6 @@ class Middleware(BaseMiddleware):
             elif segment.type == "mention_user":
                 message_list.append(
                     OneBotMessageSegment.mention(segment.data["user_id"])
-                )
-            elif segment.type == "reference":
-                message_id = segment.data["reference"].message_id
-                resp = await self.bot.get_message_of_id(channel_id=event.channel_id, message_id=message_id)  # type: ignore
-                user_id = resp.message.author.id  # type: ignore
-                message_list.append(
-                    OneBotMessageSegment.reply(
-                        self._to_ob_message_id(
-                            message_id=message_id,
-                            guild_id=event.guild_id,
-                            channel_id=event.channel_id,
-                        ),
-                        user_id=user_id,
-                    )
                 )
             elif segment.type == "attachment":
                 url = segment.data["url"]
