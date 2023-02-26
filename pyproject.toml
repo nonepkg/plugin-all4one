@@ -31,6 +31,12 @@ adapters = [
     "nonebot-adapter-console @ git+https://github.com/nonebot/adapter-console.git",
     "nonebot-adapter-qqguild @ git+https://github.com/nonebot/adapter-qqguild.git",
 ]
+tests = [
+    "nonebug>=0.3.1",
+    "pytest-asyncio>=0.20.3",
+    "pytest-cov>=4.0.0",
+    "pytest-xdist>=3.2.0",
+]
 
 [tool.black]
 line-length = 88
@@ -60,3 +66,6 @@ exclude = ["__pypackages__"]
 [build-system]
 requires = ["pdm-pep517>=1.0.0"]
 build-backend = "pdm.pep517.api"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
