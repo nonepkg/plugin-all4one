@@ -7,13 +7,10 @@ from nonebot.exception import IgnoredException
 from nonebot.message import run_preprocessor, event_preprocessor
 
 from .config import Config
-
-driver = get_driver()
-# 先初始化配置，防止循环引用报错
-a4o_config = Config(**driver.config.dict())
-
 from .onebotimpl import OneBotImplementation
 
+driver = get_driver()
+a4o_config = Config(**driver.config.dict())
 obimpl = OneBotImplementation(driver)
 
 on(priority=1, block=False)

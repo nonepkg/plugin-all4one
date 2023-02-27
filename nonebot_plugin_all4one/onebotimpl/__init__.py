@@ -12,7 +12,6 @@ from nonebot import Driver
 from nonebot.log import logger
 from nonebot.adapters import Bot
 from nonebot.utils import escape_tag
-from pydantic.json import pydantic_encoder
 from nonebot.adapters.onebot.v12 import Event
 from nonebot.exception import WebSocketClosed
 from nonebot.adapters.onebot.utils import get_auth_bearer
@@ -35,8 +34,7 @@ from nonebot.drivers import (
     WebSocketServerSetup,
 )
 
-from .. import a4o_config
-from .utils import encode_event, onebot_encoder
+from .utils import encode_event, msgpack_encoder
 from ..middlewares import MIDDLEWARE_MAP, Queue, Middleware
 from .config import (
     Config,
@@ -198,13 +196,16 @@ class OneBotImplementation:
             return Response(401, content=msg)
 
     async def _ws_send(
-        self, middleware: Middleware, websocket: WebSocket, self_id_prefix: bool = False
+        self,
+        middleware: Middleware,
+        websocket: WebSocket,
+        conn: Union[WebsocketConfig, WebsocketReverseConfig],
     ) -> None:
-        queue = middleware.new_queue(self_id_prefix)
+        queue = middleware.new_queue(conn.self_id_prefix)
         try:
             while True:
                 event = await queue.get()
-                await websocket.send(encode_event(event))
+                await websocket.send(encode_event(event, conn.msgpack))
         except WebSocketClosed as e:
             logger.opt(colors=True).log(
                 "ERROR",
@@ -238,7 +239,7 @@ class OneBotImplementation:
                 resp = (
                     json.dumps(resp, cls=CustomEncoder)
                     if isinstance(raw_data, str)
-                    else msgpack.packb(resp, default=onebot_encoder)
+                    else msgpack.packb(resp, default=msgpack_encoder)
                 )
                 await websocket.send(resp)  # type:ignore
         except WebSocketClosed:
@@ -283,7 +284,7 @@ class OneBotImplementation:
                     return Response(200, content=json.dumps(resp, cls=CustomEncoder))
                 else:
                     return Response(
-                        200, content=msgpack.packb(resp, default=onebot_encoder)
+                        200, content=msgpack.packb(resp, default=msgpack_encoder)
                     )
         except Exception as e:
             logger.debug(e)
@@ -306,12 +307,11 @@ class OneBotImplementation:
                     detail_type="connect",
                     sub_type="",
                     version=ImplVersion(**await self.get_version()),
-                )
+                ),
+                conn.msgpack,
             )
         )
-        t1 = asyncio.create_task(
-            self._ws_send(middleware, websocket, conn.self_id_prefix)
-        )
+        t1 = asyncio.create_task(self._ws_send(middleware, websocket, conn))
         t2 = asyncio.create_task(self._ws_recv(middleware, websocket))
         await t2
         t1.cancel()
@@ -356,7 +356,7 @@ class OneBotImplementation:
     async def _http_webhook(self, middleware: Middleware, conn: HTTPWebhookConfig):
         headers = {
             "Content-Type": "application/msgpack"
-            if a4o_config.enable_msgpack
+            if conn.msgpack
             else "application/json",
             "User-Agent": "OneBot/12 NoneBot Plugin All4One/0.1.0",
             "X-OneBot-Version": "12",
@@ -372,7 +372,7 @@ class OneBotImplementation:
                     "POST",
                     conn.url,
                     headers=headers,
-                    content=encode_event(event),
+                    content=encode_event(event, conn.msgpack),
                 )
                 resp = await self.request(request)
                 if resp.status_code == 200:
@@ -419,12 +419,11 @@ class OneBotImplementation:
                                     detail_type="connect",
                                     sub_type="",
                                     version=ImplVersion(**await self.get_version()),
-                                )
+                                ),
+                                conn.msgpack,
                             )
                         )
-                        t1 = asyncio.create_task(
-                            self._ws_send(middleware, ws, conn.self_id_prefix)
-                        )
+                        t1 = asyncio.create_task(self._ws_send(middleware, ws, conn))
                         t2 = asyncio.create_task(self._ws_recv(middleware, ws))
                         await t2
                         t1.cancel()

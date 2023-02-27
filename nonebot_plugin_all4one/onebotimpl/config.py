@@ -16,6 +16,7 @@ class BaseConnectionConfig(BaseModel):
     type: ConnectionType
     access_token: str = ""
     self_id_prefix: bool = False
+    msgpack: bool = False
 
     class Config:
         extra = "ignore"
