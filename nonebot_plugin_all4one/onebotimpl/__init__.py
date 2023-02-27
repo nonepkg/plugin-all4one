@@ -281,10 +281,16 @@ class OneBotImplementation:
                 if "echo" in data:
                     resp["echo"] = data["echo"]
                 if request.headers.get("Content-Type") == "application/json":
-                    return Response(200, content=json.dumps(resp, cls=CustomEncoder))
+                    return Response(
+                        200,
+                        headers={"Content-Type": "application/json"},
+                        content=json.dumps(resp, cls=CustomEncoder),
+                    )
                 else:
                     return Response(
-                        200, content=msgpack.packb(resp, default=msgpack_encoder)
+                        200,
+                        headers={"Content-Type": "application/msgpack"},
+                        content=msgpack.packb(resp, default=msgpack_encoder),
                     )
         except Exception as e:
             logger.debug(e)
