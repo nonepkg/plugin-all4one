@@ -35,7 +35,7 @@ from nonebot.drivers import (
     WebSocketServerSetup,
 )
 
-from .utils import encode_event
+from .utils import encode_event, onebot_encoder
 from ..middlewares import MIDDLEWARE_MAP, Queue, Middleware
 from .config import (
     Config,
@@ -237,7 +237,7 @@ class OneBotImplementation:
                 resp = (
                     json.dumps(resp, cls=CustomEncoder)
                     if isinstance(raw_data, str)
-                    else msgpack.packb(resp)
+                    else msgpack.packb(resp, default=onebot_encoder)
                 )
                 await websocket.send(resp)  # type:ignore
         except WebSocketClosed:
@@ -279,9 +279,9 @@ class OneBotImplementation:
                 if "echo" in data:
                     resp["echo"] = data["echo"]
                 if request.headers.get("Content-Type") == "application/json":
-                    return Response(200, content=json.dumps(resp))
+                    return Response(200, content=json.dumps(resp, cls=CustomEncoder))
                 else:
-                    return Response(200, content=msgpack.packb(resp))
+                    return Response(200, content=msgpack.packb(resp, default=onebot_encoder))
         except Exception as e:
             logger.debug(e)
         return Response(204)
