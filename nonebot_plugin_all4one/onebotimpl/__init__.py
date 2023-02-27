@@ -35,6 +35,7 @@ from nonebot.drivers import (
     WebSocketServerSetup,
 )
 
+from .. import a4o_config
 from .utils import encode_event, onebot_encoder
 from ..middlewares import MIDDLEWARE_MAP, Queue, Middleware
 from .config import (
@@ -281,7 +282,9 @@ class OneBotImplementation:
                 if request.headers.get("Content-Type") == "application/json":
                     return Response(200, content=json.dumps(resp, cls=CustomEncoder))
                 else:
-                    return Response(200, content=msgpack.packb(resp, default=onebot_encoder))
+                    return Response(
+                        200, content=msgpack.packb(resp, default=onebot_encoder)
+                    )
         except Exception as e:
             logger.debug(e)
         return Response(204)
@@ -352,7 +355,9 @@ class OneBotImplementation:
 
     async def _http_webhook(self, middleware: Middleware, conn: HTTPWebhookConfig):
         headers = {
-            "Content-Type": "application/json",
+            "Content-Type": "application/msgpack"
+            if a4o_config.enable_msgpack
+            else "application/json",
             "User-Agent": "OneBot/12 NoneBot Plugin All4One/0.1.0",
             "X-OneBot-Version": "12",
             "X-Impl": "nonebot-plugin-all4one",
@@ -367,11 +372,7 @@ class OneBotImplementation:
                     "POST",
                     conn.url,
                     headers=headers,
-                    content=event.json(
-                        encoder=lambda v: int(v.timestamp())
-                        if isinstance(v, datetime)
-                        else pydantic_encoder(v)
-                    ),
+                    content=encode_event(event),
                 )
                 resp = await self.request(request)
                 if resp.status_code == 200:
