@@ -35,6 +35,7 @@ from nonebot.drivers import (
     WebSocketServerSetup,
 )
 
+from .utils import encode_event
 from ..middlewares import MIDDLEWARE_MAP, Queue, Middleware
 from .config import (
     Config,
@@ -202,7 +203,7 @@ class OneBotImplementation:
         try:
             while True:
                 event = await queue.get()
-                await websocket.send(event.json())
+                await websocket.send(encode_event(event))
         except WebSocketClosed as e:
             logger.opt(colors=True).log(
                 "ERROR",
@@ -294,14 +295,16 @@ class OneBotImplementation:
             return
         await websocket.accept()
         await websocket.send(
-            ConnectMetaEvent(
-                id=uuid.uuid4().hex,
-                time=datetime.now(),
-                type="meta",
-                detail_type="connect",
-                sub_type="",
-                version=ImplVersion(**await self.get_version()),
-            ).json()
+            encode_event(
+                ConnectMetaEvent(
+                    id=uuid.uuid4().hex,
+                    time=datetime.now(),
+                    type="meta",
+                    detail_type="connect",
+                    sub_type="",
+                    version=ImplVersion(**await self.get_version()),
+                )
+            )
         )
         t1 = asyncio.create_task(
             self._ws_send(middleware, websocket, conn.self_id_prefix)
@@ -407,14 +410,16 @@ class OneBotImplementation:
                 async with self.websocket(req) as ws:  # type:ignore
                     try:
                         await ws.send(
-                            ConnectMetaEvent(
-                                id=uuid.uuid4().hex,
-                                time=datetime.now(),
-                                type="meta",
-                                detail_type="connect",
-                                sub_type="",
-                                version=ImplVersion(**await self.get_version()),
-                            ).json()
+                            encode_event(
+                                ConnectMetaEvent(
+                                    id=uuid.uuid4().hex,
+                                    time=datetime.now(),
+                                    type="meta",
+                                    detail_type="connect",
+                                    sub_type="",
+                                    version=ImplVersion(**await self.get_version()),
+                                )
+                            )
                         )
                         t1 = asyncio.create_task(
                             self._ws_send(middleware, ws, conn.self_id_prefix)
