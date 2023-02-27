@@ -61,6 +61,7 @@ all = false
 reportShadowedImports = false
 pythonVersion = "3.8"
 pythonPlatform = "All"
+extraPaths = ["__pypackages__/3.8/lib/"]
 exclude = ["__pypackages__", "nonebot_plugin_all4one/migrations"]
 
 [build-system]

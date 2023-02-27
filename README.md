@@ -61,16 +61,16 @@ blocked_plugins = ["echo"] # 在 block_event=False 时生效，可自定义处�
 
 ### Middlewares
 
-- [x] Console -> OneBot V12
-- [x] OneBot V11 -> OneBot V12 测试中
-- [x] OneBot V12 -> OneBot V12
-- [x] Telegram -> OneBot V12 测试中
-- [ ] Kaiheila -> OneBot V12
+- [x] Console
+- [x] OneBot V11 测试中
+- [x] OneBot V12
+- [x] Telegram 测试中
+- [x] QQ Guild [@he0119](https://github.com/he0119) 测试中
+- [ ] Kaiheila
 
-## 鸣谢
-
-All4One 的出现离不开以下项目：
+## 相关链接
 
 - [nonebot-adapter-onebot](https://github.com/nonebot/adapter-onebot) 复用代码
 - [zhamao-robot/go-cqhttp-adapter-plugin](https://github.com/zhamao-robot/go-cqhttp-adapter-plugin) OneBot V11 -> V12 逻辑参考
 - [nonebot-plugin-params](https://github.com/iyume/nonebot-plugin-params) 灵感来源
+- [felinae98/nonebot-plugin-send-anything-anywhere](https://github.com/felinae98/nonebot-plugin-send-anything-anywhere) 友情推荐
