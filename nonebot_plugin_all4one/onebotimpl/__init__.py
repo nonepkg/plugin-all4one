@@ -15,7 +15,6 @@ from nonebot.utils import escape_tag
 from nonebot.adapters.onebot.v12 import Event
 from nonebot.exception import WebSocketClosed
 from nonebot.adapters.onebot.utils import get_auth_bearer
-from nonebot.adapters.onebot.v12.utils import CustomEncoder
 from nonebot.adapters.onebot.v12.exception import ActionFailedWithRetcode
 from nonebot.adapters.onebot.v12.event import (
     Status,
@@ -34,7 +33,7 @@ from nonebot.drivers import (
     WebSocketServerSetup,
 )
 
-from .utils import encode_event, msgpack_encoder
+from .utils import encode_data
 from ..middlewares import MIDDLEWARE_MAP, Queue, Middleware
 from .config import (
     Config,
@@ -205,7 +204,7 @@ class OneBotImplementation:
         try:
             while True:
                 event = await queue.get()
-                await websocket.send(encode_event(event, conn.use_msgpack))
+                await websocket.send(encode_data(event.dict(), conn.use_msgpack))
         except WebSocketClosed as e:
             logger.opt(colors=True).log(
                 "ERROR",
@@ -236,12 +235,7 @@ class OneBotImplementation:
                 )
                 if "echo" in data:
                     resp["echo"] = data["echo"]
-                resp = (
-                    json.dumps(resp, cls=CustomEncoder)
-                    if isinstance(raw_data, str)
-                    else msgpack.packb(resp, default=msgpack_encoder)
-                )
-                await websocket.send(resp)  # type:ignore
+                await websocket.send(encode_data(resp, isinstance(raw_data, str)))
         except WebSocketClosed:
             logger.opt(colors=True).log(
                 "WARNING",
@@ -284,13 +278,13 @@ class OneBotImplementation:
                     return Response(
                         200,
                         headers={"Content-Type": "application/json"},
-                        content=json.dumps(resp, cls=CustomEncoder),
+                        content=encode_data(resp, False),
                     )
                 else:
                     return Response(
                         200,
                         headers={"Content-Type": "application/msgpack"},
-                        content=msgpack.packb(resp, default=msgpack_encoder),
+                        content=encode_data(resp, True),
                     )
         except Exception as e:
             logger.debug(e)
@@ -305,7 +299,7 @@ class OneBotImplementation:
             return
         await websocket.accept()
         await websocket.send(
-            encode_event(
+            encode_data(
                 ConnectMetaEvent(
                     id=uuid.uuid4().hex,
                     time=datetime.now(),
@@ -313,7 +307,7 @@ class OneBotImplementation:
                     detail_type="connect",
                     sub_type="",
                     version=ImplVersion(**await self.get_version()),
-                ),
+                ).dict(),
                 conn.use_msgpack,
             )
         )
@@ -378,7 +372,7 @@ class OneBotImplementation:
                     "POST",
                     conn.url,
                     headers=headers,
-                    content=encode_event(event, conn.use_msgpack),
+                    content=encode_data(event.dict(), conn.use_msgpack),
                 )
                 resp = await self.request(request)
                 if resp.status_code == 200:
@@ -417,7 +411,7 @@ class OneBotImplementation:
                 async with self.websocket(req) as ws:  # type:ignore
                     try:
                         await ws.send(
-                            encode_event(
+                            encode_data(
                                 ConnectMetaEvent(
                                     id=uuid.uuid4().hex,
                                     time=datetime.now(),
@@ -425,7 +419,7 @@ class OneBotImplementation:
                                     detail_type="connect",
                                     sub_type="",
                                     version=ImplVersion(**await self.get_version()),
-                                ),
+                                ).dict(),
                                 conn.use_msgpack,
                             )
                         )
