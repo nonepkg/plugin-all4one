@@ -31,16 +31,19 @@ class HTTPWebhookConfig(BaseConnectionConfig):
     type: Literal[ConnectionType.HTTP_WEBHOOK]
     url: AnyUrl
     timeout: int = 4
+    use_msgpack: bool = False
 
 
 class WebsocketConfig(BaseConnectionConfig):
     type: Literal[ConnectionType.WEBSOCKET]
+    use_msgpack: bool = False
 
 
 class WebsocketReverseConfig(BaseConnectionConfig):
     type: Literal[ConnectionType.WEBSOCKET_REV]
     url: WSUrl
     reconnect_interval: int = 4
+    use_msgpack: bool = False
 
 
 class Config(BaseModel):

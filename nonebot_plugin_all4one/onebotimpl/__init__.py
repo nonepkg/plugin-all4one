@@ -12,11 +12,9 @@ from nonebot import Driver
 from nonebot.log import logger
 from nonebot.adapters import Bot
 from nonebot.utils import escape_tag
-from pydantic.json import pydantic_encoder
 from nonebot.adapters.onebot.v12 import Event
 from nonebot.exception import WebSocketClosed
 from nonebot.adapters.onebot.utils import get_auth_bearer
-from nonebot.adapters.onebot.v12.utils import CustomEncoder
 from nonebot.adapters.onebot.v12.exception import ActionFailedWithRetcode
 from nonebot.adapters.onebot.v12.event import (
     Status,
@@ -35,6 +33,7 @@ from nonebot.drivers import (
     WebSocketServerSetup,
 )
 
+from .utils import encode_data
 from ..middlewares import MIDDLEWARE_MAP, Queue, Middleware
 from .config import (
     Config,
@@ -196,13 +195,16 @@ class OneBotImplementation:
             return Response(401, content=msg)
 
     async def _ws_send(
-        self, middleware: Middleware, websocket: WebSocket, self_id_prefix: bool = False
+        self,
+        middleware: Middleware,
+        websocket: WebSocket,
+        conn: Union[WebsocketConfig, WebsocketReverseConfig],
     ) -> None:
-        queue = middleware.new_queue(self_id_prefix)
+        queue = middleware.new_queue(conn.self_id_prefix)
         try:
             while True:
                 event = await queue.get()
-                await websocket.send(event.json())
+                await websocket.send(encode_data(event.dict(), conn.use_msgpack))
         except WebSocketClosed as e:
             logger.opt(colors=True).log(
                 "ERROR",
@@ -233,12 +235,7 @@ class OneBotImplementation:
                 )
                 if "echo" in data:
                     resp["echo"] = data["echo"]
-                resp = (
-                    json.dumps(resp, cls=CustomEncoder)
-                    if isinstance(raw_data, str)
-                    else msgpack.packb(resp)
-                )
-                await websocket.send(resp)  # type:ignore
+                await websocket.send(encode_data(resp, isinstance(raw_data, str)))
         except WebSocketClosed:
             logger.opt(colors=True).log(
                 "WARNING",
@@ -278,9 +275,17 @@ class OneBotImplementation:
                 if "echo" in data:
                     resp["echo"] = data["echo"]
                 if request.headers.get("Content-Type") == "application/json":
-                    return Response(200, content=json.dumps(resp))
+                    return Response(
+                        200,
+                        headers={"Content-Type": "application/json"},
+                        content=encode_data(resp, False),
+                    )
                 else:
-                    return Response(200, content=msgpack.packb(resp))
+                    return Response(
+                        200,
+                        headers={"Content-Type": "application/msgpack"},
+                        content=encode_data(resp, True),
+                    )
         except Exception as e:
             logger.debug(e)
         return Response(204)
@@ -294,18 +299,19 @@ class OneBotImplementation:
             return
         await websocket.accept()
         await websocket.send(
-            ConnectMetaEvent(
-                id=uuid.uuid4().hex,
-                time=datetime.now(),
-                type="meta",
-                detail_type="connect",
-                sub_type="",
-                version=ImplVersion(**await self.get_version()),
-            ).json()
+            encode_data(
+                ConnectMetaEvent(
+                    id=uuid.uuid4().hex,
+                    time=datetime.now(),
+                    type="meta",
+                    detail_type="connect",
+                    sub_type="",
+                    version=ImplVersion(**await self.get_version()),
+                ).dict(),
+                conn.use_msgpack,
+            )
         )
-        t1 = asyncio.create_task(
-            self._ws_send(middleware, websocket, conn.self_id_prefix)
-        )
+        t1 = asyncio.create_task(self._ws_send(middleware, websocket, conn))
         t2 = asyncio.create_task(self._ws_recv(middleware, websocket))
         await t2
         t1.cancel()
@@ -349,7 +355,9 @@ class OneBotImplementation:
 
     async def _http_webhook(self, middleware: Middleware, conn: HTTPWebhookConfig):
         headers = {
-            "Content-Type": "application/json",
+            "Content-Type": "application/msgpack"
+            if conn.use_msgpack
+            else "application/json",
             "User-Agent": "OneBot/12 NoneBot Plugin All4One/0.1.0",
             "X-OneBot-Version": "12",
             "X-Impl": "nonebot-plugin-all4one",
@@ -364,11 +372,7 @@ class OneBotImplementation:
                     "POST",
                     conn.url,
                     headers=headers,
-                    content=event.json(
-                        encoder=lambda v: int(v.timestamp())
-                        if isinstance(v, datetime)
-                        else pydantic_encoder(v)
-                    ),
+                    content=encode_data(event.dict(), conn.use_msgpack),
                 )
                 resp = await self.request(request)
                 if resp.status_code == 200:
@@ -407,18 +411,19 @@ class OneBotImplementation:
                 async with self.websocket(req) as ws:  # type:ignore
                     try:
                         await ws.send(
-                            ConnectMetaEvent(
-                                id=uuid.uuid4().hex,
-                                time=datetime.now(),
-                                type="meta",
-                                detail_type="connect",
-                                sub_type="",
-                                version=ImplVersion(**await self.get_version()),
-                            ).json()
+                            encode_data(
+                                ConnectMetaEvent(
+                                    id=uuid.uuid4().hex,
+                                    time=datetime.now(),
+                                    type="meta",
+                                    detail_type="connect",
+                                    sub_type="",
+                                    version=ImplVersion(**await self.get_version()),
+                                ).dict(),
+                                conn.use_msgpack,
+                            )
                         )
-                        t1 = asyncio.create_task(
-                            self._ws_send(middleware, ws, conn.self_id_prefix)
-                        )
+                        t1 = asyncio.create_task(self._ws_send(middleware, ws, conn))
                         t2 = asyncio.create_task(self._ws_recv(middleware, ws))
                         await t2
                         t1.cancel()
