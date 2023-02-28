@@ -260,9 +260,11 @@ class OneBotImplementation:
             return response
         try:
             if request.content:
-                if request.headers.get("Content-Type") == "application/msgpack":
+                if (
+                    content_type := request.headers.get("Content-Type")
+                ) == "application/msgpack":
                     data = msgpack.unpackb(request.content)
-                elif request.headers.get("Content-Type") == "application/json":
+                elif content_type == "application/json":
                     data = json.loads(request.content)
                 else:
                     return Response(415, content="Invalid Content-Type")
@@ -274,18 +276,11 @@ class OneBotImplementation:
                 )
                 if "echo" in data:
                     resp["echo"] = data["echo"]
-                if request.headers.get("Content-Type") == "application/json":
-                    return Response(
-                        200,
-                        headers={"Content-Type": "application/json"},
-                        content=encode_data(resp, False),
-                    )
-                else:
-                    return Response(
-                        200,
-                        headers={"Content-Type": "application/msgpack"},
-                        content=encode_data(resp, True),
-                    )
+                return Response(
+                    200,
+                    headers={"Content-Type": content_type},
+                    content=encode_data(resp, content_type != "application/json"),
+                )
         except Exception as e:
             logger.debug(e)
         return Response(204)
