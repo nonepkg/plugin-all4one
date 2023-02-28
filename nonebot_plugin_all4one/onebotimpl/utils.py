@@ -29,12 +29,9 @@ msgpack_encoder = partial(custom_pydantic_encoder, msgpack_type_encoders)  # typ
 json_encoder = partial(custom_pydantic_encoder, json_type_encoders)  # type: ignore
 
 
-def encode_event(event: Event, enable_msgpack: bool) -> Union[str, bytes]:
-    """编码事件
-
-    根据配置决定是否使用 msgpack 编码事件
-    """
-    if enable_msgpack:
+def encode_event(event: Event, use_msgpack: bool) -> Union[str, bytes]:
+    """编码事件"""
+    if use_msgpack:
         return msgpack.packb(event.dict(), default=msgpack_encoder)  # type: ignore
     else:
         return event.json(encoder=json_encoder)

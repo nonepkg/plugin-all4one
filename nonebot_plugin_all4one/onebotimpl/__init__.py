@@ -205,7 +205,7 @@ class OneBotImplementation:
         try:
             while True:
                 event = await queue.get()
-                await websocket.send(encode_event(event, conn.msgpack))
+                await websocket.send(encode_event(event, conn.use_msgpack))
         except WebSocketClosed as e:
             logger.opt(colors=True).log(
                 "ERROR",
@@ -314,7 +314,7 @@ class OneBotImplementation:
                     sub_type="",
                     version=ImplVersion(**await self.get_version()),
                 ),
-                conn.msgpack,
+                conn.use_msgpack,
             )
         )
         t1 = asyncio.create_task(self._ws_send(middleware, websocket, conn))
@@ -362,7 +362,7 @@ class OneBotImplementation:
     async def _http_webhook(self, middleware: Middleware, conn: HTTPWebhookConfig):
         headers = {
             "Content-Type": "application/msgpack"
-            if conn.msgpack
+            if conn.use_msgpack
             else "application/json",
             "User-Agent": "OneBot/12 NoneBot Plugin All4One/0.1.0",
             "X-OneBot-Version": "12",
@@ -378,7 +378,7 @@ class OneBotImplementation:
                     "POST",
                     conn.url,
                     headers=headers,
-                    content=encode_event(event, conn.msgpack),
+                    content=encode_event(event, conn.use_msgpack),
                 )
                 resp = await self.request(request)
                 if resp.status_code == 200:
@@ -426,7 +426,7 @@ class OneBotImplementation:
                                     sub_type="",
                                     version=ImplVersion(**await self.get_version()),
                                 ),
-                                conn.msgpack,
+                                conn.use_msgpack,
                             )
                         )
                         t1 = asyncio.create_task(self._ws_send(middleware, ws, conn))
