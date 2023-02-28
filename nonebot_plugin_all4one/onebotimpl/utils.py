@@ -2,7 +2,7 @@ import json
 import datetime
 from base64 import b64encode
 from functools import partial
-from typing import Any, Dict, Union
+from typing import Dict, Union
 
 import msgpack
 from nonebot.adapters.onebot.v12 import Event
