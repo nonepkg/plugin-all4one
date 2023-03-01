@@ -5,9 +5,8 @@ from functools import partial
 from typing import Dict, Union
 
 import msgpack
-from nonebot.adapters.onebot.v12 import Event
 from pydantic.json import custom_pydantic_encoder
-from nonebot.adapters.onebot.v12.utils import CustomEncoder
+from nonebot.adapters.onebot.v12.utils import CustomEncoder as _CustomEncoder
 
 
 def timestamp(obj: datetime.datetime):
@@ -24,6 +23,13 @@ msgpack_type_encoders = {
 }
 
 msgpack_encoder = partial(custom_pydantic_encoder, msgpack_type_encoders)  # type: ignore
+
+
+class CustomEncoder(_CustomEncoder):
+    def default(self, o):
+        if isinstance(o, datetime.datetime):
+            return o.timestamp()
+        return super().default(o)
 
 
 def encode_data(data: Dict, use_msgpack: bool) -> Union[str, bytes]:
