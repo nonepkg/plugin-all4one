@@ -1,11 +1,12 @@
 from hashlib import sha256
 from base64 import b64decode
 from uuid import UUID, uuid4
-from typing import Dict, Union, Optional, cast
+from typing import Dict, Union, Optional
 
 from anyio import open_file
 from httpx import AsyncClient
-from sqlmodel import JSON, Field, Column, select
+from sqlalchemy import JSON, Uuid, select
+from sqlalchemy.orm import Mapped, mapped_column
 from nonebot.adapters.onebot.v12.exception import DatabaseError
 from nonebot_plugin_datastore import create_session, get_plugin_data
 
@@ -17,15 +18,15 @@ def get_sha256(data: bytes) -> str:
     return sha256(data).hexdigest()
 
 
-class File(Model, table=True):
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-    name: str
-    src: Optional[str] = None
-    src_id: Optional[str] = None
-    url: Optional[str] = None
-    headers: Optional[Dict[str, str]] = Field(default=None, sa_column=Column(JSON))
-    path: Optional[str] = None
-    sha256: Optional[str] = None
+class File(Model):
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    name: Mapped[str]
+    src: Mapped[Optional[str]]
+    src_id: Mapped[Optional[str]]
+    url: Mapped[Optional[str]]
+    headers: Mapped[Optional[Dict[str, str]]] = mapped_column(JSON)
+    path: Mapped[Optional[str]]
+    sha256: Mapped[Optional[str]]
 
 
 DATA_PATH = plugin_data.data_dir
@@ -36,10 +37,9 @@ FILE_PATH.mkdir(parents=True, exist_ok=True)
 async def get_file(file_id: str, src: Optional[str] = None) -> File:
     async with create_session() as session:
         file = (
-            await session.execute(select(File).where(File.id == file_id))
+            await session.scalars(select(File).where(File.id == UUID(file_id)))
         ).one_or_none()
         if file:
-            file = cast(File, file[0])
             if src is None:
                 if file.sha256:
                     return file
@@ -49,13 +49,13 @@ async def get_file(file_id: str, src: Optional[str] = None) -> File:
                 else:
                     if file.sha256:
                         if file_ := (
-                            await session.execute(
+                            await session.scalars(
                                 select(File).where(
                                     File.sha256 == file.sha256, File.src == src
                                 )
                             )
                         ).first():
-                            return file_[0]
+                            return file_
                         else:
                             file.src = src
                             file.src_id = None
@@ -77,26 +77,28 @@ async def upload_file(
     if src and src_id:
         async with create_session() as session:
             if file := (
-                await session.execute(
+                await session.scalars(
                     select(File).where(File.src == src).where(File.src_id == src_id)
                 )
             ).first():
-                return file[0].id.hex
+                return file.id.hex
     if sha256:
-        async with create_session() as session, session.begin():
+        async with create_session() as session:
             if file := (
-                await session.execute(select(File).where(File.sha256 == sha256))
+                await session.scalars(select(File).where(File.sha256 == sha256))
             ).first():
                 file = File(
                     name=name,
                     src=src,
                     src_id=src_id,
-                    url=file[0].url,
-                    headers=file[0].headers,
-                    path=file[0].path,
+                    url=file.url,
+                    headers=file.headers,
+                    path=file.path,
                     sha256=sha256,
                 )
                 session.add(file)
+                await session.commit()
+                await session.refresh(file)
                 return file.id.hex
 
     if path:
@@ -124,6 +126,8 @@ async def upload_file(
         path=path,
         sha256=sha256,
     )
-    async with create_session() as session, session.begin():
+    async with create_session() as session:
         session.add(file)
+        await session.commit()
+        await session.refresh(file)
         return file.id.hex
