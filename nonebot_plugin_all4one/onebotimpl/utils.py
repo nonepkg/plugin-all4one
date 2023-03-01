@@ -6,7 +6,6 @@ from typing import Dict, Union
 
 import msgpack
 from pydantic.json import custom_pydantic_encoder
-from nonebot.adapters.onebot.v12.utils import CustomEncoder as _CustomEncoder
 
 
 def timestamp(obj: datetime.datetime):
@@ -21,15 +20,13 @@ def encode_bytes(obj: bytes):
 msgpack_type_encoders = {
     datetime.datetime: timestamp,
 }
+json_type_encoders = {
+    datetime.datetime: timestamp,
+    bytes: encode_bytes,
+}
 
 msgpack_encoder = partial(custom_pydantic_encoder, msgpack_type_encoders)  # type: ignore
-
-
-class CustomEncoder(_CustomEncoder):
-    def default(self, o):
-        if isinstance(o, datetime.datetime):
-            return o.timestamp()
-        return super().default(o)
+json_encoder = partial(custom_pydantic_encoder, json_type_encoders)  # type: ignore
 
 
 def encode_data(data: Dict, use_msgpack: bool) -> Union[str, bytes]:
@@ -37,4 +34,4 @@ def encode_data(data: Dict, use_msgpack: bool) -> Union[str, bytes]:
     if use_msgpack:
         return msgpack.packb(data, default=msgpack_encoder)  # type: ignore
     else:
-        return json.dumps(data, cls=CustomEncoder)
+        return json.dumps(data, default=json_encoder)
