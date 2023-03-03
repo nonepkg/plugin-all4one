@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Any, Dict, List, Union, Literal, Optional
 
-from httpx import AsyncClient
 from pydantic import parse_obj_as
 from nonebot.adapters.onebot.v12 import UnsupportedSegment
 from nonebot.adapters.telegram.message import File, Entity
@@ -124,13 +123,14 @@ class Middleware(BaseMiddleware):
         for segment in message_list:
             if segment.type in ("image", "voice", "audio", "video", "file"):
                 file = await self.bot.get_file(segment.data["file_id"])
-                async with AsyncClient() as client:
-                    segment.data["file_id"] = await upload_file(
-                        Path(file.file_path).name,  # type:ignore
-                        self.get_platform(),
-                        file.file_id,
-                        url=f"https://api.telegram.org/file/bot{self.bot.bot_config.token}/{file.file_path}",
-                    )
+                if file.file_path is None:
+                    continue
+                segment.data["file_id"] = await upload_file(
+                    Path(file.file_path).name,
+                    self.get_platform(),
+                    file.file_id,
+                    url=f"https://api.telegram.org/file/bot{self.bot.bot_config.token}/{file.file_path}",
+                )
         return OneBotMessage(message_list)
 
     async def send(

@@ -89,7 +89,7 @@ class Middleware(BaseMiddleware):
                 message=message,
                 **kwargs,
             )
-        return self.bot.send_message(
+        return await self.bot.send_message(
             detail_type=detail_type, message=message, **kwargs
         )  # type:ignore
 
