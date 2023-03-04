@@ -5,7 +5,18 @@ import importlib
 from datetime import datetime
 from functools import partial
 from contextlib import asynccontextmanager
-from typing import Any, Dict, List, Type, Union, Literal, Optional, AsyncGenerator, cast
+from typing import (
+    Any,
+    Set,
+    Dict,
+    List,
+    Type,
+    Union,
+    Literal,
+    Optional,
+    AsyncGenerator,
+    cast,
+)
 
 import msgpack
 from nonebot import Driver
@@ -311,7 +322,7 @@ class OneBotImplementation:
         await t2
         t1.cancel()
 
-    async def bot_connect(self, bot: Bot) -> None:
+    def bot_connect(self, bot: Bot) -> None:
         if (middleware := self._middlewares.get(bot.type, None)) is None:
             return
         middleware = middleware(bot)
@@ -444,36 +455,32 @@ class OneBotImplementation:
                 )
             await asyncio.sleep(conn.reconnect_interval)
 
-    async def bot_disconnect(self, bot: Bot) -> None:
+    def bot_disconnect(self, bot: Bot) -> None:
         if (middleware := self.middlewares.pop(bot.self_id, None)) is None:
             return
         for task in middleware.tasks:
             if not task.done():
                 task.cancel()
-        await asyncio.gather(*middleware.tasks)
+
+    def import_middlewares(self, middlewares: Optional[Set[str]] = None):
+        if middlewares is None:
+            middlewares = set(self.driver._adapters.keys())
+        for middleware in middlewares:
+            try:
+                if middleware in MIDDLEWARE_MAP:
+                    module = importlib.import_module(
+                        f"nonebot_plugin_all4one.middlewares.{MIDDLEWARE_MAP[middleware]}"
+                    )
+                    self.register_middleware(getattr(module, "Middleware"))
+                else:
+                    logger.warning(f"Can not find middleware for Adapter {middleware}")
+            except Exception as e:
+                logger.warning(f"Can not load middleware for Adapter {middleware}: {e}")
 
     def setup(self):
         @self.driver.on_startup
         async def _():
-            adapters = (
-                self.driver._adapters.keys()
-                if self.config.middlewares is None
-                else self.config.middlewares
-            )
-
-            for adapter in adapters:
-                try:
-                    if adapter in MIDDLEWARE_MAP:
-                        module = importlib.import_module(
-                            f"nonebot_plugin_all4one.middlewares.{MIDDLEWARE_MAP[adapter]}"
-                        )
-                        self.register_middleware(getattr(module, "Middleware"))
-                    else:
-                        logger.warning(f"Can not find middleware for Adapter {adapter}")
-                except Exception as e:
-                    logger.warning(
-                        f"Can not load middleware for Adapter {adapter}: {e}"
-                    )
+            self.import_middlewares(self.config.middlewares)
 
         @self.driver.on_shutdown
         async def _():
@@ -487,10 +494,10 @@ class OneBotImplementation:
         async def _(bot: Bot):
             if bot.self_id.startswith("a4o@"):
                 return
-            await self.bot_connect(bot)
+            self.bot_connect(bot)
 
         @self.driver.on_bot_disconnect
         async def _(bot: Bot):
             if bot.self_id.startswith("a4o@"):
                 return
-            await self.bot_disconnect(bot)
+            self.bot_disconnect(bot)

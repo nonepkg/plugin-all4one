@@ -27,6 +27,29 @@ def load_adapters(nonebug_init: None):
     driver.register_adapter(TelegramAdapter)
     driver.register_adapter(ConsoleAdapter)
 
+    nonebot.require("nonebot_plugin_all4one")
+    from nonebot_plugin_all4one import obimpl
+
+    obimpl.import_middlewares()
+
+
+@pytest.fixture
+def FakeMiddleware():
+    from nonebot_plugin_all4one.middlewares import Middleware
+
+    class FakeMiddleware(Middleware):
+        @classmethod
+        def get_name(cls):
+            return "fake"
+
+        def get_platform(self):
+            return "fake"
+
+        async def to_onebot_event(self, event):
+            return []
+
+    return FakeMiddleware
+
 
 @pytest.fixture
 async def app(nonebug_init: None, tmp_path: Path):

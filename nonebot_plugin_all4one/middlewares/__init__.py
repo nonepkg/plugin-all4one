@@ -2,8 +2,8 @@ import asyncio
 from uuid import uuid4
 from datetime import datetime
 from functools import partial
-from abc import ABC, abstractmethod
 from asyncio import Queue as BaseQueue
+from abc import ABC, ABCMeta, abstractmethod
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -88,8 +88,21 @@ class Queue(_Queue[_T]):
         return event
 
 
-class Middleware(ABC):
-    supported_actions: ClassVar[Set[str]] = set()
+class _MiddlewareMeta(type):
+    def __new__(cls, name, bases, attrs):
+        supported_actions = set()
+        for base in bases:
+            supported_actions.update(base.supported_actions)
+        attrs["supported_actions"] = supported_actions
+        return type.__new__(cls, name, bases, attrs)
+
+
+class MiddlewareMeta(_MiddlewareMeta, ABCMeta):
+    pass
+
+
+class Middleware(metaclass=MiddlewareMeta):
+    supported_actions: ClassVar[Set[str]]
 
     def __init__(self, bot: Bot):
         self.bot = bot
