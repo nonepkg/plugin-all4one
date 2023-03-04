@@ -47,8 +47,7 @@ class Middleware(BaseMiddleware):
                     user_id=event.user.id,
                 )
             ]
-
-        raise NotImplementedError
+        return []
 
     def from_onebot_message(self, message: OneBotMessage) -> Message:
         return Message(str(message))

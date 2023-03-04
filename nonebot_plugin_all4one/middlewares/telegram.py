@@ -97,7 +97,7 @@ class Middleware(BaseMiddleware):
             event_dict, "nonebot-plugin-all4one"
         ):
             return [event_out]
-        raise NotImplementedError
+        return []
 
     async def to_onebot_message(self, message: Message) -> OneBotMessage:
         message_list = []
