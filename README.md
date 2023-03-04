@@ -10,6 +10,7 @@
 [![NoneBot Version](https://img.shields.io/badge/nonebot-2.0.0rc2+-red.svg?style=flat-square)](https://v2.nonebot.dev/)
 [![OneBot V12](https://img.shields.io/badge/OneBot-12-black?style=flat-square)](https://12.onebot.dev/)
 [![PyPI Version](https://img.shields.io/pypi/v/nonebot-plugin-all4one.svg?style=flat-square)](https://pypi.python.org/pypi/nonebot-plugin-all4one)
+[![codecov](https://codecov.io/gh/nonepkg/nonebot-plugin-all4one/branch/master/graph/badge.svg?token=BOK429DAHO)](https://codecov.io/gh/nonepkg/nonebot-plugin-all4one)
 
 </div>
 
