@@ -227,22 +227,25 @@ class Middleware(BaseMiddleware):
             message_id, _, _ = self._from_ob_message_id(message_id)
             message_reference = MessageReference(message_id=message_id)
 
-        if detail_type == "private":
-            result = await self.bot.post_dms_messages(
-                guild_id=int(guild_id),  # type: ignore
-                content=content,
-                msg_id=kwargs.get("event_id"),
-                file_image=file_image,  # type: ignore
-                message_reference=message_reference,  # type: ignore
-            )
-        else:
-            result = await self.bot.post_messages(
-                channel_id=int(channel_id),  # type: ignore
-                content=content,
-                msg_id=kwargs.get("event_id"),
-                file_image=file_image,  # type: ignore
-                message_reference=message_reference,  # type: ignore
-            )
+        try:
+            if detail_type == "private":
+                result = await self.bot.post_dms_messages(
+                    guild_id=int(guild_id),  # type: ignore
+                    content=content,
+                    msg_id=kwargs.get("event_id"),
+                    file_image=file_image,  # type: ignore
+                    message_reference=message_reference,  # type: ignore
+                )
+            else:
+                result = await self.bot.post_messages(
+                    channel_id=int(channel_id),  # type: ignore
+                    content=content,
+                    msg_id=kwargs.get("event_id"),
+                    file_image=file_image,  # type: ignore
+                    message_reference=message_reference,  # type: ignore
+                )
+        except ActionFailed as e:
+            raise ob_exception.PlatformError("failed", 34001, str(e), None)
         # FIXME: 如果是主动消息，返回的时间会是 None
         # 暂时不清楚原因，先用当前时间代替
         time = (
