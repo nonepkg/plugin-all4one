@@ -28,7 +28,9 @@ from nonebot.adapters.qqguild import (
     MessageCreateEvent,
     GuildMemberUpdateEvent,
     DirectMessageCreateEvent,
+    GuildCreateEvent,
 )
+from nonebot import logger
 
 from . import supported_action
 from . import Middleware as BaseMiddleware
@@ -140,6 +142,9 @@ class Middleware(BaseMiddleware):
                 event_dict["detail_type"] = "channel_delete"
             elif isinstance(event, ChannelUpdateEvent):
                 event_dict["detail_type"] = "channel_update"
+        else:
+            logger.warning(f"未转换事件: {event}")
+            return []
 
         if event_out := OneBotAdapter.json_to_event(
             event_dict, "nonebot-plugin-all4one"
@@ -246,8 +251,9 @@ class Middleware(BaseMiddleware):
                 )
         except ActionFailed as e:
             raise ob_exception.PlatformError("failed", 34001, str(e), None)
-        # FIXME: 如果是主动消息，返回的时间会是 None
-        # 暂时不清楚原因，先用当前时间代替
+        # TODO: 如果是主动消息，返回的时间会是 None
+        # https://bot.q.qq.com/wiki/develop/api/openapi/message/post_messages.html#%E9%94%99%E8%AF%AF%E7%A0%81
+        # 因为会返回带 MessageAudit 的错误消息
         time = (
             result.timestamp.timestamp()
             if result.timestamp
