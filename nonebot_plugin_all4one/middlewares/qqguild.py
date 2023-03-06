@@ -2,6 +2,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict, List, Tuple, Union, Literal, Optional
 
+from nonebot import logger
 from anyio import open_file
 from pydantic import parse_obj_as
 from nonebot.adapters.qqguild.api.model import Member
@@ -21,6 +22,7 @@ from nonebot.adapters.qqguild import (
     ChannelEvent,
     MessageEvent,
     MessageSegment,
+    GuildCreateEvent,
     GuildMemberEvent,
     ChannelCreateEvent,
     ChannelDeleteEvent,
@@ -28,9 +30,7 @@ from nonebot.adapters.qqguild import (
     MessageCreateEvent,
     GuildMemberUpdateEvent,
     DirectMessageCreateEvent,
-    GuildCreateEvent,
 )
-from nonebot import logger
 
 from . import supported_action
 from . import Middleware as BaseMiddleware
