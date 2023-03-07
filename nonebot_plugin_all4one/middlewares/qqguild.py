@@ -2,6 +2,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict, List, Tuple, Union, Literal, Optional
 
+from nonebot import logger
 from anyio import open_file
 from pydantic import parse_obj_as
 from nonebot.adapters.qqguild.api.model import Member
@@ -21,6 +22,7 @@ from nonebot.adapters.qqguild import (
     ChannelEvent,
     MessageEvent,
     MessageSegment,
+    GuildCreateEvent,
     GuildMemberEvent,
     ChannelCreateEvent,
     ChannelDeleteEvent,
@@ -140,6 +142,9 @@ class Middleware(BaseMiddleware):
                 event_dict["detail_type"] = "channel_delete"
             elif isinstance(event, ChannelUpdateEvent):
                 event_dict["detail_type"] = "channel_update"
+        else:
+            logger.warning(f"未转换事件: {event}")
+            return []
 
         if event_out := OneBotAdapter.json_to_event(
             event_dict, "nonebot-plugin-all4one"
@@ -227,24 +232,28 @@ class Middleware(BaseMiddleware):
             message_id, _, _ = self._from_ob_message_id(message_id)
             message_reference = MessageReference(message_id=message_id)
 
-        if detail_type == "private":
-            result = await self.bot.post_dms_messages(
-                guild_id=int(guild_id),  # type: ignore
-                content=content,
-                msg_id=kwargs.get("event_id"),
-                file_image=file_image,  # type: ignore
-                message_reference=message_reference,  # type: ignore
-            )
-        else:
-            result = await self.bot.post_messages(
-                channel_id=int(channel_id),  # type: ignore
-                content=content,
-                msg_id=kwargs.get("event_id"),
-                file_image=file_image,  # type: ignore
-                message_reference=message_reference,  # type: ignore
-            )
-        # FIXME: 如果是主动消息，返回的时间会是 None
-        # 暂时不清楚原因，先用当前时间代替
+        try:
+            if detail_type == "private":
+                result = await self.bot.post_dms_messages(
+                    guild_id=int(guild_id),  # type: ignore
+                    content=content,
+                    msg_id=kwargs.get("event_id"),
+                    file_image=file_image,  # type: ignore
+                    message_reference=message_reference,  # type: ignore
+                )
+            else:
+                result = await self.bot.post_messages(
+                    channel_id=int(channel_id),  # type: ignore
+                    content=content,
+                    msg_id=kwargs.get("event_id"),
+                    file_image=file_image,  # type: ignore
+                    message_reference=message_reference,  # type: ignore
+                )
+        except ActionFailed as e:
+            raise ob_exception.PlatformError("failed", 34001, str(e), None)
+        # TODO: 如果是主动消息，返回的时间会是 None
+        # https://bot.q.qq.com/wiki/develop/api/openapi/message/post_messages.html#%E9%94%99%E8%AF%AF%E7%A0%81
+        # 因为会返回带 MessageAudit 的错误消息
         time = (
             result.timestamp.timestamp()
             if result.timestamp
