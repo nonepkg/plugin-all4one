@@ -215,7 +215,7 @@ class Middleware(BaseMiddleware):
                 message_list.append(MessageSegment.reply(segment.data["message_id"]))
         return Message(message_list)
 
-    @supported_action
+    @supported_action("OneBot V11")
     async def send_message(
         self,
         *,
@@ -241,11 +241,11 @@ class Middleware(BaseMiddleware):
             "time": int(datetime.now().timestamp()),
         }
 
-    @supported_action
+    @supported_action("OneBot V11")
     async def delete_message(self, *, message_id: str, **kwargs: Any) -> None:
         await self.bot.delete_msg(message_id=int(message_id))
 
-    @supported_action
+    @supported_action("OneBot V11")
     async def get_self_info(
         self, **kwargs: Any
     ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
@@ -256,7 +256,7 @@ class Middleware(BaseMiddleware):
             "user_displayname": "",
         }
 
-    @supported_action
+    @supported_action("OneBot V11")
     async def get_user_info(
         self, *, user_id: str, no_cache: bool = False, **kwargs: Any
     ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
@@ -272,7 +272,7 @@ class Middleware(BaseMiddleware):
         resp.update({f"qq.{k}": v for k, v in result.items() if k not in resp})
         return resp
 
-    @supported_action
+    @supported_action("OneBot V11")
     async def get_friend_list(
         self,
         **kwargs: Any,
@@ -292,7 +292,7 @@ class Middleware(BaseMiddleware):
             resp.append(friend_dict)
         return resp
 
-    @supported_action
+    @supported_action("OneBot V11")
     async def get_group_info(
         self, *, group_id: str, no_cache: bool = False, **kwargs: Any
     ) -> Dict[Union[Literal["group_id", "group_name"], str], str]:
@@ -306,7 +306,7 @@ class Middleware(BaseMiddleware):
         resp.update({f"qq.{k}": v for k, v in result.items() if k not in resp})
         return resp
 
-    @supported_action
+    @supported_action("OneBot V11")
     async def get_group_list(
         self,
         **kwargs: Any,
@@ -324,7 +324,7 @@ class Middleware(BaseMiddleware):
             resp.append(group_dict)
         return resp
 
-    @supported_action
+    @supported_action("OneBot V11")
     async def get_group_member_info(
         self, *, group_id: str, user_id: str, no_cache: bool = False, **kwargs: Any
     ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
@@ -354,13 +354,13 @@ class Middleware(BaseMiddleware):
             resp.append(tmp)
         return resp
 
-    @supported_action
+    @supported_action("OneBot V11")
     async def set_group_name(
         self, *, group_id: str, group_name: str, **kwargs: Any
     ) -> None:
         await self.bot.set_group_name(group_id=int(group_id), group_name=group_name)
 
-    @supported_action
+    @supported_action("OneBot V11")
     async def leave_group(
         self, *, group_id: str, is_dismiss: bool = False, **kwargs: Any
     ) -> None:

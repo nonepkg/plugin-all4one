@@ -191,7 +191,7 @@ class Middleware(BaseMiddleware):
                 message_list.append(OneBotMessageSegment.mention_all())
         return OneBotMessage(message_list)
 
-    @supported_action
+    @supported_action("QQ Guild")
     async def send_message(
         self,
         *,
@@ -268,7 +268,7 @@ class Middleware(BaseMiddleware):
             "time": time,
         }
 
-    @supported_action
+    @supported_action("QQ Guild")
     async def get_guild_info(
         self, *, guild_id: str, **kwargs: Any
     ) -> Dict[Union[Literal["guild_id", "guild_name"], str], str]:
@@ -279,7 +279,7 @@ class Middleware(BaseMiddleware):
         guild_dict["guild_name"] = guild_dict["name"]
         return guild_dict
 
-    @supported_action
+    @supported_action("QQ Guild")
     async def get_guild_list(
         self, **kwargs: Any
     ) -> List[Dict[Union[Literal["guild_id", "guild_name"], str], str]]:
@@ -303,7 +303,7 @@ class Middleware(BaseMiddleware):
             guilds_list.append(guild_dict)
         return guilds_list
 
-    @supported_action
+    @supported_action("QQ Guild")
     async def get_guild_member_info(
         self, *, guild_id: str, user_id: str, **kwargs: Any
     ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
@@ -329,7 +329,7 @@ class Middleware(BaseMiddleware):
             after = str(result[-1].user.id)  # type: ignore
         return members
 
-    @supported_action
+    @supported_action("QQ Guild")
     async def get_guild_member_list(
         self, *, guild_id: str, **kwargs: Any
     ) -> List[
@@ -348,7 +348,7 @@ class Middleware(BaseMiddleware):
             )
         return members_list
 
-    @supported_action
+    @supported_action("QQ Guild")
     async def get_channel_info(
         self, *, guild_id: str, channel_id: str, **kwargs: Any
     ) -> Dict[Union[Literal["channel_id", "channel_name"], str], str]:
@@ -359,7 +359,7 @@ class Middleware(BaseMiddleware):
             "channel_name": result.name,  # type: ignore
         }
 
-    @supported_action
+    @supported_action("QQ Guild")
     async def get_channel_list(
         self, *, guild_id: str, **kwargs: Any
     ) -> List[Dict[Union[Literal["channel_id", "channel_name"], str], str]]:
@@ -375,13 +375,13 @@ class Middleware(BaseMiddleware):
             )
         return channels_list
 
-    @supported_action
+    @supported_action("QQ Guild")
     async def set_channel_name(
         self, *, guild_id: str, channel_id: str, channel_name: str, **kwargs: Any
     ) -> None:
         await self.bot.patch_channel(channel_id=int(channel_id), name=channel_name)
 
-    @supported_action
+    @supported_action("QQ Guild")
     async def get_channel_member_info(
         self, *, guild_id: str, channel_id: str, user_id: str, **kwargs: Any
     ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
@@ -393,7 +393,7 @@ class Middleware(BaseMiddleware):
             "user_displayname": result.nick,  # type: ignore
         }
 
-    @supported_action
+    @supported_action("QQ Guild")
     async def get_channel_member_list(
         self, *, guild_id: str, channel_id: str, **kwargs: Any
     ) -> List[
@@ -446,7 +446,7 @@ class Middleware(BaseMiddleware):
             )
         return members_list
 
-    @supported_action
+    @supported_action("QQ Guild")
     async def delete_message(self, *, message_id: str, **kwargs: Any) -> None:
         message, _, channel = self._from_ob_message_id(message_id)
         if channel is None or message is None:
