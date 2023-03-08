@@ -8,10 +8,10 @@ from pydantic import parse_obj_as
 from nonebot.adapters.qqguild.api.model import Member
 from nonebot.adapters.qqguild.api import MessageReference
 import nonebot.adapters.onebot.v12.exception as ob_exception
-from nonebot.adapters.qqguild.exception import ActionFailed
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
+from nonebot.adapters.qqguild.exception import ActionFailed, AuditException
 from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
 from nonebot.adapters.qqguild.event import GuildMemberAddEvent, GuildMemberRemoveEvent
 from nonebot.adapters.qqguild import (
@@ -22,7 +22,6 @@ from nonebot.adapters.qqguild import (
     ChannelEvent,
     MessageEvent,
     MessageSegment,
-    GuildCreateEvent,
     GuildMemberEvent,
     ChannelCreateEvent,
     ChannelDeleteEvent,
@@ -249,22 +248,29 @@ class Middleware(BaseMiddleware):
                     file_image=file_image,  # type: ignore
                     message_reference=message_reference,  # type: ignore
                 )
+            time = result.timestamp.timestamp()  # type: ignore
+            message_id = {
+                "message_id": result.id,
+                "guild_id": result.guild_id,
+                "channel_id": result.channel_id,
+            }
+        except AuditException as e:
+            # https://bot.q.qq.com/wiki/develop/api/openapi/message/post_messages.html#%E9%94%99%E8%AF%AF%E7%A0%81
+            # NoneBot 的默认 API_TIMEOUT 为 30s，这里设置为 25s
+            result = await e.get_audit_result(timeout=25)
+            if result.message_id is None:
+                raise ob_exception.PlatformError("failed", 34001, "消息审核未通过", None)
+            time = result.audit_time.timestamp()  # type: ignore
+            message_id = {
+                "message_id": result.message_id,
+                "guild_id": result.guild_id,
+                "channel_id": result.channel_id,
+            }
         except ActionFailed as e:
             raise ob_exception.PlatformError("failed", 34001, str(e), None)
-        # TODO: 如果是主动消息，返回的时间会是 None
-        # https://bot.q.qq.com/wiki/develop/api/openapi/message/post_messages.html#%E9%94%99%E8%AF%AF%E7%A0%81
-        # 因为会返回带 MessageAudit 的错误消息
-        time = (
-            result.timestamp.timestamp()
-            if result.timestamp
-            else datetime.now().timestamp()
-        )
+
         return {
-            "message_id": self._to_ob_message_id(
-                message_id=result.id,
-                guild_id=result.guild_id,
-                channel_id=result.channel_id,
-            ),
+            "message_id": self._to_ob_message_id(**message_id),
             "time": time,
         }
 

@@ -133,7 +133,7 @@ summary = "execnet: rapid multi-Python deployment"
 
 [[package]]
 name = "fastapi"
-version = "0.92.0"
+version = "0.93.0"
 requires_python = ">=3.7"
 summary = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 dependencies = [
@@ -428,7 +428,7 @@ name = "nonebot-adapter-console"
 version = "0.3.2"
 requires_python = ">=3.8,<4.0"
 git = "https://github.com/nonebot/adapter-console.git"
-revision = "4af22be821efd07484ecc5883177efefcea11501"
+revision = "e980e4a911ba701e7bf7f481331c4471e44d8f3f"
 summary = "console adapter for nonebot2"
 dependencies = [
     "nonebot2<3.0.0.0,>=2.0.0-beta.1",
@@ -440,7 +440,7 @@ name = "nonebot-adapter-onebot"
 version = "2.2.1"
 requires_python = ">=3.8,<4.0"
 git = "https://github.com/nonebot/adapter-onebot.git"
-revision = "044f3c4381cb36586b1f6736557f5b5669731d49"
+revision = "c2f6de703030ca57fd6101f598f436f1d76551f6"
 summary = "OneBot(CQHTTP) adapter for nonebot2"
 dependencies = [
     "msgpack<2.0.0,>=1.0.3",
@@ -449,10 +449,10 @@ dependencies = [
 
 [[package]]
 name = "nonebot-adapter-qqguild"
-version = "0.2.0"
+version = "0.2.1"
 requires_python = ">=3.8,<4.0"
 git = "https://github.com/nonebot/adapter-qqguild.git"
-revision = "c38cda9a262b9f9ce017e92b315a00257963aa54"
+revision = "29c35c011c29dac79737cffa81d2325c70605bb7"
 summary = "QQ Guild adapter for nonebot2"
 dependencies = [
     "nonebot2<3.0.0.0,>=2.0.0-beta.1",
@@ -464,7 +464,7 @@ name = "nonebot-adapter-telegram"
 version = "0.1.0b8"
 requires_python = ">=3.8,<4.0"
 git = "https://github.com/nonebot/adapter-telegram.git"
-revision = "a382a7f1954bec289a22c8f240ce9e6c02afffed"
+revision = "3be8809bad8ac52cd645c7cd32193673c99ddabe"
 summary = "Telegram Adapter for NoneBot2"
 dependencies = [
     "anyio<4.0.0,>=3.6.2",
@@ -473,7 +473,7 @@ dependencies = [
 
 [[package]]
 name = "nonebot-plugin-datastore"
-version = "0.6.0a0"
+version = "0.6.0a2"
 requires_python = ">=3.8,<4.0"
 summary = "适用于 Nonebot2 的数据存储插件"
 dependencies = [
@@ -1136,9 +1136,9 @@ content_hash = "sha256:ebe43d1568f09fdaace73892be9ded8cd540c02904cc2e02d828a35c7
     {url = "https://files.pythonhosted.org/packages/7a/3c/b5ac9fc61e1e559ced3e40bf5b518a4142536b34eb274aa50dff29cb89f5/execnet-1.9.0.tar.gz", hash = "sha256:8f694f3ba9cc92cab508b152dcfe322153975c29bda272e2fd7f3f00f36e47c5"},
     {url = "https://files.pythonhosted.org/packages/81/c0/3072ecc23f4c5e0a1af35e3a222855cfd9c80a1a105ca67be3b6172637dd/execnet-1.9.0-py2.py3-none-any.whl", hash = "sha256:a295f7cc774947aac58dde7fdc85f4aa00c42adf5d8f5468fc630c1acf30a142"},
 ]
-"fastapi 0.92.0" = [
-    {url = "https://files.pythonhosted.org/packages/11/92/6577adcb71d85378700765b5298929ac0fcafaa47a7c39bdc205289d9c74/fastapi-0.92.0.tar.gz", hash = "sha256:023a0f5bd2c8b2609014d3bba1e14a1d7df96c6abea0a73070621c9862b9a4de"},
-    {url = "https://files.pythonhosted.org/packages/cd/ec/878318da126d6c83641d23644899ca94838b839490bcdbcddad6814fe07a/fastapi-0.92.0-py3-none-any.whl", hash = "sha256:ae7b97c778e2f2ec3fb3cb4fb14162129411d99907fb71920f6d69a524340ebf"},
+"fastapi 0.93.0" = [
+    {url = "https://files.pythonhosted.org/packages/16/78/94f134a297b1d7ed57a2f6998a504f410bf832aff4dfcde8a409ffdf4273/fastapi-0.93.0-py3-none-any.whl", hash = "sha256:d6e6db5f096d67b475e2a09e1124983554f634fad50297de85fc3de0583df13a"},
+    {url = "https://files.pythonhosted.org/packages/a2/7e/ad403c2511358cb20cb33e46b941024ad3f35784d093c2259f99f4aecfc4/fastapi-0.93.0.tar.gz", hash = "sha256:c2944febec6da706f4c82cdfa0de48afda960c8fbde29dec88697d55a67d7718"},
 ]
 "filelock 3.9.0" = [
     {url = "https://files.pythonhosted.org/packages/0b/dc/eac02350f06c6ed78a655ceb04047df01b02c6b7ea3fc02d4df24ca87d24/filelock-3.9.0.tar.gz", hash = "sha256:7b319f24340b51f55a2bf7a12ac0755a9b03e718311dac567a0f4f7fabd2f5de"},
@@ -1523,9 +1523,9 @@ content_hash = "sha256:ebe43d1568f09fdaace73892be9ded8cd540c02904cc2e02d828a35c7
     {url = "https://files.pythonhosted.org/packages/96/a8/d3b5baead78adadacb99e7281b3e842126da825cf53df61688cfc8b8ff91/nodeenv-1.7.0-py2.py3-none-any.whl", hash = "sha256:27083a7b96a25f2f5e1d8cb4b6317ee8aeda3bdd121394e5ac54e498028a042e"},
     {url = "https://files.pythonhosted.org/packages/f3/9d/a28ecbd1721cd6c0ea65da6bfb2771d31c5d7e32d916a8f643b062530af3/nodeenv-1.7.0.tar.gz", hash = "sha256:e0e7f7dfb85fc5394c6fe1e8fa98131a2473e04311a45afb6508f7cf1836fa2b"},
 ]
-"nonebot-plugin-datastore 0.6.0a0" = [
-    {url = "https://files.pythonhosted.org/packages/51/a0/2505ed0016e8c7ac2c833a7e31635df73adeff8d9368fd8a5aa7bb3ae1a3/nonebot_plugin_datastore-0.6.0a0-py3-none-any.whl", hash = "sha256:60c8eee138a2721ae020a6ba774872a3e9c01c1eba0b80dad490c940df2d7685"},
-    {url = "https://files.pythonhosted.org/packages/ab/1b/8eab8d68da031f307637bcdd71accf3df304f10794c14b0c9833bd083787/nonebot_plugin_datastore-0.6.0a0.tar.gz", hash = "sha256:7026e4afb6430b33523535b72e895f031d2ad213beac82cd8f5ce70790cc14a3"},
+"nonebot-plugin-datastore 0.6.0a2" = [
+    {url = "https://files.pythonhosted.org/packages/ab/53/797dae22405a2616b787ac79ab79153fa8fd72f92b2303996cc353308fa1/nonebot_plugin_datastore-0.6.0a2.tar.gz", hash = "sha256:a27d5dfdab4899d3b30e407575ee15b6b70385ee38d8d7c2ab4bf87e7dc29326"},
+    {url = "https://files.pythonhosted.org/packages/f7/29/76fd43e775d5d49356ee31f110b9043979cf32c6e084e6a8d44c637c329b/nonebot_plugin_datastore-0.6.0a2-py3-none-any.whl", hash = "sha256:1e0095065c6213a875ed1d939dd21f2dde0d20e399f83ecdc0532d89fc93e2ae"},
 ]
 "nonebot-plugin-localstore 0.3.1" = [
     {url = "https://files.pythonhosted.org/packages/22/5a/a1e3de9aa7c93a910c70f50dfeff4053138e9d7fc21bc3c88eb3fcb10738/nonebot_plugin_localstore-0.3.1-py3-none-any.whl", hash = "sha256:5a03e731a354105741852121fa6fa30508ad9c1b93eb9f42f8ba02924128a985"},
