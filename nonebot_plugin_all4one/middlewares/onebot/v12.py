@@ -39,7 +39,7 @@ class Middleware(BaseMiddleware):
             event.message = Message(message_list)
         return [event]
 
-    @supported_action("OneBot V12")
+    @supported_action
     async def send_message(
         self,
         *,
@@ -95,11 +95,11 @@ class Middleware(BaseMiddleware):
 
     async def get_supported_actions(self, **kwargs: Any) -> List[str]:
         _ = set()
-        _.update(await super().get_supported_actions())
+        _.update(self.supported_actions)
         _.update(await self.bot.get_supported_actions(**kwargs))
         return list(_)
 
     async def _call_api(self, api: str, **kwargs: Any) -> Any:
-        if api in await super().get_supported_actions():
+        if api in self.supported_actions:
             return await getattr(self, api)(**kwargs)
         return await self.bot.call_api(api, **kwargs)

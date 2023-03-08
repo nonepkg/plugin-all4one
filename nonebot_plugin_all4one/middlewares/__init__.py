@@ -15,7 +15,6 @@ from typing import (
     Generic,
     Literal,
     TypeVar,
-    Callable,
     ClassVar,
     Optional,
 )
@@ -44,17 +43,19 @@ MIDDLEWARE_MAP = {
     "OneBot V11": "onebot.v11",
 }
 
-supported_actions: Dict[str, Set[str]] = {}
 
+class supported_action:
+    def __init__(self, fn):
+        self.fn = fn
 
-def supported_action(middleware: str):
-    def _(action):
-        if middleware not in supported_actions:
-            supported_actions[middleware] = set()
-        supported_actions[middleware].add(action.__name__)
-        return action
+    def __set_name__(self, owner: Type["Middleware"], name: str):
+        owner.supported_actions.add(name)
 
-    return _
+    def __call__(self, *args, **kwargs):
+        return self.fn(*args, **kwargs)
+
+    def __get__(self, obj, objtype=None):
+        return partial(self.__call__, obj)
 
 
 _T = TypeVar("_T", bound=OneBotEvent)
@@ -87,7 +88,22 @@ class Queue(_Queue[_T]):
         return event
 
 
-class Middleware:
+class _MiddlewareMeta(type):
+    def __new__(cls, name, bases, attrs):
+        supported_actions = set()
+        for base in bases:
+            supported_actions.update(base.supported_actions)
+        attrs["supported_actions"] = supported_actions
+        return type.__new__(cls, name, bases, attrs)
+
+
+class MiddlewareMeta(_MiddlewareMeta, ABCMeta):
+    pass
+
+
+class Middleware(metaclass=MiddlewareMeta):
+    supported_actions: ClassVar[Set[str]]
+
     def __init__(self, bot: Bot):
         self.bot = bot
         self.tasks: List[asyncio.Task] = []
@@ -99,10 +115,7 @@ class Middleware:
         参数:
             kwargs: 扩展字段
         """
-        _ = set()
-        _.update(supported_actions.get("", set()))
-        _.update(supported_actions.get(self.get_name(), set()))
-        return list(_)
+        return list(self.supported_actions)
 
     async def _call_api(self, api: str, **kwargs: Any) -> Any:
         if api not in await self.get_supported_actions():
@@ -162,7 +175,7 @@ class Middleware:
     @abstractmethod
     def get_name(cls) -> str:
         """对应协议适配器的名称"""
-        return ""
+        raise NotImplementedError
 
     @abstractmethod
     def get_platform(self) -> str:
@@ -451,7 +464,7 @@ class Middleware:
         """
         raise NotImplementedError
 
-    @supported_action("")
+    @supported_action
     async def upload_file(
         self,
         *,
@@ -545,7 +558,7 @@ class Middleware:
         """
         raise NotImplementedError
 
-    @supported_action("")
+    @supported_action
     async def get_file(
         self,
         *,

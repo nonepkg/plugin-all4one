@@ -55,7 +55,7 @@ class Middleware(BaseMiddleware):
     def to_onebot_message(self, message: Message) -> OneBotMessage:
         return OneBotMessage(OneBotMessageSegment.text(str(message)))
 
-    @supported_action("Console")
+    @supported_action
     async def send_message(
         self,
         *,
