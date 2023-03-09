@@ -48,7 +48,7 @@ class Middleware(BaseMiddleware):
             event_dict["time"] = event.date
             event_dict["detail_type"] = event.get_event_name().split(".")[1]
             event_dict["sub_type"] = ""
-            event_dict["message_id"] = str(event.message_id)
+            event_dict["message_id"] = f"{event.chat.id}/{event.message_id}"
             event_dict["message"] = await self.to_onebot_message(event.message)
             event_dict["alt_message"] = str(event.message)
             if isinstance(event, PrivateMessageEvent):
@@ -65,7 +65,7 @@ class Middleware(BaseMiddleware):
                 event_dict["message"].insert(
                     0,
                     OneBotMessageSegment.reply(
-                        str(event.reply_to_message.message_id),
+                        f"{event.reply_to_message.chat.id}/{event.reply_to_message.message_id}",
                         user_id=event.reply_to_message.get_user_id()
                         if not isinstance(event.reply_to_message, ChannelPostEvent)
                         else "",
@@ -204,7 +204,9 @@ class Middleware(BaseMiddleware):
 
         reply_to_message_id = None
         if message.count("reply"):
-            reply_to_message_id = int(message["reply", 0].data["message_id"])
+            reply_to_message_id = int(
+                message["reply", 0].data["message_id"].split("/")[1]
+            )
 
         result = await self.send(
             int(chat_id),
@@ -216,6 +218,10 @@ class Middleware(BaseMiddleware):
         if isinstance(result, list):
             result = result[0]
         return {"message_id": str(result.message_id), "time": result.date}
+
+    @supported_action
+    async def delete_message(self, *, message_id: str, **kwargs: Any) -> None:
+        await self.bot.delete_message(*map(int, message_id.split("/")))
 
     @supported_action
     async def get_self_info(
@@ -270,3 +276,48 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def leave_group(self, *, group_id: str, **kwargs: Any) -> None:
         await self.bot.leave_chat(int(group_id))
+
+    @supported_action
+    async def get_guild_info(
+        self, *, guild_id: str, **kwargs: Any
+    ) -> Dict[Union[Literal["guild_id", "guild_name"], str], str]:
+        result = await self.bot.get_chat(int(guild_id))
+        return {"guild_id": str(result.id), "guild_id": result.title}  # type: ignore
+
+    @supported_action
+    async def set_guild_name(
+        self, *, guild_id: str, guild_name: str, **kwargs: Any
+    ) -> None:
+        await self.bot.set_chat_title(int(guild_id), guild_name)
+
+    @supported_action
+    async def get_guild_member_info(
+        self, *, guild_id: str, user_id: str, **kwargs: Any
+    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
+        result = await self.bot.get_chat_member(int(guild_id), int(user_id))
+        return {
+            "user_id": str(result.user.id),
+            "user_name": result.user.username if result.user.username else "",
+            "user_displayname": result.user.first_name,
+        }
+
+    @supported_action
+    async def leave_guild(self, *, guild_id: str, **kwargs: Any) -> None:
+        await self.bot.leave_chat(int(guild_id))
+
+    @supported_action
+    async def set_channel_name(
+        self, *, guild_id: str, channel_id: str, channel_name: str, **kwargs: Any
+    ) -> None:
+        await self.bot.edit_forum_topic(int(guild_id), int(channel_id), channel_name)
+
+    @supported_action
+    async def get_channel_member_info(
+        self, *, guild_id: str, channel_id: str, user_id: str, **kwargs: Any
+    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
+        result = await self.bot.get_chat_member(int(guild_id), int(user_id))
+        return {
+            "user_id": str(result.user.id),
+            "user_name": result.user.username if result.user.username else "",
+            "user_displayname": result.user.first_name,
+        }
