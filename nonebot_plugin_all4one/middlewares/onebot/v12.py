@@ -95,11 +95,11 @@ class Middleware(BaseMiddleware):
 
     async def get_supported_actions(self, **kwargs: Any) -> List[str]:
         _ = set()
-        _.update(self.supported_actions)
+        _.update(self._supported_actions)
         _.update(await self.bot.get_supported_actions(**kwargs))
         return list(_)
 
     async def _call_api(self, api: str, **kwargs: Any) -> Any:
-        if api in self.supported_actions:
+        if api in self._supported_actions:
             return await getattr(self, api)(**kwargs)
         return await self.bot.call_api(api, **kwargs)
