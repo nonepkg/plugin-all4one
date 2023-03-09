@@ -219,7 +219,7 @@ class OneBotImplementation:
         except WebSocketClosed as e:
             logger.opt(colors=True, exception=e).log(
                 "WARNING",
-                "<r><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></r>",
+                "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>",
                 e,
             )
         except Exception as e:
@@ -436,7 +436,7 @@ class OneBotImplementation:
                     except WebSocketClosed as e:
                         logger.opt(colors=True, exception=e).log(
                             "WARNING",
-                            "<r><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></r>",
+                            "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>",
                             e,
                         )
                     except Exception as e:
@@ -447,10 +447,10 @@ class OneBotImplementation:
                             e,
                         )
             except Exception as e:
-                logger.opt(colors=True, exception=e).log(
-                    "ERROR",
-                    "<r><bg #f8bbd0>Error while setup websocket to "
-                    f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></r>",
+                logger.opt(colors=True).log(
+                    "WARNING",
+                    "<y><bg #f8bbd0>Error while setup websocket to "
+                    f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></y>",
                     e,
                 )
             await asyncio.sleep(conn.reconnect_interval)
