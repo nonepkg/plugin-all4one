@@ -1,21 +1,17 @@
 import asyncio
 from uuid import uuid4
 from datetime import datetime
-from functools import partial
+from abc import ABC, abstractmethod
 from asyncio import Queue as BaseQueue
-from abc import ABC, ABCMeta, abstractmethod
 from typing import (
     TYPE_CHECKING,
     Any,
-    Set,
     Dict,
     List,
-    Type,
     Union,
     Generic,
     Literal,
     TypeVar,
-    ClassVar,
     Optional,
 )
 
@@ -42,20 +38,6 @@ MIDDLEWARE_MAP = {
     "OneBot V12": "onebot.v12",
     "OneBot V11": "onebot.v11",
 }
-
-
-class supported_action:
-    def __init__(self, fn):
-        self.fn = fn
-
-    def __set_name__(self, owner: Type["Middleware"], name: str):
-        owner.supported_actions.add(name)
-
-    def __call__(self, *args, **kwargs):
-        return self.fn(*args, **kwargs)
-
-    def __get__(self, obj, objtype=None):
-        return partial(self.__call__, obj)
 
 
 _T = TypeVar("_T", bound=OneBotEvent)
@@ -88,37 +70,39 @@ class Queue(_Queue[_T]):
         return event
 
 
-class _MiddlewareMeta(type):
-    def __new__(cls, name, bases, attrs):
-        supported_actions = set()
-        for base in bases:
-            supported_actions.update(base.supported_actions)
-        attrs["supported_actions"] = supported_actions
-        return type.__new__(cls, name, bases, attrs)
+def supported_action(func):
+    """标记支持的动作"""
+    func.__supported__ = True
+    return func
 
 
-class MiddlewareMeta(_MiddlewareMeta, ABCMeta):
-    pass
-
-
-class Middleware(metaclass=MiddlewareMeta):
-    supported_actions: ClassVar[Set[str]]
-
+class Middleware(ABC):
     def __init__(self, bot: Bot):
         self.bot = bot
         self.tasks: List[asyncio.Task] = []
         self.queues: List[Queue[OneBotEvent]] = []
+        self._supported_actions = self._get_supported_actions()
 
+    def _get_supported_actions(self) -> List[str]:
+        """获取支持的动作列表"""
+        supported_actions = set()
+        for class_ in self.__class__.__mro__:
+            for name, attr in class_.__dict__.items():
+                if not name.startswith("_") and getattr(attr, "__supported__", False):
+                    supported_actions.add(name)
+        return list(supported_actions)
+
+    @supported_action
     async def get_supported_actions(self, **kwargs: Any) -> List[str]:
         """获取支持的动作列表
 
         参数:
             kwargs: 扩展字段
         """
-        return list(self.supported_actions)
+        return self._supported_actions
 
     async def _call_api(self, api: str, **kwargs: Any) -> Any:
-        if api not in await self.get_supported_actions():
+        if api not in self._supported_actions:
             raise UnsupportedAction(
                 status="failed",
                 retcode=10002,
