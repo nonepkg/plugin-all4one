@@ -217,13 +217,13 @@ class OneBotImplementation:
                 event = await queue.get()
                 await websocket.send(encode_data(event.dict(), conn.use_msgpack))
         except WebSocketClosed as e:
-            logger.opt(colors=True).log(
-                "ERROR",
-                "<r><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></r>",
+            logger.opt(colors=True, exception=e).log(
+                "WARNING",
+                "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>",
                 e,
             )
         except Exception as e:
-            logger.opt(colors=True).log(
+            logger.opt(colors=True, exception=e).log(
                 "ERROR",
                 "<r><bg #f8bbd0>Error while process data from websocket"
                 ". Trying to reconnect...</bg #f8bbd0></r>",
@@ -247,13 +247,13 @@ class OneBotImplementation:
                 if "echo" in data:
                     resp["echo"] = data["echo"]
                 await websocket.send(encode_data(resp, isinstance(raw_data, str)))
-        except WebSocketClosed:
-            logger.opt(colors=True).log(
+        except WebSocketClosed as e:
+            logger.opt(colors=True, exception=e).log(
                 "WARNING",
                 f"WebSocket for Bot {escape_tag(middleware.self_id)} closed by peer",
             )
         except Exception as e:
-            logger.opt(colors=True).log(
+            logger.opt(colors=True, exception=e).log(
                 "ERROR",
                 "<r><bg #f8bbd0>Error while process data from websocket "
                 f"for bot {escape_tag(middleware.self_id)}.</bg #f8bbd0></r>",
@@ -434,13 +434,13 @@ class OneBotImplementation:
                         await t2
                         t1.cancel()
                     except WebSocketClosed as e:
-                        logger.opt(colors=True).log(
-                            "ERROR",
-                            "<r><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></r>",
+                        logger.opt(colors=True, exception=e).log(
+                            "WARNING",
+                            "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>",
                             e,
                         )
                     except Exception as e:
-                        logger.opt(colors=True).log(
+                        logger.opt(colors=True, exception=e).log(
                             "ERROR",
                             "<r><bg #f8bbd0>Error while process data from websocket"
                             f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></r>",
@@ -448,9 +448,9 @@ class OneBotImplementation:
                         )
             except Exception as e:
                 logger.opt(colors=True).log(
-                    "ERROR",
-                    "<r><bg #f8bbd0>Error while setup websocket to "
-                    f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></r>",
+                    "WARNING",
+                    "<y><bg #f8bbd0>Error while setup websocket to "
+                    f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></y>",
                     e,
                 )
             await asyncio.sleep(conn.reconnect_interval)
