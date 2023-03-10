@@ -217,7 +217,7 @@ class OneBotImplementation:
                 event = await queue.get()
                 await websocket.send(encode_data(event.dict(), conn.use_msgpack))
         except WebSocketClosed as e:
-            logger.opt(colors=True, exception=e).log(
+            logger.opt(colors=True).log(
                 "WARNING",
                 "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>",
                 e,
@@ -248,7 +248,7 @@ class OneBotImplementation:
                     resp["echo"] = data["echo"]
                 await websocket.send(encode_data(resp, isinstance(raw_data, str)))
         except WebSocketClosed as e:
-            logger.opt(colors=True, exception=e).log(
+            logger.opt(colors=True).log(
                 "WARNING",
                 f"WebSocket for Bot {escape_tag(middleware.self_id)} closed by peer",
             )
@@ -434,7 +434,7 @@ class OneBotImplementation:
                         await t2
                         t1.cancel()
                     except WebSocketClosed as e:
-                        logger.opt(colors=True, exception=e).log(
+                        logger.opt(colors=True).log(
                             "WARNING",
                             "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>",
                             e,
