@@ -121,8 +121,6 @@ class OneBotImplementation:
                 "data": e.data,
                 "message": e.message,
             }
-        except Exception as e:
-            logger.debug(e)
 
     async def get_latest_events(
         self,
@@ -236,16 +234,33 @@ class OneBotImplementation:
         try:
             while True:
                 raw_data = await websocket.receive()
-                data = (
-                    json.loads(raw_data)
-                    if isinstance(raw_data, str)
-                    else msgpack.unpackb(raw_data)
-                )
-                resp = await self._call_api(
-                    middleware, data["action"], **data["params"]
-                )
-                if "echo" in data:
-                    resp["echo"] = data["echo"]
+                try:
+                    data = (
+                        json.loads(raw_data)
+                        if isinstance(raw_data, str)
+                        else msgpack.unpackb(raw_data)
+                    )
+                    resp = await self._call_api(
+                        middleware, data["action"], **data["params"]
+                    )
+                    if "echo" in data:
+                        resp["echo"] = data["echo"]
+                # 格式错误（包括实现不支持 MessagePack 的情况）、必要字段缺失或字段类型错误
+                except (json.JSONDecodeError, msgpack.UnpackException):
+                    resp = {
+                        "status": "failed",
+                        "retcode": 10001,
+                        "data": None,
+                        "message": "Invalid data format",
+                    }
+                # OneBot 实现内部发生了未捕获的意料之外的异常
+                except Exception as e:
+                    resp = {
+                        "status": "failed",
+                        "retcode": 20002,
+                        "data": None,
+                        "message": str(e),
+                    }
                 await websocket.send(encode_data(resp, isinstance(raw_data, str)))
         except WebSocketClosed as e:
             logger.opt(colors=True).log(
@@ -269,32 +284,46 @@ class OneBotImplementation:
     ) -> Response:
         if response := self._check_access_token(request, conn.access_token):
             return response
+
+        content_type = request.headers.get("Content-Type")
+        if content_type not in ("application/json", "application/msgpack"):
+            return Response(415, content="Invalid Content-Type")
+
         try:
-            if request.content:
-                if (
-                    content_type := request.headers.get("Content-Type")
-                ) == "application/msgpack":
-                    data = msgpack.unpackb(request.content)
-                elif content_type == "application/json":
-                    data = json.loads(request.content)
-                else:
-                    return Response(415, content="Invalid Content-Type")
-                resp = await self._call_api(
-                    middleware,
-                    data["action"],
-                    queue=queue,
-                    **data["params"],
-                )
-                if "echo" in data:
-                    resp["echo"] = data["echo"]
-                return Response(
-                    200,
-                    headers={"Content-Type": content_type},
-                    content=encode_data(resp, content_type != "application/json"),
-                )
+            if request.content is None:
+                raise ValueError("Empty request body")
+            if content_type == "application/msgpack":
+                data = msgpack.unpackb(request.content)
+            else:
+                data = json.loads(request.content)
+
+            resp = await self._call_api(
+                middleware,
+                data["action"],
+                queue=queue,
+                **data["params"],
+            )
+            if "echo" in data:
+                resp["echo"] = data["echo"]
+        except (json.JSONDecodeError, msgpack.UnpackException, ValueError):
+            resp = {
+                "status": "failed",
+                "retcode": 10001,
+                "data": None,
+                "message": "Invalid data format",
+            }
         except Exception as e:
-            logger.debug(e)
-        return Response(204)
+            resp = {
+                "status": "failed",
+                "retcode": 20002,
+                "data": None,
+                "message": str(e),
+            }
+        return Response(
+            200,
+            headers={"Content-Type": content_type},
+            content=encode_data(resp, content_type != "application/json"),
+        )
 
     async def _handle_ws(
         self, middleware: Middleware, conn: WebsocketConfig, websocket: WebSocket
@@ -382,7 +411,9 @@ class OneBotImplementation:
                 )
                 resp = await self.request(request)
                 if resp.status_code == 200:
-                    if resp.content:
+                    try:
+                        if resp.content is None:
+                            raise ValueError("Empty response body")
                         if resp.headers.get("Content-Type") == "application/msgpack":
                             data = msgpack.unpackb(resp.content)
                         elif resp.headers.get("Content-Type") == "application/json":
@@ -394,8 +425,17 @@ class OneBotImplementation:
                             await self._call_api(
                                 middleware, action["action"], **action["params"]
                             )
-            except Exception as e:
-                logger.debug(e)
+                    # 动作请求执行出错
+                    except Exception:
+                        logger.exception("HTTP Webhook Response action failed")
+                # 事件推送成功，并不做更多处理
+                elif resp.status_code == 204:
+                    pass
+                # 事件推送失败
+                else:
+                    logger.exception(f"HTTP Webhook event push failed: {resp}")
+            except Exception:
+                logger.exception("HTTP Webhook event push failed")
 
     async def _websocket_rev(
         self, middleware: Middleware, conn: WebsocketReverseConfig
