@@ -267,6 +267,7 @@ class OneBotImplementation:
                 "WARNING",
                 f"WebSocket for Bot {escape_tag(middleware.self_id)} closed by peer",
             )
+        # 与 WebSocket 服务器的连接发生了意料之外的错误
         except Exception as e:
             logger.opt(colors=True, exception=e).log(
                 "ERROR",
@@ -285,6 +286,7 @@ class OneBotImplementation:
         if response := self._check_access_token(request, conn.access_token):
             return response
 
+        # 如果收到不支持的 Content-Type 请求头，必须返回 HTTP 状态码 415 Unsupported Media Type
         content_type = request.headers.get("Content-Type")
         if content_type not in ("application/json", "application/msgpack"):
             return Response(415, content="Invalid Content-Type")
