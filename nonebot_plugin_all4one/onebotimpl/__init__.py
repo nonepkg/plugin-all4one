@@ -93,12 +93,12 @@ class OneBotImplementation:
         """注册一个中间件"""
         name = middleware.get_name()
         if name in self._middlewares:
-            logger.opt(colors=True).debug(
+            logger.opt(colors=True).warning(
                 f'Middleware "<y>{escape_tag(name)}</y>" already exists'
             )
             return
         self._middlewares[name] = middleware
-        logger.opt(colors=True).debug(
+        logger.opt(colors=True).info(
             f'Succeeded to load middleware "<y>{escape_tag(name)}</y>"'
         )
 
@@ -121,8 +121,6 @@ class OneBotImplementation:
                 "data": e.data,
                 "message": e.message,
             }
-        except Exception as e:
-            logger.debug(e)
 
     async def get_latest_events(
         self,
@@ -217,17 +215,13 @@ class OneBotImplementation:
                 event = await queue.get()
                 await websocket.send(encode_data(event.dict(), conn.use_msgpack))
         except WebSocketClosed as e:
-            logger.opt(colors=True, exception=e).log(
-                "WARNING",
-                "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>",
-                e,
+            logger.opt(colors=True).warning(
+                "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>"
             )
         except Exception as e:
-            logger.opt(colors=True, exception=e).log(
-                "ERROR",
+            logger.opt(colors=True).exception(
                 "<r><bg #f8bbd0>Error while process data from websocket"
-                ". Trying to reconnect...</bg #f8bbd0></r>",
-                e,
+                ". Trying to reconnect...</bg #f8bbd0></r>"
             )
         finally:
             middleware.queues.remove(queue)
@@ -236,28 +230,43 @@ class OneBotImplementation:
         try:
             while True:
                 raw_data = await websocket.receive()
-                data = (
-                    json.loads(raw_data)
-                    if isinstance(raw_data, str)
-                    else msgpack.unpackb(raw_data)
-                )
-                resp = await self._call_api(
-                    middleware, data["action"], **data["params"]
-                )
-                if "echo" in data:
-                    resp["echo"] = data["echo"]
+                try:
+                    data = (
+                        json.loads(raw_data)
+                        if isinstance(raw_data, str)
+                        else msgpack.unpackb(raw_data)
+                    )
+                    resp = await self._call_api(
+                        middleware, data["action"], **data["params"]
+                    )
+                    if "echo" in data:
+                        resp["echo"] = data["echo"]
+                # 格式错误（包括实现不支持 MessagePack 的情况）、必要字段缺失或字段类型错误
+                except (json.JSONDecodeError, msgpack.UnpackException):
+                    resp = {
+                        "status": "failed",
+                        "retcode": 10001,
+                        "data": None,
+                        "message": "Invalid data format",
+                    }
+                # OneBot 实现内部发生了未捕获的意料之外的异常
+                except Exception as e:
+                    resp = {
+                        "status": "failed",
+                        "retcode": 20002,
+                        "data": None,
+                        "message": str(e),
+                    }
                 await websocket.send(encode_data(resp, isinstance(raw_data, str)))
         except WebSocketClosed as e:
-            logger.opt(colors=True, exception=e).log(
-                "WARNING",
-                f"WebSocket for Bot {escape_tag(middleware.self_id)} closed by peer",
+            logger.opt(colors=True).warning(
+                f"WebSocket for Bot {escape_tag(middleware.self_id)} closed by peer"
             )
+        # 与 WebSocket 服务器的连接发生了意料之外的错误
         except Exception as e:
-            logger.opt(colors=True, exception=e).log(
-                "ERROR",
+            logger.opt(colors=True).exception(
                 "<r><bg #f8bbd0>Error while process data from websocket "
-                f"for bot {escape_tag(middleware.self_id)}.</bg #f8bbd0></r>",
-                e,
+                f"for bot {escape_tag(middleware.self_id)}.</bg #f8bbd0></r>"
             )
 
     async def _handle_http(
@@ -269,32 +278,47 @@ class OneBotImplementation:
     ) -> Response:
         if response := self._check_access_token(request, conn.access_token):
             return response
+
+        # 如果收到不支持的 Content-Type 请求头，必须返回 HTTP 状态码 415 Unsupported Media Type
+        content_type = request.headers.get("Content-Type")
+        if content_type not in ("application/json", "application/msgpack"):
+            return Response(415, content="Invalid Content-Type")
+
         try:
-            if request.content:
-                if (
-                    content_type := request.headers.get("Content-Type")
-                ) == "application/msgpack":
-                    data = msgpack.unpackb(request.content)
-                elif content_type == "application/json":
-                    data = json.loads(request.content)
-                else:
-                    return Response(415, content="Invalid Content-Type")
-                resp = await self._call_api(
-                    middleware,
-                    data["action"],
-                    queue=queue,
-                    **data["params"],
-                )
-                if "echo" in data:
-                    resp["echo"] = data["echo"]
-                return Response(
-                    200,
-                    headers={"Content-Type": content_type},
-                    content=encode_data(resp, content_type != "application/json"),
-                )
+            if request.content is None:
+                raise ValueError("Empty request body")
+            if content_type == "application/msgpack":
+                data = msgpack.unpackb(request.content)
+            else:
+                data = json.loads(request.content)
+
+            resp = await self._call_api(
+                middleware,
+                data["action"],
+                queue=queue,
+                **data["params"],
+            )
+            if "echo" in data:
+                resp["echo"] = data["echo"]
+        except (json.JSONDecodeError, msgpack.UnpackException, ValueError):
+            resp = {
+                "status": "failed",
+                "retcode": 10001,
+                "data": None,
+                "message": "Invalid data format",
+            }
         except Exception as e:
-            logger.debug(e)
-        return Response(204)
+            resp = {
+                "status": "failed",
+                "retcode": 20002,
+                "data": None,
+                "message": str(e),
+            }
+        return Response(
+            200,
+            headers={"Content-Type": content_type},
+            content=encode_data(resp, content_type != "application/json"),
+        )
 
     async def _handle_ws(
         self, middleware: Middleware, conn: WebsocketConfig, websocket: WebSocket
@@ -382,20 +406,33 @@ class OneBotImplementation:
                 )
                 resp = await self.request(request)
                 if resp.status_code == 200:
-                    if resp.content:
-                        if resp.headers.get("Content-Type") == "application/msgpack":
+                    try:
+                        if resp.content is None:
+                            raise ValueError("Empty response body")
+                        if (
+                            content_type := resp.headers.get("Content-Type")
+                        ) == "application/msgpack":
                             data = msgpack.unpackb(resp.content)
-                        elif resp.headers.get("Content-Type") == "application/json":
+                        elif content_type == "application/json":
                             data = json.loads(resp.content)
                         else:
-                            logger.exception("Invalid Content-Type")
+                            logger.error("Invalid Content-Type")
                             continue
                         for action in data:
                             await self._call_api(
                                 middleware, action["action"], **action["params"]
                             )
-            except Exception as e:
-                logger.debug(e)
+                    # 动作请求执行出错
+                    except Exception:
+                        logger.exception("HTTP Webhook Response action failed")
+                # 事件推送成功，并不做更多处理
+                elif resp.status_code == 204:
+                    pass
+                # 事件推送失败
+                else:
+                    logger.error(f"HTTP Webhook event push failed: {resp}")
+            except Exception:
+                logger.exception("HTTP Webhook event push failed")
 
     async def _websocket_rev(
         self, middleware: Middleware, conn: WebsocketReverseConfig
@@ -434,24 +471,18 @@ class OneBotImplementation:
                         await t2
                         t1.cancel()
                     except WebSocketClosed as e:
-                        logger.opt(colors=True, exception=e).log(
-                            "WARNING",
-                            "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>",
-                            e,
+                        logger.opt(colors=True).warning(
+                            "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>"
                         )
                     except Exception as e:
-                        logger.opt(colors=True, exception=e).log(
-                            "ERROR",
+                        logger.opt(colors=True).exception(
                             "<r><bg #f8bbd0>Error while process data from websocket"
                             f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></r>",
-                            e,
                         )
             except Exception as e:
-                logger.opt(colors=True).log(
-                    "WARNING",
+                logger.opt(colors=True).warning(
                     "<y><bg #f8bbd0>Error while setup websocket to "
                     f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></y>",
-                    e,
                 )
             await asyncio.sleep(conn.reconnect_interval)
 
@@ -473,9 +504,9 @@ class OneBotImplementation:
                     )
                     self.register_middleware(getattr(module, "Middleware"))
                 else:
-                    logger.warning(f"Can not find middleware for Adapter {middleware}")
-            except Exception as e:
-                logger.warning(f"Can not load middleware for Adapter {middleware}: {e}")
+                    logger.error(f"Can not find middleware for Adapter {middleware}")
+            except Exception:
+                logger.exception(f"Can not load middleware for Adapter {middleware}:")
 
     def setup(self):
         @self.driver.on_startup
