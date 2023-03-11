@@ -93,12 +93,12 @@ class OneBotImplementation:
         """注册一个中间件"""
         name = middleware.get_name()
         if name in self._middlewares:
-            logger.opt(colors=True).debug(
+            logger.opt(colors=True).warning(
                 f'Middleware "<y>{escape_tag(name)}</y>" already exists'
             )
             return
         self._middlewares[name] = middleware
-        logger.opt(colors=True).debug(
+        logger.opt(colors=True).info(
             f'Succeeded to load middleware "<y>{escape_tag(name)}</y>"'
         )
 
@@ -409,12 +409,14 @@ class OneBotImplementation:
                     try:
                         if resp.content is None:
                             raise ValueError("Empty response body")
-                        if resp.headers.get("Content-Type") == "application/msgpack":
+                        if (
+                            content_type := resp.headers.get("Content-Type")
+                        ) == "application/msgpack":
                             data = msgpack.unpackb(resp.content)
-                        elif resp.headers.get("Content-Type") == "application/json":
+                        elif content_type == "application/json":
                             data = json.loads(resp.content)
                         else:
-                            logger.exception("Invalid Content-Type")
+                            logger.error("Invalid Content-Type")
                             continue
                         for action in data:
                             await self._call_api(
@@ -428,7 +430,7 @@ class OneBotImplementation:
                     pass
                 # 事件推送失败
                 else:
-                    logger.exception(f"HTTP Webhook event push failed: {resp}")
+                    logger.error(f"HTTP Webhook event push failed: {resp}")
             except Exception:
                 logger.exception("HTTP Webhook event push failed")
 
@@ -502,11 +504,9 @@ class OneBotImplementation:
                     )
                     self.register_middleware(getattr(module, "Middleware"))
                 else:
-                    logger.warning(f"Can not find middleware for Adapter {middleware}")
+                    logger.error(f"Can not find middleware for Adapter {middleware}")
             except Exception:
-                logger.opt(exception=True).warning(
-                    f"Can not load middleware for Adapter {middleware}"
-                )
+                logger.exception(f"Can not load middleware for Adapter {middleware}:")
 
     def setup(self):
         @self.driver.on_startup
