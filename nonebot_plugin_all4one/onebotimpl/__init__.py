@@ -215,17 +215,13 @@ class OneBotImplementation:
                 event = await queue.get()
                 await websocket.send(encode_data(event.dict(), conn.use_msgpack))
         except WebSocketClosed as e:
-            logger.opt(colors=True).log(
-                "WARNING",
-                "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>",
-                e,
+            logger.opt(colors=True).warning(
+                "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>"
             )
         except Exception as e:
-            logger.opt(colors=True, exception=e).log(
-                "ERROR",
+            logger.opt(colors=True).exception(
                 "<r><bg #f8bbd0>Error while process data from websocket"
-                ". Trying to reconnect...</bg #f8bbd0></r>",
-                e,
+                ". Trying to reconnect...</bg #f8bbd0></r>"
             )
         finally:
             middleware.queues.remove(queue)
@@ -263,17 +259,14 @@ class OneBotImplementation:
                     }
                 await websocket.send(encode_data(resp, isinstance(raw_data, str)))
         except WebSocketClosed as e:
-            logger.opt(colors=True).log(
-                "WARNING",
-                f"WebSocket for Bot {escape_tag(middleware.self_id)} closed by peer",
+            logger.opt(colors=True).warning(
+                f"WebSocket for Bot {escape_tag(middleware.self_id)} closed by peer"
             )
         # 与 WebSocket 服务器的连接发生了意料之外的错误
         except Exception as e:
-            logger.opt(colors=True, exception=e).log(
-                "ERROR",
+            logger.opt(colors=True).exception(
                 "<r><bg #f8bbd0>Error while process data from websocket "
-                f"for bot {escape_tag(middleware.self_id)}.</bg #f8bbd0></r>",
-                e,
+                f"for bot {escape_tag(middleware.self_id)}.</bg #f8bbd0></r>"
             )
 
     async def _handle_http(
@@ -476,24 +469,18 @@ class OneBotImplementation:
                         await t2
                         t1.cancel()
                     except WebSocketClosed as e:
-                        logger.opt(colors=True).log(
-                            "WARNING",
-                            "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>",
-                            e,
+                        logger.opt(colors=True).warning(
+                            "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>"
                         )
                     except Exception as e:
-                        logger.opt(colors=True, exception=e).log(
-                            "ERROR",
+                        logger.opt(colors=True).exception(
                             "<r><bg #f8bbd0>Error while process data from websocket"
                             f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></r>",
-                            e,
                         )
             except Exception as e:
-                logger.opt(colors=True).log(
-                    "WARNING",
+                logger.opt(colors=True).warning(
                     "<y><bg #f8bbd0>Error while setup websocket to "
                     f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></y>",
-                    e,
                 )
             await asyncio.sleep(conn.reconnect_interval)
 
@@ -516,8 +503,10 @@ class OneBotImplementation:
                     self.register_middleware(getattr(module, "Middleware"))
                 else:
                     logger.warning(f"Can not find middleware for Adapter {middleware}")
-            except Exception as e:
-                logger.warning(f"Can not load middleware for Adapter {middleware}: {e}")
+            except Exception:
+                logger.opt(exception=True).warning(
+                    f"Can not load middleware for Adapter {middleware}"
+                )
 
     def setup(self):
         @self.driver.on_startup
