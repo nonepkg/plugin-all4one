@@ -133,12 +133,12 @@ summary = "execnet: rapid multi-Python deployment"
 
 [[package]]
 name = "fastapi"
-version = "0.93.0"
+version = "0.94.0"
 requires_python = ">=3.7"
 summary = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 dependencies = [
     "pydantic!=1.7,!=1.7.1,!=1.7.2,!=1.7.3,!=1.8,!=1.8.1,<2.0.0,>=1.6.2",
-    "starlette<0.26.0,>=0.25.0",
+    "starlette<0.27.0,>=0.26.0",
 ]
 
 [[package]]
@@ -471,7 +471,7 @@ dependencies = [
 
 [[package]]
 name = "nonebot-plugin-datastore"
-version = "0.6.0a2"
+version = "0.6.0a3"
 requires_python = ">=3.8,<4.0"
 summary = "适用于 Nonebot2 的数据存储插件"
 dependencies = [
@@ -779,7 +779,7 @@ dependencies = [
 
 [[package]]
 name = "starlette"
-version = "0.25.0"
+version = "0.26.0.post1"
 requires_python = ">=3.7"
 summary = "The little ASGI library that shines."
 dependencies = [
@@ -910,7 +910,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:4492815a460c32b7127bffd463ffe303fd1bf00555c7afb53d355132c312412e"
+content_hash = "sha256:0f9742a6467f6a13b2ba435fee4c4079857a8abca191037fb030adaaa75715e1"
 
 [metadata.files]
 "aiosqlite 0.18.0" = [
@@ -1134,9 +1134,9 @@ content_hash = "sha256:4492815a460c32b7127bffd463ffe303fd1bf00555c7afb53d355132c
     {url = "https://files.pythonhosted.org/packages/7a/3c/b5ac9fc61e1e559ced3e40bf5b518a4142536b34eb274aa50dff29cb89f5/execnet-1.9.0.tar.gz", hash = "sha256:8f694f3ba9cc92cab508b152dcfe322153975c29bda272e2fd7f3f00f36e47c5"},
     {url = "https://files.pythonhosted.org/packages/81/c0/3072ecc23f4c5e0a1af35e3a222855cfd9c80a1a105ca67be3b6172637dd/execnet-1.9.0-py2.py3-none-any.whl", hash = "sha256:a295f7cc774947aac58dde7fdc85f4aa00c42adf5d8f5468fc630c1acf30a142"},
 ]
-"fastapi 0.93.0" = [
-    {url = "https://files.pythonhosted.org/packages/16/78/94f134a297b1d7ed57a2f6998a504f410bf832aff4dfcde8a409ffdf4273/fastapi-0.93.0-py3-none-any.whl", hash = "sha256:d6e6db5f096d67b475e2a09e1124983554f634fad50297de85fc3de0583df13a"},
-    {url = "https://files.pythonhosted.org/packages/a2/7e/ad403c2511358cb20cb33e46b941024ad3f35784d093c2259f99f4aecfc4/fastapi-0.93.0.tar.gz", hash = "sha256:c2944febec6da706f4c82cdfa0de48afda960c8fbde29dec88697d55a67d7718"},
+"fastapi 0.94.0" = [
+    {url = "https://files.pythonhosted.org/packages/61/0f/6622586ef40e96085812fa2266a779a8c70ad66a563e29263a9784125e01/fastapi-0.94.0.tar.gz", hash = "sha256:08ce0bc6f381ef1b6431e84a31d26eca0b60d6e1ac575adba4af95cc5a36cb62"},
+    {url = "https://files.pythonhosted.org/packages/f5/07/8e950c4bcb953a0bcbb41e0d7b1d5496f9792edfd0dc2cd518cd7a42f948/fastapi-0.94.0-py3-none-any.whl", hash = "sha256:898d7f6616dea49e78fa00e34401f9ace238fc670aafe4e30a16a384e3a671e1"},
 ]
 "filelock 3.9.0" = [
     {url = "https://files.pythonhosted.org/packages/0b/dc/eac02350f06c6ed78a655ceb04047df01b02c6b7ea3fc02d4df24ca87d24/filelock-3.9.0.tar.gz", hash = "sha256:7b319f24340b51f55a2bf7a12ac0755a9b03e718311dac567a0f4f7fabd2f5de"},
@@ -1525,9 +1525,9 @@ content_hash = "sha256:4492815a460c32b7127bffd463ffe303fd1bf00555c7afb53d355132c
     {url = "https://files.pythonhosted.org/packages/0c/23/81753fc0b663ba6c0916d2d30c95108de57b5293f986f6870a9d15ee658c/nonebot_adapter_qqguild-0.2.2.tar.gz", hash = "sha256:a428dda064f4501c285ea7fb51f81fc17e25dca2c2a82edaf1aa34454e28f1b8"},
     {url = "https://files.pythonhosted.org/packages/e2/79/1c48262c040ff67a42e9b7671563f9e39e2e262ef79dc8c4e9e2cbcee413/nonebot_adapter_qqguild-0.2.2-py3-none-any.whl", hash = "sha256:b47cf5793d2aeed53e3d0bd9f0fbd371ce4155e4fb3be48e15e0abe64228ee24"},
 ]
-"nonebot-plugin-datastore 0.6.0a2" = [
-    {url = "https://files.pythonhosted.org/packages/ab/53/797dae22405a2616b787ac79ab79153fa8fd72f92b2303996cc353308fa1/nonebot_plugin_datastore-0.6.0a2.tar.gz", hash = "sha256:a27d5dfdab4899d3b30e407575ee15b6b70385ee38d8d7c2ab4bf87e7dc29326"},
-    {url = "https://files.pythonhosted.org/packages/f7/29/76fd43e775d5d49356ee31f110b9043979cf32c6e084e6a8d44c637c329b/nonebot_plugin_datastore-0.6.0a2-py3-none-any.whl", hash = "sha256:1e0095065c6213a875ed1d939dd21f2dde0d20e399f83ecdc0532d89fc93e2ae"},
+"nonebot-plugin-datastore 0.6.0a3" = [
+    {url = "https://files.pythonhosted.org/packages/6b/6e/23fc63b458958aa66aa0a0dfb9e297a7eab97d2752f48f723a15bcfeb111/nonebot_plugin_datastore-0.6.0a3.tar.gz", hash = "sha256:d3030cfc00d0ffee6014d56d3a0bbc11a83feb246d5be9a4cc0995274789d8e5"},
+    {url = "https://files.pythonhosted.org/packages/be/3c/670af3d57ea99918e1aa6b17bdb0650d549e7f662040844c1949b7d3ffd2/nonebot_plugin_datastore-0.6.0a3-py3-none-any.whl", hash = "sha256:8a3ea97599aa12eaef477419ce604c46db8cc93c1812f554b7cb3377c94de911"},
 ]
 "nonebot-plugin-localstore 0.3.1" = [
     {url = "https://files.pythonhosted.org/packages/22/5a/a1e3de9aa7c93a910c70f50dfeff4053138e9d7fc21bc3c88eb3fcb10738/nonebot_plugin_localstore-0.3.1-py3-none-any.whl", hash = "sha256:5a03e731a354105741852121fa6fa30508ad9c1b93eb9f42f8ba02924128a985"},
@@ -1760,9 +1760,9 @@ content_hash = "sha256:4492815a460c32b7127bffd463ffe303fd1bf00555c7afb53d355132c
     {url = "https://files.pythonhosted.org/packages/e7/d3/a15a090792050d88b0c634d55c18ae55bd5039f14d2097112a3b784e0092/SQLAlchemy-2.0.4-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:738c80705e11c1268827dbe22c01162a9cdc98fc6f7901b429a1459db2593060"},
     {url = "https://files.pythonhosted.org/packages/f1/cc/0fe2fc875724d746f348a10b3c0166f12eaee28af9b027ff254a14be34b9/SQLAlchemy-2.0.4-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:25e4e54575f9d2af1eab82d3a470fca27062191c48ee57b6386fe09a3c0a6a33"},
 ]
-"starlette 0.25.0" = [
-    {url = "https://files.pythonhosted.org/packages/3b/89/f873d6392441a8be9bcbc0abbc92aa73849879e72565331bd9b54cfb8675/starlette-0.25.0.tar.gz", hash = "sha256:854c71e73736c429c2bdb07801f2c76c9cba497e7c3cf4988fde5e95fe4cdb3c"},
-    {url = "https://files.pythonhosted.org/packages/b0/56/e7e16e133428ce19ff429d3d71aa7114048730385eea7d0985df5cf9aed6/starlette-0.25.0-py3-none-any.whl", hash = "sha256:774f1df1983fd594b9b6fb3ded39c2aa1979d10ac45caac0f4255cbe2acb8628"},
+"starlette 0.26.0.post1" = [
+    {url = "https://files.pythonhosted.org/packages/53/b7/4a3a1e03c14fd9109e38f3dc89b2446e664543b5f9e5bc0a875af349da15/starlette-0.26.0.post1.tar.gz", hash = "sha256:af0e54d08afed70fcbc53ae01e71c9c62c8ab038ff8cfd3f7477bf0f086b5ab4"},
+    {url = "https://files.pythonhosted.org/packages/5b/54/169fef8cf7676c8bd9dbd6af0684eb448cf68ca59ea2979d6a3180ea5ece/starlette-0.26.0.post1-py3-none-any.whl", hash = "sha256:5b80b546ed60d43da45f80113c05ff9f4c44fae95ee884945958eba685c56253"},
 ]
 "textual 0.12.1" = [
     {url = "https://files.pythonhosted.org/packages/8d/7c/1ce1c9119abe83c8c00910dc2609e2c1ccfdb89fdfc08cc1531034ac32c6/textual-0.12.1-py3-none-any.whl", hash = "sha256:976226eb7e56e31e70acff0d4146d8c96a0cd35613769c7f9e0b63df28ee6902"},
