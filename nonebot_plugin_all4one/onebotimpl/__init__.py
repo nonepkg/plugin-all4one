@@ -257,7 +257,7 @@ class OneBotImplementation:
                         "data": None,
                         "message": str(e),
                     }
-                await websocket.send(encode_data(resp, isinstance(raw_data, str)))
+                await websocket.send(encode_data(resp, isinstance(raw_data, bytes)))
         except WebSocketClosed as e:
             logger.opt(colors=True).warning(
                 f"WebSocket for Bot {escape_tag(middleware.self_id)} closed by peer"
