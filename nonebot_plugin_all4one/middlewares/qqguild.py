@@ -167,7 +167,8 @@ class Middleware(BaseMiddleware):
                     user_id=event.reply.message.author.id,  # type: ignore
                 )
             )
-        if event.to_me:
+        # 如果是私聊默认是 to_me 的，不需要再次 @ 机器人
+        if event.to_me and not isinstance(event, DirectMessageCreateEvent):
             message_list.append(OneBotMessageSegment.mention(self.self_id))
         for segment in message:
             if segment.type == "text":
