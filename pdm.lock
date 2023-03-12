@@ -449,13 +449,11 @@ dependencies = [
 
 [[package]]
 name = "nonebot-adapter-qqguild"
-version = "0.2.1"
+version = "0.2.2"
 requires_python = ">=3.8,<4.0"
-git = "https://github.com/nonebot/adapter-qqguild.git"
-revision = "29c35c011c29dac79737cffa81d2325c70605bb7"
 summary = "QQ Guild adapter for nonebot2"
 dependencies = [
-    "nonebot2<3.0.0.0,>=2.0.0-beta.1",
+    "nonebot2<3.0.0,>=2.0.0-beta.1",
     "pydantic<2.0.0,>=1.9.0",
 ]
 
@@ -912,7 +910,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:ebe43d1568f09fdaace73892be9ded8cd540c02904cc2e02d828a35c7e2e8e7d"
+content_hash = "sha256:4492815a460c32b7127bffd463ffe303fd1bf00555c7afb53d355132c312412e"
 
 [metadata.files]
 "aiosqlite 0.18.0" = [
@@ -1522,6 +1520,10 @@ content_hash = "sha256:ebe43d1568f09fdaace73892be9ded8cd540c02904cc2e02d828a35c7
 "nodeenv 1.7.0" = [
     {url = "https://files.pythonhosted.org/packages/96/a8/d3b5baead78adadacb99e7281b3e842126da825cf53df61688cfc8b8ff91/nodeenv-1.7.0-py2.py3-none-any.whl", hash = "sha256:27083a7b96a25f2f5e1d8cb4b6317ee8aeda3bdd121394e5ac54e498028a042e"},
     {url = "https://files.pythonhosted.org/packages/f3/9d/a28ecbd1721cd6c0ea65da6bfb2771d31c5d7e32d916a8f643b062530af3/nodeenv-1.7.0.tar.gz", hash = "sha256:e0e7f7dfb85fc5394c6fe1e8fa98131a2473e04311a45afb6508f7cf1836fa2b"},
+]
+"nonebot-adapter-qqguild 0.2.2" = [
+    {url = "https://files.pythonhosted.org/packages/0c/23/81753fc0b663ba6c0916d2d30c95108de57b5293f986f6870a9d15ee658c/nonebot_adapter_qqguild-0.2.2.tar.gz", hash = "sha256:a428dda064f4501c285ea7fb51f81fc17e25dca2c2a82edaf1aa34454e28f1b8"},
+    {url = "https://files.pythonhosted.org/packages/e2/79/1c48262c040ff67a42e9b7671563f9e39e2e262ef79dc8c4e9e2cbcee413/nonebot_adapter_qqguild-0.2.2-py3-none-any.whl", hash = "sha256:b47cf5793d2aeed53e3d0bd9f0fbd371ce4155e4fb3be48e15e0abe64228ee24"},
 ]
 "nonebot-plugin-datastore 0.6.0a2" = [
     {url = "https://files.pythonhosted.org/packages/ab/53/797dae22405a2616b787ac79ab79153fa8fd72f92b2303996cc353308fa1/nonebot_plugin_datastore-0.6.0a2.tar.gz", hash = "sha256:a27d5dfdab4899d3b30e407575ee15b6b70385ee38d8d7c2ab4bf87e7dc29326"},
