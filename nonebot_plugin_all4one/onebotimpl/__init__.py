@@ -2,6 +2,7 @@ import json
 import uuid
 import asyncio
 import importlib
+from pathlib import Path
 from datetime import datetime
 from functools import partial
 from contextlib import asynccontextmanager
@@ -493,25 +494,19 @@ class OneBotImplementation:
             if not task.done():
                 task.cancel()
 
-    def import_middlewares(self, middlewares: Optional[Set[str]] = None):
+    def _register_middlewares(self, middlewares: Optional[Set[str]] = None):
         if middlewares is None:
             middlewares = set(self.driver._adapters.keys())
         for middleware in middlewares:
-            try:
-                if middleware in MIDDLEWARE_MAP:
-                    module = importlib.import_module(
-                        f"nonebot_plugin_all4one.middlewares.{MIDDLEWARE_MAP[middleware]}"
-                    )
-                    self.register_middleware(getattr(module, "Middleware"))
-                else:
-                    logger.error(f"Can not find middleware for Adapter {middleware}")
-            except Exception:
-                logger.exception(f"Can not load middleware for Adapter {middleware}:")
+            if middleware in MIDDLEWARE_MAP:
+                self.register_middleware(MIDDLEWARE_MAP[middleware])
+            else:
+                logger.error(f"Can not find middleware for Adapter {middleware}")
 
     def setup(self):
         @self.driver.on_startup
         async def _():
-            self.import_middlewares(self.config.middlewares)
+            self._register_middlewares(self.config.middlewares)
 
         @self.driver.on_shutdown
         async def _():

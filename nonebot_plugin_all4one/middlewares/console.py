@@ -11,8 +11,8 @@ from nonebot.adapters.onebot.v12.event import (
     PrivateMessageEvent as OneBotPrivateMessageEvent,
 )
 
-from . import supported_action
-from . import Middleware as BaseMiddleware
+from .base import supported_action
+from .base import Middleware as BaseMiddleware
 
 
 class Middleware(BaseMiddleware):

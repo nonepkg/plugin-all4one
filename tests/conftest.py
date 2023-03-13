@@ -27,11 +27,6 @@ def load_adapters(nonebug_init: None):
     driver.register_adapter(TelegramAdapter)
     driver.register_adapter(ConsoleAdapter)
 
-    nonebot.require("nonebot_plugin_all4one")
-    from nonebot_plugin_all4one import obimpl
-
-    obimpl.import_middlewares()
-
 
 @pytest.fixture
 def FakeMiddleware():

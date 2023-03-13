@@ -31,9 +31,9 @@ from nonebot.adapters.qqguild import (
     DirectMessageCreateEvent,
 )
 
-from . import supported_action
-from . import Middleware as BaseMiddleware
+from .base import supported_action
 from ..database import get_file, upload_file
+from .base import Middleware as BaseMiddleware
 
 
 class Middleware(BaseMiddleware):
