@@ -104,6 +104,8 @@ class Middleware(BaseMiddleware):
                 event_dict["user_id"] = event.get_user_id()
                 # 发送私信还需要临时频道 id
                 event_dict["guild_id"] = event.guild_id
+                # 原频道 id
+                event_dict["src_guild_id"] = event.src_guild_id
             elif isinstance(event, MessageCreateEvent):
                 event_dict["detail_type"] = "channel"
                 event_dict["guild_id"] = event.guild_id
