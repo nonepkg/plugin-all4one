@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict, List, Tuple, Union, Literal, Optional
+from uuid import uuid4
 
 from nonebot import logger
 from anyio import open_file
@@ -103,7 +104,7 @@ class Middleware(BaseMiddleware):
                 event_dict["detail_type"] = "private"
                 event_dict["user_id"] = event.get_user_id()
                 # 发送私信还需要临时频道 id
-                event_dict["qqguild.guild_id"] = event.guild_id
+                event_dict["qqguild.guild_id"] = str(event.guild_id)
                 # 原频道 id
                 event_dict["qqguild.src_guild_id"] = event.src_guild_id
             elif isinstance(event, MessageCreateEvent):
@@ -114,8 +115,8 @@ class Middleware(BaseMiddleware):
         # 频道成员事件
         # https://bot.q.qq.com/wiki/develop/api/gateway/guild_member.html
         elif isinstance(event, GuildMemberEvent):
-            # 随便拼了个 id
-            event_dict["id"] = f"{event.guild_id}-{event.op_user_id}"
+            # 随机生成一个 id，暂时没啥意义
+            event_dict["id"] = uuid4().hex
             event_dict["time"] = (
                 event.joined_at.timestamp()
                 if event.joined_at
@@ -133,9 +134,10 @@ class Middleware(BaseMiddleware):
         # 子频道事件
         # https://bot.q.qq.com/wiki/develop/api/gateway/channel.html
         elif isinstance(event, ChannelEvent):
-            event_dict["id"] = event.id
+            event_dict["id"] = uuid4().hex
             event_dict["time"] = datetime.now().timestamp()
             event_dict["guild_id"] = event.guild_id
+            event_dict["channel_id"] = event.id
             event_dict["operator_id"] = event.op_user_id
             if isinstance(event, ChannelCreateEvent):
                 event_dict["detail_type"] = "channel_create"
