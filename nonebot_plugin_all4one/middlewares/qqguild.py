@@ -1,7 +1,7 @@
+from uuid import uuid4
 from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict, List, Tuple, Union, Literal, Optional
-from uuid import uuid4
 
 from nonebot import logger
 from anyio import open_file

@@ -4,10 +4,9 @@ from pathlib import Path
 from nonebug import App
 from nonebot.adapters.qqguild.api import User
 from nonebot.adapters.qqguild.config import BotInfo
-from nonebot.adapters.onebot.v12 import ChannelMessageEvent as OB12ChannelMessageEvent
+from nonebot.adapters.qqguild import Bot, ChannelCreateEvent, MessageCreateEvent
 from nonebot.adapters.onebot.v12 import ChannelCreateEvent as OB12ChannelCreateEvent
-
-from nonebot.adapters.qqguild import Bot, MessageCreateEvent, ChannelCreateEvent
+from nonebot.adapters.onebot.v12 import ChannelMessageEvent as OB12ChannelMessageEvent
 
 bot_info = BotInfo(id="333333", token="token", secret="secret")
 
