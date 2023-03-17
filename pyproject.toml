@@ -29,7 +29,7 @@ adapters = [
     "nonebot-adapter-onebot @ git+https://github.com/nonebot/adapter-onebot.git",
     "nonebot-adapter-telegram @ git+https://github.com/nonebot/adapter-telegram.git",
     "nonebot-adapter-console @ git+https://github.com/nonebot/adapter-console.git",
-    "nonebot-adapter-qqguild>=0.2.2",
+    "nonebot-adapter-qqguild @ git+https://github.com/nonebot/adapter-qqguild.git",
 ]
 tests = [
     "nonebug>=0.3.1",
