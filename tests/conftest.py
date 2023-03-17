@@ -51,6 +51,7 @@ async def app(nonebug_init: None, tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     nonebot.require("nonebot_plugin_all4one")
     from nonebot_plugin_datastore.db import init_db
     from nonebot_plugin_datastore import create_session
+
     import nonebot_plugin_all4one.database
 
     await init_db()
