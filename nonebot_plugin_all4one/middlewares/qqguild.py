@@ -73,6 +73,11 @@ class Middleware(BaseMiddleware):
         return message, int(guild) if guild else None, int(channel) if channel else None
 
     @staticmethod
+    def _str_or_none(s: Optional[Union[str, int]]) -> Optional[str]:
+        """如果字符串为空则返回 None"""
+        return str(s) if s else None
+
+    @staticmethod
     def get_name():
         return Adapter.get_name()
 
@@ -394,8 +399,15 @@ class Middleware(BaseMiddleware):
         for channel in result:
             channels_list.append(
                 {
-                    "channel_id": str(channel.id),
-                    "channel_name": channel.name,  # type: ignore
+                    "channel_id": self._str_or_none(channel.id),
+                    "channel_name": self._str_or_none(channel.name),
+                    "qqguild.guild_id": self._str_or_none(channel.guild_id),
+                    "qqguild.channel_type": self._str_or_none(channel.type),
+                    "qqguild.position": self._str_or_none(channel.position),
+                    "qqguild.parent_id": self._str_or_none(channel.parent_id),
+                    "qqguild.owner_id": self._str_or_none(channel.owner_id),
+                    "qqguild.sub_type": self._str_or_none(channel.sub_type),
+                    "qqguild.private_type": self._str_or_none(channel.private_type),
                 }
             )
         return channels_list
