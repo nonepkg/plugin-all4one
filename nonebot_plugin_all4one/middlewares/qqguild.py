@@ -73,11 +73,6 @@ class Middleware(BaseMiddleware):
         return message, int(guild) if guild else None, int(channel) if channel else None
 
     @staticmethod
-    def _str_or_none(s: Optional[Union[str, int]]) -> Optional[str]:
-        """如果字符串为空则返回 None"""
-        return str(s) if s else None
-
-    @staticmethod
     def get_name():
         return Adapter.get_name()
 
@@ -381,12 +376,19 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_channel_info(
         self, *, guild_id: str, channel_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["channel_id", "channel_name"], str], str]:
-        result = await self.bot.get_channel(channel_id=int(channel_id))
+    ) -> Dict[Union[Literal["channel_id", "channel_name"], str], Union[str, int, None]]:
+        channel = await self.bot.get_channel(channel_id=int(channel_id))
 
         return {
-            "channel_id": str(result.id),
-            "channel_name": result.name,  # type: ignore
+            "channel_id": str(channel.id) if channel.id else "",
+            "channel_name": channel.name or "",
+            "qqguild.guild_id": str(channel.guild_id) if channel.guild_id else "",
+            "qqguild.channel_type": channel.type,
+            "qqguild.position": channel.position,
+            "qqguild.parent_id": channel.parent_id,
+            "qqguild.owner_id": str(channel.owner_id) if channel.owner_id else "",
+            "qqguild.sub_type": channel.sub_type,
+            "qqguild.private_type": channel.private_type,
         }
 
     @supported_action
@@ -399,15 +401,19 @@ class Middleware(BaseMiddleware):
         for channel in result:
             channels_list.append(
                 {
-                    "channel_id": self._str_or_none(channel.id),
-                    "channel_name": self._str_or_none(channel.name),
-                    "qqguild.guild_id": self._str_or_none(channel.guild_id),
-                    "qqguild.channel_type": self._str_or_none(channel.type),
-                    "qqguild.position": self._str_or_none(channel.position),
-                    "qqguild.parent_id": self._str_or_none(channel.parent_id),
-                    "qqguild.owner_id": self._str_or_none(channel.owner_id),
-                    "qqguild.sub_type": self._str_or_none(channel.sub_type),
-                    "qqguild.private_type": self._str_or_none(channel.private_type),
+                    "channel_id": str(channel.id) if channel.id else "",
+                    "channel_name": channel.name or "",
+                    "qqguild.guild_id": str(channel.guild_id)
+                    if channel.guild_id
+                    else "",
+                    "qqguild.channel_type": channel.type,
+                    "qqguild.position": channel.position,
+                    "qqguild.parent_id": channel.parent_id,
+                    "qqguild.owner_id": str(channel.owner_id)
+                    if channel.owner_id
+                    else "",
+                    "qqguild.sub_type": channel.sub_type,
+                    "qqguild.private_type": channel.private_type,
                 }
             )
         return channels_list
