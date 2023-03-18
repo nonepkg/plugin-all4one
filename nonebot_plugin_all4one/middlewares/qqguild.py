@@ -288,6 +288,13 @@ class Middleware(BaseMiddleware):
         guild_dict = guild.dict()
         guild_dict["guild_id"] = str(guild_dict["id"])
         guild_dict["guild_name"] = guild_dict["name"]
+        guild_dict["qqguild.icon"] = guild_dict.get("icon")
+        guild_dict["qqguild.owner_id"] = guild_dict.get("owner_id")
+        guild_dict["qqguild.owner"] = guild_dict.get("owner")
+        guild_dict["qqguild.member_count"] = guild_dict.get("member_count")
+        guild_dict["qqguild.max_members"] = guild_dict.get("max_members")
+        guild_dict["qqguild.description"] = guild_dict.get("description")
+        guild_dict["qqguild.joined_at"] = guild_dict.get("joined_at")
         return guild_dict
 
     async def _get_all_guild(self) -> List[Guild]:
@@ -335,7 +342,8 @@ class Middleware(BaseMiddleware):
         Union[str, bool, None],
     ]:
         member = await self.bot.get_member(guild_id=int(guild_id), user_id=int(user_id))
-        assert member.user
+        if member.user is None:
+            raise ob_exception.PlatformError("failed", 34001, "用户不存在", None)
 
         return {
             "user_id": str(member.user.id) if member.user.id else "",
@@ -369,13 +377,16 @@ class Middleware(BaseMiddleware):
 
         members_list = []
         for member in members:
-            members_list.append(
-                {
-                    "user_id": str(member.user.id),  # type: ignore
-                    "user_name": member.user.username,  # type: ignore
-                    "user_displayname": member.nick,  # type: ignore
-                }
-            )
+            if member.user:
+                members_list.append(
+                    {
+                        "user_id": str(member.user.id) if member.user.id else "",
+                        "user_name": member.user.username or "",
+                        "user_displayname": member.nick or "",
+                        "qqguild.user_avatar": member.user.avatar,
+                        "qqguild.user_bot": member.user.bot,
+                    }
+                )
         return members_list
 
     @supported_action
@@ -437,7 +448,9 @@ class Middleware(BaseMiddleware):
         Optional[Union[str, bool]],
     ]:
         member = await self.bot.get_member(guild_id=int(guild_id), user_id=int(user_id))
-        assert member.user
+        if member.user is None:
+            raise ob_exception.PlatformError("failed", 34001, "用户不存在", None)
+
         return {
             "user_id": str(member.user.id) if member.user.id else "",
             "user_name": member.user.username or "",
@@ -490,13 +503,16 @@ class Middleware(BaseMiddleware):
 
         members_list = []
         for member in view_members:
-            members_list.append(
-                {
-                    "user_id": str(member.user.id),  # type: ignore
-                    "user_name": member.user.username,  # type: ignore
-                    "user_displayname": member.nick,  # type: ignore
-                }
-            )
+            if member.user:
+                members_list.append(
+                    {
+                        "user_id": str(member.user.id) if member.user.id else "",
+                        "user_name": member.user.username or "",
+                        "user_displayname": member.nick or "",
+                        "qqguild.user_avatar": member.user.avatar,
+                        "qqguild.user_bot": member.user.bot,
+                    }
+                )
         return members_list
 
     @supported_action
