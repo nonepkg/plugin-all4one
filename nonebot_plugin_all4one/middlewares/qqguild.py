@@ -6,10 +6,10 @@ from typing import Any, Dict, List, Tuple, Union, Literal, Optional
 from nonebot import logger
 from anyio import open_file
 from pydantic import parse_obj_as
-from nonebot.adapters.qqguild.api.model import Member
 from nonebot.adapters.qqguild.api import MessageReference
 import nonebot.adapters.onebot.v12.exception as ob_exception
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
+from nonebot.adapters.qqguild.api.model import Guild, Member
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
 from nonebot.adapters.qqguild.exception import ActionFailed, AuditException
@@ -290,13 +290,8 @@ class Middleware(BaseMiddleware):
         guild_dict["guild_name"] = guild_dict["name"]
         return guild_dict
 
-    @supported_action
-    async def get_guild_list(
-        self, **kwargs: Any
-    ) -> List[Dict[Union[Literal["guild_id", "guild_name"], str], str]]:
-        """获取群列表"""
+    async def _get_all_guild(self) -> List[Guild]:
         guilds = []
-
         # 有分页，每页 100 个
         # https://bot.q.qq.com/wiki/develop/api/openapi/user/guilds.html#%E5%8F%82%E6%95%B0
         after = None
@@ -306,11 +301,29 @@ class Middleware(BaseMiddleware):
                 break
             after = str(result[-1].id)
 
+        return guilds
+
+    @supported_action
+    async def get_guild_list(
+        self, **kwargs: Any
+    ) -> List[Dict[Union[Literal["guild_id", "guild_name"], str], str]]:
+        """获取群列表"""
+        guilds = await self._get_all_guild()
+
         guilds_list = []
         for guild in guilds:
             guild_dict = guild.dict()
             guild_dict["guild_id"] = str(guild_dict["id"])
             guild_dict["guild_name"] = guild_dict["name"]
+            # 扩展字段
+            # 根据扩展规则 https://12.onebot.dev/interface/rules/ 加上前缀
+            guild_dict["qqguild.icon"] = guild_dict.get("icon")
+            guild_dict["qqguild.owner_id"] = guild_dict.get("owner_id")
+            guild_dict["qqguild.owner"] = guild_dict.get("owner")
+            guild_dict["qqguild.member_count"] = guild_dict.get("member_count")
+            guild_dict["qqguild.max_members"] = guild_dict.get("max_members")
+            guild_dict["qqguild.description"] = guild_dict.get("description")
+            guild_dict["qqguild.joined_at"] = guild_dict.get("joined_at")
             guilds_list.append(guild_dict)
         return guilds_list
 
@@ -324,6 +337,7 @@ class Middleware(BaseMiddleware):
             "user_id": str(result.user.id),  # type: ignore
             "user_name": result.user.username,  # type: ignore
             "user_displayname": result.nick,  # type: ignore
+            "qqguild.user_avatar": result.user.avatar,  # type: ignore
         }
 
     async def _get_all_members(self, guild_id: str) -> List[Member]:
