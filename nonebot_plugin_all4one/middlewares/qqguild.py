@@ -330,14 +330,19 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_guild_member_info(
         self, *, guild_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
-        result = await self.bot.get_member(guild_id=int(guild_id), user_id=int(user_id))
+    ) -> Dict[
+        Union[Literal["user_id", "user_name", "user_displayname"], str],
+        Union[str, bool, None],
+    ]:
+        member = await self.bot.get_member(guild_id=int(guild_id), user_id=int(user_id))
+        assert member.user
 
         return {
-            "user_id": str(result.user.id),  # type: ignore
-            "user_name": result.user.username,  # type: ignore
-            "user_displayname": result.nick,  # type: ignore
-            "qqguild.user_avatar": result.user.avatar,  # type: ignore
+            "user_id": str(member.user.id) if member.user.id else "",
+            "user_name": member.user.username or "",
+            "user_displayname": member.nick or "",
+            "qqguild.user_avatar": member.user.avatar,
+            "qqguild.user_bot": member.user.bot,
         }
 
     async def _get_all_members(self, guild_id: str) -> List[Member]:
@@ -427,13 +432,18 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_channel_member_info(
         self, *, guild_id: str, channel_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
-        result = await self.bot.get_member(guild_id=int(guild_id), user_id=int(user_id))
-
+    ) -> Dict[
+        Union[Literal["user_id", "user_name", "user_displayname"], str],
+        Optional[Union[str, bool]],
+    ]:
+        member = await self.bot.get_member(guild_id=int(guild_id), user_id=int(user_id))
+        assert member.user
         return {
-            "user_id": str(result.user.id),  # type: ignore
-            "user_name": result.user.username,  # type: ignore
-            "user_displayname": result.nick,  # type: ignore
+            "user_id": str(member.user.id) if member.user.id else "",
+            "user_name": member.user.username or "",
+            "user_displayname": member.nick or "",
+            "qqguild.user_avatar": member.user.avatar,
+            "qqguild.user_bot": member.user.bot,
         }
 
     @supported_action
