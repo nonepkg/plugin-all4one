@@ -482,3 +482,21 @@ class Middleware(BaseMiddleware):
             )
         except ActionFailed as e:
             raise ob_exception.PlatformError("failed", 34001, e.message or "", None)
+
+    @supported_action
+    async def create_dms(self, *, user_id: str, src_guild_id: str):
+        """创建私聊会话
+
+        https://bot.q.qq.com/wiki/develop/api/openapi/dms/post_dms.html
+        """
+        try:
+            dms = await self.bot.post_dms(
+                recipient_id=user_id, source_guild_id=src_guild_id
+            )
+            return {
+                "guild_id": str(dms.guild_id) if dms.guild_id else None,
+                "channel_id": dms.channel_id,
+                "create_time": dms.create_time.timestamp() if dms.create_time else None,
+            }
+        except ActionFailed as e:
+            raise ob_exception.PlatformError("failed", 34001, e.message or "", None)
