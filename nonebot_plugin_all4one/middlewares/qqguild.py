@@ -340,10 +340,7 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_guild_member_info(
         self, *, guild_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[
-        Union[Literal["user_id", "user_name", "user_displayname"], str],
-        Union[str, bool, None, Dict],
-    ]:
+    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], Any]:
         member = await self.bot.get_member(guild_id=int(guild_id), user_id=int(user_id))
         if member.user is None:
             raise ob_exception.PlatformError("failed", 34001, "用户不存在", None)
@@ -353,6 +350,10 @@ class Middleware(BaseMiddleware):
             "user_name": member.user.username or "",
             "user_displayname": member.nick or "",
             "qqguild.user": member.user.dict() if member.user else None,
+            "qqguild.roles": member.roles,
+            "qqguild.joined_at": member.joined_at.timestamp()
+            if member.joined_at
+            else None,
         }
 
     async def _get_all_members(self, guild_id: str) -> List[Member]:
@@ -386,6 +387,10 @@ class Middleware(BaseMiddleware):
                         "user_name": member.user.username or "",
                         "user_displayname": member.nick or "",
                         "qqguild.user": member.user.dict() if member.user else None,
+                        "qqguild.roles": member.roles,
+                        "qqguild.joined_at": member.joined_at.timestamp()
+                        if member.joined_at
+                        else None,
                     }
                 )
         return members_list
@@ -444,10 +449,7 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_channel_member_info(
         self, *, guild_id: str, channel_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[
-        Union[Literal["user_id", "user_name", "user_displayname"], str],
-        Optional[Union[str, bool, Dict]],
-    ]:
+    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], Any,]:
         member = await self.bot.get_member(guild_id=int(guild_id), user_id=int(user_id))
         if member.user is None:
             raise ob_exception.PlatformError("failed", 34001, "用户不存在", None)
@@ -457,6 +459,10 @@ class Middleware(BaseMiddleware):
             "user_name": member.user.username or "",
             "user_displayname": member.nick or "",
             "qqguild.user": member.user.dict() if member.user else {},
+            "qqguild.roles": member.roles,
+            "qqguild.joined_at": member.joined_at.timestamp()
+            if member.joined_at
+            else None,
         }
 
     @supported_action
@@ -510,6 +516,10 @@ class Middleware(BaseMiddleware):
                         "user_name": member.user.username or "",
                         "user_displayname": member.nick or "",
                         "qqguild.user": member.user.dict() if member.user else {},
+                        "qqguild.roles": member.roles,
+                        "qqguild.joined_at": member.joined_at.timestamp()
+                        if member.joined_at
+                        else None,
                     }
                 )
         return members_list

@@ -26,8 +26,10 @@ async def test_to_onebot_event(app: App):
         )
         bot._self_info = User(id=333333, username="bot")  # type: ignore
         middleware = Middleware(bot)
-        message_create_event = await middleware.to_onebot_event(message_create_event)
-        assert isinstance(message_create_event[0], OB12ChannelMessageEvent)
+        message_create = (await middleware.to_onebot_event(message_create_event))[0]
+        assert isinstance(message_create, OB12ChannelMessageEvent)
+        assert message_create.qqguild["author"] == message_create_event.author
+        assert message_create.qqguild["member"] == message_create_event.member
 
-        channel_create_event = await middleware.to_onebot_event(channel_create_event)
-        assert isinstance(channel_create_event[0], OB12ChannelCreateEvent)
+        channel_create = (await middleware.to_onebot_event(channel_create_event))[0]
+        assert isinstance(channel_create, OB12ChannelCreateEvent)
