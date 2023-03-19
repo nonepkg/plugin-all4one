@@ -6,15 +6,13 @@ from typing import Any, Dict, List, Tuple, Union, Literal, Optional
 from nonebot import logger
 from anyio import open_file
 from pydantic import parse_obj_as
-from nonebot.adapters.qqguild.api import MessageReference
 import nonebot.adapters.onebot.v12.exception as ob_exception
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
-from nonebot.adapters.qqguild.api.model import Guild, Member
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
+from nonebot.adapters.qqguild.api import Guild, Member, MessageReference
 from nonebot.adapters.qqguild.exception import ActionFailed, AuditException
 from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
-from nonebot.adapters.qqguild.event import GuildMemberAddEvent, GuildMemberRemoveEvent
 from nonebot.adapters.qqguild import (
     Bot,
     Event,
@@ -27,7 +25,8 @@ from nonebot.adapters.qqguild import (
     ChannelCreateEvent,
     ChannelDeleteEvent,
     ChannelUpdateEvent,
-    MessageCreateEvent,
+    GuildMemberAddEvent,
+    GuildMemberRemoveEvent,
     GuildMemberUpdateEvent,
     DirectMessageCreateEvent,
 )
@@ -100,6 +99,9 @@ class Middleware(BaseMiddleware):
             )
             event_dict["message"] = await self.to_onebot_message(event)
             event_dict["alt_message"] = str(event.get_message())
+            # 扩展 author, member 信息
+            event_dict["qqguild.author"] = event.author.dict() if event.author else {}
+            event_dict["qqguild.member"] = event.member.dict() if event.member else {}
             if isinstance(event, DirectMessageCreateEvent):
                 event_dict["detail_type"] = "private"
                 event_dict["user_id"] = event.get_user_id()
@@ -107,7 +109,8 @@ class Middleware(BaseMiddleware):
                 event_dict["qqguild.guild_id"] = str(event.guild_id)
                 # 原频道 id
                 event_dict["qqguild.src_guild_id"] = event.src_guild_id
-            elif isinstance(event, MessageCreateEvent):
+            # MessageCreateEvent, AtMessageCreateEvent
+            else:
                 event_dict["detail_type"] = "channel"
                 event_dict["guild_id"] = event.guild_id
                 event_dict["channel_id"] = event.channel_id
@@ -339,7 +342,7 @@ class Middleware(BaseMiddleware):
         self, *, guild_id: str, user_id: str, **kwargs: Any
     ) -> Dict[
         Union[Literal["user_id", "user_name", "user_displayname"], str],
-        Union[str, bool, None],
+        Union[str, bool, None, Dict],
     ]:
         member = await self.bot.get_member(guild_id=int(guild_id), user_id=int(user_id))
         if member.user is None:
@@ -349,8 +352,7 @@ class Middleware(BaseMiddleware):
             "user_id": str(member.user.id) if member.user.id else "",
             "user_name": member.user.username or "",
             "user_displayname": member.nick or "",
-            "qqguild.user_avatar": member.user.avatar,
-            "qqguild.user_bot": member.user.bot,
+            "qqguild.user": member.user.dict() if member.user else None,
         }
 
     async def _get_all_members(self, guild_id: str) -> List[Member]:
@@ -383,8 +385,7 @@ class Middleware(BaseMiddleware):
                         "user_id": str(member.user.id) if member.user.id else "",
                         "user_name": member.user.username or "",
                         "user_displayname": member.nick or "",
-                        "qqguild.user_avatar": member.user.avatar,
-                        "qqguild.user_bot": member.user.bot,
+                        "qqguild.user": member.user.dict() if member.user else None,
                     }
                 )
         return members_list
@@ -445,7 +446,7 @@ class Middleware(BaseMiddleware):
         self, *, guild_id: str, channel_id: str, user_id: str, **kwargs: Any
     ) -> Dict[
         Union[Literal["user_id", "user_name", "user_displayname"], str],
-        Optional[Union[str, bool]],
+        Optional[Union[str, bool, Dict]],
     ]:
         member = await self.bot.get_member(guild_id=int(guild_id), user_id=int(user_id))
         if member.user is None:
@@ -455,8 +456,7 @@ class Middleware(BaseMiddleware):
             "user_id": str(member.user.id) if member.user.id else "",
             "user_name": member.user.username or "",
             "user_displayname": member.nick or "",
-            "qqguild.user_avatar": member.user.avatar,
-            "qqguild.user_bot": member.user.bot,
+            "qqguild.user": member.user.dict() if member.user else {},
         }
 
     @supported_action
@@ -509,8 +509,7 @@ class Middleware(BaseMiddleware):
                         "user_id": str(member.user.id) if member.user.id else "",
                         "user_name": member.user.username or "",
                         "user_displayname": member.nick or "",
-                        "qqguild.user_avatar": member.user.avatar,
-                        "qqguild.user_bot": member.user.bot,
+                        "qqguild.user": member.user.dict() if member.user else {},
                     }
                 )
         return members_list
