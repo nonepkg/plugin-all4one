@@ -89,6 +89,14 @@ class Middleware(BaseMiddleware):
         if isinstance(event, MessageEvent):
             event_dict["detail_type"] = event.message_type
             event_dict["message"] = await self.to_onebot_message(event.original_message)
+            if event.reply:
+                event_dict["message"].insert(
+                    0,
+                    OneBotMessageSegment.reply(
+                        str(event.reply.message_id),
+                        user_id=str(event.reply.sender.user_id),
+                    ),
+                )
             event_dict["alt_message"] = event.raw_message
         elif isinstance(event, NoticeEvent):
             if isinstance(event, FriendRecallNoticeEvent):
@@ -170,12 +178,6 @@ class Middleware(BaseMiddleware):
                                 segment.data["file"],
                             )
                         },
-                    )
-                )
-            elif segment.type == "reply":
-                message_list.append(
-                    OneBotMessageSegment.reply(
-                        segment.data["id"], user_id=message["at", 0].data["qq"]
                     )
                 )
         return OneBotMessage(message_list)

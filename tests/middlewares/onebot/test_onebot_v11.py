@@ -27,3 +27,11 @@ async def test_to_onebot_event(app: App):
         event = await middleware.to_onebot_event(event)
         assert isinstance(event[0], GroupMessageEvent)
         assert event[0].message[0].type == "mention_all"
+
+        event = Adapter.json_to_event(test_events[2])
+        assert event
+        event = await middleware.to_onebot_event(event)
+        assert isinstance(event[0], GroupMessageEvent)
+        assert event[0].message[0].type == "reply"
+        assert event[0].message[0].data.get("message_id") == "2"
+        assert event[0].message[0].data.get("user_id") == "1"
