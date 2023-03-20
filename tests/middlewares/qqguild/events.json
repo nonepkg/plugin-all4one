@@ -33,5 +33,19 @@
         "message_reference": null,
         "to_me": false,
         "reply": null
+    },
+    {
+        "id": 222222222,
+        "guild_id": 11111111111111111111,
+        "name": "测试",
+        "type": 0,
+        "sub_type": 0,
+        "position": null,
+        "parent_id": null,
+        "owner_id": 22222222222222222222,
+        "private_type": 0,
+        "speak_permission": 1,
+        "application_id": null,
+        "op_user_id": "22222222222222222222"
     }
 ]
