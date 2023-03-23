@@ -7,7 +7,7 @@ from nonebot.adapters.onebot.v12 import GroupMessageEvent, PrivateMessageEvent
 
 
 async def test_to_onebot_event(app: App):
-    from nonebot_plugin_all4one.middlewares.onebot.v11 import Middleware
+    from nonebot_plugin_all4one.middlewares.onebot_v11 import Middleware
 
     with (Path(__file__).parent / "events.json").open("r", encoding="utf8") as f:
         test_events = json.load(f)

@@ -55,18 +55,17 @@ blocked_plugins = ["echo"] # 在 block_event=False 时生效，可自定义处�
 
 ### OneBot
 
-- [x] HTTP 测试中
-- [x] HTTP Webhook 测试中
-- [x] 正向 WebSocket 测试中
+- [x] HTTP
+- [x] HTTP Webhook
+- [x] 正向 WebSocket
 - [x] 反向 WebSocket
 
 ### Middlewares
 
 - [x] Console
-- [x] OneBot V11 测试中
-- [x] OneBot V12
-- [x] Telegram 测试中
-- [x] QQ Guild [@he0119](https://github.com/he0119) 测试中
+- [x] OneBot V11
+- [x] Telegram
+- [x] QQ Guild [@he0119](https://github.com/he0119)
 - [ ] Kaiheila
 
 ## 相关链接
