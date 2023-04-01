@@ -217,7 +217,7 @@ class Middleware(BaseMiddleware):
         )
         if isinstance(result, list):
             result = result[0]
-        return {"message_id": str(result.message_id), "time": result.date}
+        return {"message_id": f"{chat_id}/{result.message_id}", "time": result.date}
 
     @supported_action
     async def delete_message(self, *, message_id: str, **kwargs: Any) -> None:
