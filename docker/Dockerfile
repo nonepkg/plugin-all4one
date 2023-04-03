@@ -21,11 +21,11 @@ RUN apt-get update \
     && apt-get -y upgrade \
     && apt-get install -y --no-install-recommends git \
     && pip install --no-cache-dir --upgrade -r requirements.txt \
-    && pip install . \
     && apt-get purge -y --auto-remove \
     && rm -rf /var/lib/apt/lists/* \
     && rm /app/requirements.txt
 
-COPY ./nonebot_plugin_all4one ./docker/bot.py ./docker/.env /app/
+COPY ./nonebot_plugin_all4one ./docker/bot.py ./docker/.env ./pyproject.toml /app/
+RUN pip install .
 
 CMD ["python", "bot.py"]
