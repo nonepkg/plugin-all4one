@@ -5,8 +5,8 @@ description = ""
 authors = [{ name = "Jigsaw", email = "j1g5aw@foxmail.com" }]
 dependencies = [
     "nonebot2<3.0.0,>=2.0.0rc2",
-    "nonebot-adapter-onebot>=2.2.0",
-    "nonebot-plugin-datastore>=0.6.0a0",
+    "nonebot-adapter-onebot>=2.2.2",
+    "nonebot-plugin-datastore>=0.6.0",
 ]
 requires-python = ">=3.8,<4.0"
 readme = "README.md"
