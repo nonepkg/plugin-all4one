@@ -25,7 +25,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && rm /app/requirements.txt
 
-COPY ./nonebot_plugin_all4one ./docker/bot.py ./docker/.env ./pyproject.toml /app/
-RUN pip install .
+COPY ./docker/bot.py ./docker/.env /app/
+COPY ./nonebot_plugin_all4one/ /app/nonebot_plugin_all4one/
 
 CMD ["python", "bot.py"]
