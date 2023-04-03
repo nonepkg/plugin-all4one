@@ -12,6 +12,7 @@ driver.register_adapter(TELEGRAMAdapter)
 driver.register_adapter(ONEBOT_V11Adapter)
 driver.register_adapter(ONEBOT_V12Adapter)
 
+nonebot.load_plugin("nonebot_plugin_sentry")
 nonebot.load_plugin("nonebot_plugin_all4one")
 
 if __name__ == "__main__":

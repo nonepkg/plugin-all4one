@@ -439,6 +439,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "nonebot-plugin-sentry"
+version = "0.2.2"
+requires_python = ">=3.7,<4.0"
+summary = "Push your bot errors to Sentry.io"
+dependencies = [
+    "nonebot2<3.0.0,>=2.0.0-alpha.6",
+    "sentry-sdk<2.0.0,>=1.0.0",
+]
+
+[[package]]
 name = "nonebot2"
 version = "2.0.0rc4"
 requires_python = ">=3.8,<4.0"
@@ -679,6 +689,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "sentry-sdk"
+version = "1.18.0"
+summary = "Python client for Sentry (https://sentry.io)"
+dependencies = [
+    "certifi",
+    "urllib3>=1.26.11; python_version >= \"3.6\"",
+]
+
+[[package]]
 name = "setuptools"
 version = "67.6.1"
 requires_python = ">=3.7"
@@ -826,8 +845,8 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.2"
-groups = ["default", "adapters", "console", "nonebot", "pre-commit", "qqguild", "telegram", "tests"]
-content_hash = "sha256:b792339b2f97fb775bbaca247f2f5b7e6345f7d3db0e39e1088257e5facf4f2c"
+groups = ["default", "adapters", "console", "impl", "nonebot", "pre-commit", "qqguild", "telegram", "tests"]
+content_hash = "sha256:b98ee35a9743922825095013ff7a2b5bb77900712d8867aeec09246e693c9ab0"
 
 [metadata.files]
 "aiosqlite 0.18.0" = [
@@ -1421,6 +1440,10 @@ content_hash = "sha256:b792339b2f97fb775bbaca247f2f5b7e6345f7d3db0e39e1088257e5f
     {url = "https://files.pythonhosted.org/packages/27/d4/c863b32d301825ae9fab59cfbe5c74817df4b19d7a3e150426c25c4d2f75/nonebot_plugin_localstore-0.4.1.tar.gz", hash = "sha256:9b6dcb98f6a4e48c5c80b2319acc2e1c424462261a210491d437f5b96abb5d67"},
     {url = "https://files.pythonhosted.org/packages/d1/06/bd1ada3f75c6a511f14dc9f2fa836cca75d3ca35b30db5c50e4ef0393bec/nonebot_plugin_localstore-0.4.1-py3-none-any.whl", hash = "sha256:dea442fcf8baa5898c15ccea761703cdde46e6fc6bb1c886261b0ab793db8193"},
 ]
+"nonebot-plugin-sentry 0.2.2" = [
+    {url = "https://files.pythonhosted.org/packages/15/3d/7ea2a0f1096c0bcae16526121fd6b4e6af4aed8ce8f1cbc66399907b87a7/nonebot_plugin_sentry-0.2.2-py3-none-any.whl", hash = "sha256:cc7aab8a258aa1931bd4fdab36672e6e99f645d438c6c24999688a8422ba0dd3"},
+    {url = "https://files.pythonhosted.org/packages/a4/02/ded89430d8198d6f7cb43731517c131e99700f99b1ddac58de7422cac96b/nonebot-plugin-sentry-0.2.2.tar.gz", hash = "sha256:e042e773e1d533d9bb5deb81cc0e9a0d78800e43c5093475d65d8c91308f98f7"},
+]
 "nonebot2 2.0.0rc4" = [
     {url = "https://files.pythonhosted.org/packages/65/54/d23c32d571eeae0330e222b072efe6aa6384a3f8a4f40ce6768992446547/nonebot2-2.0.0rc4-py3-none-any.whl", hash = "sha256:dba33955e07f962d4fc0d3841b1d5d20ed00b8eb4189f0ac608b07e193148a3b"},
     {url = "https://files.pythonhosted.org/packages/84/1e/f0aa87695d505f35bc36756f01ab4b2a8f8544a5b004dc53219de179ff5f/nonebot2-2.0.0rc4.tar.gz", hash = "sha256:572ab5a2678155dca93ec27695a51b1c8b3ad43c3329a360e67ce11c6dd01c7d"},
@@ -1584,6 +1607,10 @@ content_hash = "sha256:b792339b2f97fb775bbaca247f2f5b7e6345f7d3db0e39e1088257e5f
 "rich 13.3.3" = [
     {url = "https://files.pythonhosted.org/packages/42/5c/f44fc88bad850c4a20711a3349ec0e8bc50fece8d8b32c962d2aab70ea2b/rich-13.3.3-py3-none-any.whl", hash = "sha256:540c7d6d26a1178e8e8b37e9ba44573a3cd1464ff6348b99ee7061b95d1c6333"},
     {url = "https://files.pythonhosted.org/packages/9a/50/672a8d347f92bc752b04c338bbf932fbd0104fbc416c82cc91aa5f7b4b0b/rich-13.3.3.tar.gz", hash = "sha256:dc84400a9d842b3a9c5ff74addd8eb798d155f36c1c91303888e0a66850d2a15"},
+]
+"sentry-sdk 1.18.0" = [
+    {url = "https://files.pythonhosted.org/packages/6c/3d/ae41e28b30705fb0e8e8ef557d1fbf954b4f63bf0e5df6ac71797b6e2ea2/sentry_sdk-1.18.0-py2.py3-none-any.whl", hash = "sha256:714203a9adcac4a4a35e348dc9d3e294ad0200a66cdca26c068967d728f34fcb"},
+    {url = "https://files.pythonhosted.org/packages/e0/1a/5e6119102fe3c09b2b5bce8997793283ccbeeb3d2fd1db2fed69d74e4fa4/sentry-sdk-1.18.0.tar.gz", hash = "sha256:d07b9569a151033b462f7a7113ada94cc41ecf49daa83d35f5f852a0b9cf3b44"},
 ]
 "setuptools 67.6.1" = [
     {url = "https://files.pythonhosted.org/packages/0b/fc/8781442def77b0aa22f63f266d4dadd486ebc0c5371d6290caf4320da4b7/setuptools-67.6.1-py3-none-any.whl", hash = "sha256:e728ca814a823bf7bf60162daf9db95b93d532948c4c0bea762ce62f60189078"},

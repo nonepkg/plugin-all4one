@@ -7,7 +7,7 @@ RUN pip install --pre pdm
 
 COPY ./pyproject.toml ./pdm.lock* /tmp/
 
-RUN pdm export -f requirements --output requirements.txt --without-hashes -G adapters -G nonebot
+RUN pdm export -f requirements --output requirements.txt --without-hashes -G adapters -G nonebot -G impl
 
 FROM python:3.10-slim
 
@@ -21,6 +21,7 @@ RUN apt-get update \
     && apt-get -y upgrade \
     && apt-get install -y --no-install-recommends git \
     && pip install --no-cache-dir --upgrade -r requirements.txt \
+    && pip install . \
     && apt-get purge -y --auto-remove \
     && rm -rf /var/lib/apt/lists/* \
     && rm /app/requirements.txt
