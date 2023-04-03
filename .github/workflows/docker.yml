@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+  pull_request:
   release:
     types: [published]
 
@@ -37,6 +38,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           file: ./docker/Dockerfile
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}

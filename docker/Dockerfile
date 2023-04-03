@@ -7,7 +7,7 @@ RUN pip install --pre pdm
 
 COPY ./pyproject.toml ./pdm.lock* /tmp/
 
-RUN pdm export -f requirements --output requirements.txt --without-hashes -G adapters -G nonebot
+RUN pdm export -f requirements --output requirements.txt --without-hashes -G adapters -G nonebot -G impl
 
 FROM python:3.10-slim
 
@@ -25,6 +25,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && rm /app/requirements.txt
 
-COPY ./nonebot_plugin_all4one ./docker/bot.py ./docker/.env /app/
+COPY ./docker/bot.py ./docker/.env /app/
+COPY ./nonebot_plugin_all4one/ /app/nonebot_plugin_all4one/
 
 CMD ["python", "bot.py"]
