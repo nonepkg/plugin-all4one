@@ -1,8 +1,6 @@
 import json
 import uuid
 import asyncio
-import importlib
-from pathlib import Path
 from datetime import datetime
 from functools import partial
 from contextlib import asynccontextmanager
@@ -432,6 +430,12 @@ class OneBotImplementation:
                 # 事件推送失败
                 else:
                     logger.error(f"HTTP Webhook event push failed: {resp}")
+            except (NotImplementedError, TypeError):
+                logger.error(
+                    f"Current driver {self.driver.type} does not support http client"
+                )
+                middleware.queues.remove(queue)
+                break
             except Exception:
                 logger.exception("HTTP Webhook event push failed")
 
@@ -480,6 +484,11 @@ class OneBotImplementation:
                             "<r><bg #f8bbd0>Error while process data from websocket"
                             f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></r>",
                         )
+            except (NotImplementedError, TypeError):
+                logger.error(
+                    f"Current driver {self.driver.type} does not support websocket server"
+                )
+                break
             except Exception as e:
                 logger.opt(colors=True).warning(
                     "<y><bg #f8bbd0>Error while setup websocket to "
