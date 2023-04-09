@@ -4,7 +4,7 @@ from typing import Optional, cast
 
 from nonebot.log import logger
 
-from .base import Queue, Middleware
+from .base import Middleware
 
 MIDDLEWARE_MAP = {}
 for file in Path(__file__).parent.rglob("*.py"):
