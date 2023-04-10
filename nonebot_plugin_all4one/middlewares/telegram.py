@@ -49,7 +49,7 @@ class Middleware(BaseMiddleware):
             event_dict["detail_type"] = event.get_event_name().split(".")[1]
             event_dict["sub_type"] = ""
             event_dict["message_id"] = f"{event.chat.id}/{event.message_id}"
-            event_dict["message"] = await self.to_onebot_message(event.message)
+            event_dict["message"] = await self.to_onebot_message(event.original_message)
             event_dict["alt_message"] = str(event.message)
             if isinstance(event, PrivateMessageEvent):
                 event_dict["user_id"] = event.get_user_id()
@@ -105,8 +105,13 @@ class Middleware(BaseMiddleware):
             if segment.type == "text":
                 message_list.append(OneBotMessageSegment.text(segment.data["text"]))
             elif segment.type == "mention":
+                if (user_name := segment.data["text"][1:]) == self.bot.username:
+                    message_list.append(OneBotMessageSegment.mention(self.bot.self_id))
+                else:
+                    message_list.append(OneBotMessageSegment.mention(user_name))
+            elif segment.type == "text_mention":
                 message_list.append(
-                    OneBotMessageSegment.mention(segment.data["text"][1:])
+                    OneBotMessageSegment.mention(str(segment.data["user"].id))
                 )
             elif isinstance(segment, Entity):
                 message_list.append(OneBotMessageSegment.text(str(segment)))

@@ -142,7 +142,9 @@ class Middleware(ABC):
                 bot.self.user_id = "a4o@" + bot.self.user_id
         if isinstance(event, MessageEvent):
             for msg in event.message:
-                if msg.type == "mention" and msg.data["user_id"] == self.self_id:
+                if msg.type == "reply" and msg.data["user_id"] == self.self_id:
+                    msg.data["user_id"] = "a4o@" + msg.data["user_id"]
+                elif msg.type == "mention" and msg.data["user_id"] == self.self_id:
                     msg.data["user_id"] = "a4o@" + msg.data["user_id"]
         return event
 
