@@ -2,12 +2,12 @@ import json
 from pathlib import Path
 
 from nonebug import App
+from nonebot.adapters.telegram import Bot, Event
 from nonebot.adapters.telegram.model import Chat
 from nonebot.adapters.telegram.model import Message
 from nonebot.adapters.telegram.config import BotConfig
 from nonebot.adapters.telegram.message import File, Entity
 from nonebot.adapters.onebot.v12 import PrivateMessageEvent
-from nonebot.adapters.telegram import Bot, Event, MessageSegment
 from nonebot.adapters.telegram.model import File as TelegramFile
 from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
 
@@ -21,7 +21,11 @@ async def test_to_onebot_event(app: App):
         test_updates = json.load(f)
 
     async with app.test_api() as ctx:
-        bot = ctx.create_bot(base=Bot, self_id=bot_config)  # type:ignore
+        bot = ctx.create_bot(
+            base=Bot,
+            self_id=Bot.get_bot_id_by_token(bot_config.token),
+            config=bot_config,
+        )
         middleware = Middleware(bot)
 
         event = Event.parse_event(test_updates[0])
@@ -69,18 +73,12 @@ async def test_send_message(app: App):
     from nonebot_plugin_all4one.middlewares.telegram import Middleware
 
     async with app.test_api() as ctx:
-        bot = ctx.create_bot(base=Bot, self_id=bot_config)  # type:ignore
-        middleware = Middleware(bot)
-
-        class FakeEvent(Event):
-            chat: Chat
-
-        fake_event = FakeEvent(
-            **{
-                "chat": Chat(id=1111, type="private"),
-                "message_thread_id": None,
-            }
+        bot = ctx.create_bot(
+            base=Bot,
+            self_id=Bot.get_bot_id_by_token(bot_config.token),
+            config=bot_config,
         )
+        middleware = Middleware(bot)
 
         file_id = await upload_file(
             name="test",
@@ -88,11 +86,23 @@ async def test_send_message(app: App):
             src=middleware.get_platform(),
             src_id="test",
         )
-        ctx.should_call_send(
-            fake_event,
-            Entity.text("Test") + File.photo("test"),
-            Message(message_id=2222, date=1, chat=fake_event.chat),
-            reply_to_message_id=None,
+        ctx.should_call_api(
+            "send_photo",
+            {
+                "chat_id": 1111,
+                "message_thread_id": None,
+                "photo": "test",
+                "caption": "Test",
+                "caption_entities": None,
+                "disable_notification": None,
+                "protect_content": None,
+                "reply_to_message_id": None,
+                "allow_sending_without_reply": None,
+                "parse_mode": None,
+                "has_spoiler": None,
+                "reply_markup": None,
+            },
+            Message(message_id=2222, date=1, chat=Chat(type="private", id=1111)),
         )
         await middleware.send_message(
             detail_type="private",
@@ -106,7 +116,11 @@ async def test_delete_message(app: App):
     from nonebot_plugin_all4one.middlewares.telegram import Middleware
 
     async with app.test_api() as ctx:
-        bot = ctx.create_bot(base=Bot, self_id=bot_config)  # type:ignore
+        bot = ctx.create_bot(
+            base=Bot,
+            self_id=Bot.get_bot_id_by_token(bot_config.token),
+            config=bot_config,
+        )
         middleware = Middleware(bot)
         ctx.should_call_api(
             "delete_message", {"chat_id": 1111, "message_id": 2222}, True

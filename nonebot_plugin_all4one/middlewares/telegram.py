@@ -8,10 +8,8 @@ from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
 from nonebot.adapters.telegram import Bot, Event, Adapter, Message
-from nonebot.adapters.telegram.model import Message as TelegramMessage
 from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
 from nonebot.adapters.telegram.event import (
-    Chat,
     NoticeEvent,
     MessageEvent,
     ChannelPostEvent,
@@ -138,25 +136,6 @@ class Middleware(BaseMiddleware):
                 )
         return OneBotMessage(message_list)
 
-    async def send(
-        self,
-        chat_id: int,
-        message: Message,
-        message_thread_id: Optional[int] = None,
-        **kwargs,
-    ) -> Union[TelegramMessage, List[TelegramMessage]]:
-        class FakeEvent(Event):
-            chat: Chat
-
-        fake_event = FakeEvent(
-            **{
-                "chat": Chat(id=chat_id, type="private"),
-                "message_thread_id": message_thread_id,
-            }
-        )
-
-        return await self.bot.send(fake_event, message, **kwargs)
-
     @supported_action
     async def send_message(
         self,
@@ -213,7 +192,7 @@ class Middleware(BaseMiddleware):
                 message["reply", 0].data["message_id"].split("/")[1]
             )
 
-        result = await self.send(
+        result = await self.bot.send_to(
             int(chat_id),
             telegram_message,
             message_thread_id=int(channel_id) if channel_id else None,
