@@ -4,7 +4,7 @@ version = "0.1.0a1"
 description = ""
 authors = [{ name = "Jigsaw", email = "j1g5aw@foxmail.com" }]
 dependencies = [
-    "nonebot2<3.0.0,>=2.0.0rc2",
+    "nonebot2<3.0.0,>=2.0.0",
     "nonebot-adapter-onebot>=2.2.2",
     "nonebot-plugin-datastore>=0.6.0",
 ]
@@ -13,7 +13,7 @@ readme = "README.md"
 license = { text = "AGPL-3.0-only" }
 
 [project.optional-dependencies]
-telegram = ["nonebot-adapter-telegram>=0.1.0b10"]
+telegram = ["nonebot-adapter-telegram>=0.1.0b13"]
 console = ["nonebot-adapter-console>=0.3.2"]
 qqguild = ["nonebot-adapter-qqguild>=0.2.2"]
 
@@ -64,7 +64,7 @@ all = false
 reportShadowedImports = false
 pythonVersion = "3.8"
 pythonPlatform = "All"
-extraPaths = ["__pypackages__/3.8/lib/"]
+extraPaths = ["__pypackages__/3.11/lib/"]
 exclude = ["__pypackages__", "nonebot_plugin_all4one/migrations"]
 
 [build-system]
