@@ -1,11 +1,13 @@
 from copy import deepcopy
 
-from nonebot import on, get_driver
 from nonebot.matcher import Matcher
 from nonebot.adapters import Bot, Event
 from nonebot.plugin import PluginMetadata
+from nonebot import on, require, get_driver
 from nonebot.exception import IgnoredException
 from nonebot.message import run_preprocessor, event_preprocessor
+
+require("nonebot_plugin_datastore")
 
 from .config import Config
 from .onebotimpl import OneBotImplementation
