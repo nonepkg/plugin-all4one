@@ -42,9 +42,7 @@ class Middleware(BaseMiddleware):
         if isinstance(event, SendMessageEvent):
             event_dict["id"] = event.id
             event_dict["time"] = (
-                event.send_at
-                if event.send_at
-                else datetime.now().timestamp()
+                event.send_at if event.send_at else datetime.now().timestamp()
             )
             event_dict["message_id"] = event.msg_uid
             event_dict["message"] = await self.to_onebot_message(event)
@@ -92,7 +90,7 @@ class Middleware(BaseMiddleware):
     ) -> Dict[Union[Literal["message_id", "time"], str], Any]:
         if detail_type not in ["channel"]:
             raise ob_exception.UnsupportedParam("failed", 10004, "不支持的类型", None)
-        
+
         if not guild_id or not channel_id:
             raise ob_exception.UnsupportedParam("failed", 10004, "不支持的类型", None)
 
@@ -107,7 +105,7 @@ class Middleware(BaseMiddleware):
                 )
             elif segment.type == "mention_all":
                 message_list.append(MessageSegment.mention_all())
-        
+
         villa_message = Message(message_list)
         content_info = await self.bot.parse_message_content(villa_message)
 
