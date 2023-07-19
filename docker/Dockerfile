@@ -3,7 +3,7 @@ FROM python:3.10 as requirements-stage
 WORKDIR /tmp
 
 RUN pip install -U pip setuptools wheel
-RUN pip install --pre pdm
+RUN pip install pdm 
 
 COPY ./pyproject.toml ./pdm.lock* /tmp/
 
