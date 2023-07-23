@@ -18,7 +18,7 @@ qqguild = ["nonebot-adapter-qqguild>=0.2.2"]
 adapters = [
     "nonebot-adapter-telegram>=0.1.0b13",
     "nonebot-adapter-qqguild>=0.2.2",
-    "nonebot-adapter-villa>=0.6.1.post1",
+    "nonebot-adapter-villa>=0.6.3",
 ]
 
 [build-system]

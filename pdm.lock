@@ -6,7 +6,7 @@ groups = ["default", "impl", "tests", "telegram", "nonebot", "adapters", "qqguil
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:a4110bde5aac9dda3386d3504d4c43a3af4bfb9c24a1f4a2ece0b67349ebd932"
+content_hash = "sha256:81f3e83a57f67ea6aee484ca642bdf5dbceccefbdb611d5043f682007eb2c32b"
 
 [[package]]
 name = "aiosqlite"
@@ -959,7 +959,7 @@ files = [
 
 [[package]]
 name = "nonebot-adapter-villa"
-version = "0.6.2"
+version = "0.6.3"
 requires_python = ">=3.8,<4.0"
 summary = "NoneBot2米游社大别野Bot适配器。MiHoYo Villa Bot adapter for nonebot2."
 dependencies = [
@@ -967,8 +967,8 @@ dependencies = [
     "rsa<5.0,>=4.9",
 ]
 files = [
-    {file = "nonebot_adapter_villa-0.6.2-py3-none-any.whl", hash = "sha256:bf87bf0c513a52f76f162afc3600736744ec0559caee053059cf40b3ff714fb9"},
-    {file = "nonebot_adapter_villa-0.6.2.tar.gz", hash = "sha256:f458ae0c26518779b120bac796e8c2c25ac12d1a51bf5a6a9f288a795f16c1dc"},
+    {file = "nonebot_adapter_villa-0.6.3-py3-none-any.whl", hash = "sha256:39181b926831336345772b7a57cd253da066854d3f5d76240c360b7f8f86b50e"},
+    {file = "nonebot_adapter_villa-0.6.3.tar.gz", hash = "sha256:dbf9888444802b8dc9392edf1cec766b1945648e53e635437eadbb2d60acc979"},
 ]
 
 [[package]]
