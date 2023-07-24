@@ -513,9 +513,7 @@ class OneBotImplementation:
                 logger.error(f"Can not find middleware for Adapter {middleware}")
 
     def setup(self):
-        @self.driver.on_startup
-        async def _():
-            self._register_middlewares(self.config.middlewares)
+        self._register_middlewares(self.config.middlewares)
 
         @self.driver.on_shutdown
         async def _():

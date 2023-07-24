@@ -1,0 +1,31 @@
+[
+    {
+        "robot": {
+            "template": {
+                "id": "bot_nUcp9kz0I2AhxZGVQDUQ",
+                "name": "琪露诺",
+                "desc": "冰之妖精",
+                "icon": "https://upload-bbs.miyoushe.com/upload/2023/07/17/7618077/3c7c762e7682c758893f7473c57f0668_7695696654447861251.jpg"
+            },
+            "villa_id": 2299
+        },
+        "type": 2,
+        "extend_data": {
+            "EventData": {
+                "SendMessage": {
+                    "content": "{\"trace\":{\"visual_room_version\":\"1\",\"app_version\":\"2.55.1\",\"action_type\":0,\"bot_msg_id\":\"\",\"client\":\"android\",\"env\":\"production\",\"rong_sdk_version\":\"5.4.3.116\"},\"mentionedInfo\":{\"mentionedContent\":\"\",\"userIdList\":[\"bot_nUcp9kz0I2AhxZGVQDUQ\"],\"type\":2},\"user\":{\"portraitUri\":\"https://img-static.mihoyo.com/communityweb/upload/29fab2f6cec22b79225726a73f1741c0.png\",\"extra\":\"{\\\"member_roles\\\":{\\\"name\\\":\\\"别野房东\\\",\\\"color\\\":\\\"#EB7F89\\\",\\\"web_color\\\":\\\"#E08F8F\\\",\\\"role_font_color\\\":\\\"#E75C8E\\\",\\\"role_bg_color\\\":\\\"#FAE2EA\\\"},\\\"state\\\":null}\",\"name\":\"爱丝琳\",\"alias\":\"\",\"id\":\"7618077\",\"portrait\":\"https://img-static.mihoyo.com/communityweb/upload/29fab2f6cec22b79225726a73f1741c0.png\"},\"content\":{\"images\":[],\"entities\":[{\"offset\":0,\"length\":5,\"entity\":{\"type\":\"mentioned_robot\",\"bot_id\":\"bot_nUcp9kz0I2AhxZGVQDUQ\"}}],\"text\":\"@琪露诺 /帮助\"}}",
+                    "from_user_id": 7618077,
+                    "send_at": 1690093758545,
+                    "object_name": 1,
+                    "room_id": 39761,
+                    "nickname": "爱丝琳",
+                    "msg_uid": "C9G5-O2GK-FJB9-EVB0",
+                    "villa_id": 2299
+                }
+            }
+        },
+        "created_at": 1690093758545,
+        "id": "f04d8307-15b9-7515-b777-121467666c18",
+        "send_at": 1690093759
+    }
+]
