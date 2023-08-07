@@ -17,7 +17,7 @@ telegram = ["nonebot-adapter-telegram>=0.1.0b13"]
 qqguild = ["nonebot-adapter-qqguild>=0.2.2"]
 adapters = [
     "nonebot-adapter-telegram>=0.1.0b13",
-    "nonebot-adapter-qqguild>=0.2.2",
+    "nonebot-adapter-qqguild>=0.2.4",
     "nonebot-adapter-villa>=0.6.3",
 ]
 
