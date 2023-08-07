@@ -18,7 +18,6 @@ from typing import (
 )
 
 import msgpack
-from nonebot import Driver
 from nonebot.log import logger
 from nonebot.adapters import Bot
 from nonebot.utils import escape_tag
@@ -34,6 +33,7 @@ from nonebot.adapters.onebot.v12.event import (
 )
 from nonebot.drivers import (
     URL,
+    Driver,
     Request,
     Response,
     WebSocket,
@@ -228,6 +228,7 @@ class OneBotImplementation:
     async def _ws_recv(self, middleware: Middleware, websocket: WebSocket) -> None:
         try:
             while True:
+                echo = None
                 raw_data = await websocket.receive()
                 try:
                     data = (
@@ -235,11 +236,11 @@ class OneBotImplementation:
                         if isinstance(raw_data, str)
                         else msgpack.unpackb(raw_data)
                     )
+                    if "echo" in data:
+                        echo = data["echo"]
                     resp = await self._call_api(
                         middleware, data["action"], **data["params"]
                     )
-                    if "echo" in data:
-                        resp["echo"] = data["echo"]
                 # 格式错误（包括实现不支持 MessagePack 的情况）、必要字段缺失或字段类型错误
                 except (json.JSONDecodeError, msgpack.UnpackException):
                     resp = {
@@ -256,6 +257,8 @@ class OneBotImplementation:
                         "data": None,
                         "message": str(e),
                     }
+                if echo is not None:
+                    resp["echo"] = echo
                 await websocket.send(encode_data(resp, isinstance(raw_data, bytes)))
         except WebSocketClosed as e:
             logger.opt(colors=True).warning(
@@ -283,6 +286,7 @@ class OneBotImplementation:
         if content_type not in ("application/json", "application/msgpack"):
             return Response(415, content="Invalid Content-Type")
 
+        echo = None
         try:
             if request.content is None:
                 raise ValueError("Empty request body")
@@ -290,15 +294,14 @@ class OneBotImplementation:
                 data = msgpack.unpackb(request.content)
             else:
                 data = json.loads(request.content)
-
+            if "echo" in data:
+                echo = data["echo"]
             resp = await self._call_api(
                 middleware,
                 data["action"],
                 queue=queue,
                 **data["params"],
             )
-            if "echo" in data:
-                resp["echo"] = data["echo"]
         except (json.JSONDecodeError, msgpack.UnpackException, ValueError):
             resp = {
                 "status": "failed",
@@ -313,6 +316,8 @@ class OneBotImplementation:
                 "data": None,
                 "message": str(e),
             }
+        if echo is not None:
+            resp["echo"] = echo
         return Response(
             200,
             headers={"Content-Type": content_type},
