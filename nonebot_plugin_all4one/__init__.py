@@ -36,9 +36,12 @@ on(priority=1, block=False)
 async def _(bot: Bot, event: Event):
     if middleware := obimpl.middlewares.get(bot.self_id, None):
         for event in await middleware.to_onebot_event(event):
-            for queue in middleware.queues:
+            for queue in obimpl.queues:
                 if queue.full():
                     await queue.get()
+                event = deepcopy(event)
+                if queue.self_id_prefix:
+                    middleware.prefix_self_id(event)
                 await queue.put(deepcopy(event))
         if a4o_config.block_event:
             raise IgnoredException("All4One has transfer it to OneBot V12")

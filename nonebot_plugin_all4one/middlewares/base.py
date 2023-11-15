@@ -1,19 +1,5 @@
-import asyncio
-from uuid import uuid4
-from datetime import datetime
 from abc import ABC, abstractmethod
-from asyncio import Queue as BaseQueue
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    List,
-    Union,
-    Generic,
-    Literal,
-    TypeVar,
-    Optional,
-)
+from typing import Any, Dict, List, Union, Literal, Optional
 
 from anyio import open_file
 from nonebot.adapters import Bot, Event, Message
@@ -21,44 +7,13 @@ from nonebot.adapters.onebot.v12 import UnsupportedAction
 from nonebot.adapters.onebot.v12.exception import BadParam
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12.event import (
-    Status,
     BotSelf,
     BotEvent,
-    BotStatus,
     MessageEvent,
     StatusUpdateMetaEvent,
 )
 
 from ..database import get_file, upload_file
-
-_T = TypeVar("_T", bound=OneBotEvent)
-if TYPE_CHECKING:
-
-    class _Queue(BaseQueue[_T]):
-        pass
-
-else:
-
-    class _Queue(Generic[_T], BaseQueue):
-        pass
-
-
-class Queue(_Queue[_T]):
-    def __init__(
-        self,
-        middleware: "Middleware",
-        maxsize: int = 0,
-        self_id_prefix: bool = False,
-    ):
-        super().__init__(maxsize=maxsize)
-        self.self_id_prefix = self_id_prefix
-        self.middleware = middleware
-
-    async def get(self):
-        event = await super().get()
-        if self.self_id_prefix:
-            self.middleware.prefix_self_id(event)
-        return event
 
 
 def supported_action(func):
@@ -70,8 +25,6 @@ def supported_action(func):
 class Middleware(ABC):
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.tasks: List[asyncio.Task] = []
-        self.queues: List[Queue[OneBotEvent]] = []
         self._supported_actions = self._get_supported_actions()
 
     def _get_supported_actions(self) -> List[str]:
@@ -112,29 +65,7 @@ class Middleware(ABC):
             user_id=self.self_id,
         )
 
-    def new_queue(
-        self,
-        self_id_prefix: bool = False,
-        maxsize: int = 0,
-    ) -> Queue[OneBotEvent]:
-        queue = Queue(self, maxsize=maxsize, self_id_prefix=self_id_prefix)
-        queue.put_nowait(
-            StatusUpdateMetaEvent(
-                id=uuid4().hex,
-                time=datetime.now(),
-                type="meta",
-                detail_type="status_update",
-                sub_type="",
-                status=Status(
-                    good=True,
-                    bots=[BotStatus(self=self.get_bot_self(), online=True)],
-                ),
-            )
-        )  # TODO beta better way
-        self.queues.append(queue)
-        return queue
-
-    def prefix_self_id(self, event: Event) -> Event:
+    def prefix_self_id(self, event: OneBotEvent) -> OneBotEvent:
         if isinstance(event, BotEvent):
             event.self.user_id = "a4o@" + event.self.user_id
         if isinstance(event, StatusUpdateMetaEvent):
