@@ -9,5 +9,5 @@ async def test_bot_connect(app: App, FakeMiddleware):
 
     async with app.test_api() as ctx:
         bot = ctx.create_bot()
-        obimpl.bot_connect(bot)
+        await obimpl.bot_connect(bot)
         assert obimpl.middlewares[bot.self_id].bot == bot

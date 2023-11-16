@@ -11,7 +11,7 @@ from nonebot.adapters.onebot.v12 import ChannelMessageEvent as OB12ChannelMessag
 bot_info = BotInfo(
     bot_id="test",
     bot_secret="123",
-    pub_key="""-----BEGIN PUBLIC KEY----- MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCuPr64CTkonwYjeLsAuKZ7HmSS 0gvB3p2kP82BFsEwYiDmlNuzV2aCu/CvfqA9jwGt+lBDzpkb4PyK8tdDNo8RXtUf GJhmY6Qq/Hxn1Zd2AAXeQE6bqyHE0JuM/9APmzfNzVw/UhrNamxXuEM8Xx12NEe8 UpxBHmCQ4dpBlTnVyQIDAQAB -----END PUBLIC KEY-----""",
+    pub_key="-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxMjm1BVqkCvCjcc8sqS+gxD7x\nx+p6E0sixGuJZgsF0afWkB3DVJiz20QYbtbBjVB+vs+OMFWtezioTqpVPB3XKaa/\nJbWb+Aa+/0ctXoXUWPmfWqY8VGTL87rhH9NMpMHWJn3O2k4GicexwfSV0/02zFh8\n+EwC5xoaVP1iBh4oyQIDAQAB\n-----END PUBLIC KEY-----\n",
 )
 
 
@@ -32,6 +32,5 @@ async def test_to_onebot_event(app: App):
         assert channel_create.message_id == "C9G5-O2GK-FJB9-EVB0"
         assert channel_create.channel_id == "39761"
         assert (
-            channel_create.alt_message
-            == "MentionedRobot(bot_id='bot_nUcp9kz0I2AhxZGVQDUQ', bot_name='琪露诺')/帮助"
+            channel_create.alt_message == "<mention_robot:bot_nUcp9kz0I2AhxZGVQDUQ>/帮助"
         )
