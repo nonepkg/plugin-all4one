@@ -132,9 +132,9 @@ class OneBotImplementation:
             f'Succeeded to load middleware "<y>{escape_tag(name)}</y>"'
         )
 
-    async def _call_api(self, api: str, data: Dict[str, Any]) -> Any:
+    async def _call_api(self, data: Dict[str, Any]) -> Any:
         try:
-            if api in (
+            if (api := data["action"]) in (
                 "get_latest_events",
                 "get_supported_actions",
                 "get_status",
@@ -146,7 +146,7 @@ class OneBotImplementation:
                     if middleware := self.middlewares.get(
                         bot_self.get("user_id", "").replace("a4o@", ""), None
                     ):
-                        resp = await middleware._call_api(api, **data)
+                        resp = await middleware._call_api(api, **data["params"])
                     else:
                         raise UnknownSelf("failed", 10102, "Unknown Self", {})
                 else:
@@ -281,7 +281,7 @@ class OneBotImplementation:
                     )
                     if "echo" in data:
                         echo = data["echo"]
-                    resp = await self._call_api(data["action"], data["params"])
+                    resp = await self._call_api(data)
                 # 格式错误（包括实现不支持 MessagePack 的情况）、必要字段缺失或字段类型错误
                 except (json.JSONDecodeError, msgpack.UnpackException):
                     resp = {
@@ -334,7 +334,7 @@ class OneBotImplementation:
             if "echo" in data:
                 echo = data["echo"]
             data["params"]["queue"] = queue
-            resp = await self._call_api(data["action"], data["params"])
+            resp = await self._call_api(data)
         except (json.JSONDecodeError, msgpack.UnpackException, ValueError):
             resp = {
                 "status": "failed",
@@ -418,7 +418,7 @@ class OneBotImplementation:
                             logger.error("Invalid Content-Type")
                             continue
                         for action in data:
-                            await self._call_api(action["action"], action["params"])
+                            await self._call_api(action)
                     # 动作请求执行出错
                     except Exception:
                         logger.exception("HTTP Webhook Response action failed")
