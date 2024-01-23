@@ -155,31 +155,20 @@ class Middleware(BaseMiddleware):
                     continue
                 message_list.append(OneBotMessageSegment.mention(qq))
             elif segment.type == "image":
-                file = await self.bot.get_image(file=segment.data["file"])
+                file = segment.data["file"]
                 async with AsyncClient() as client:
-                    message_list.append(
-                        OneBotMessageSegment.image(
-                            await upload_file(
-                                file["filename"],
-                                self.get_name(),
-                                segment.data["file"],
-                                data=(await client.get(file["url"])).content,
-                            )
-                        )
-                    )
-            elif segment.type in ("video", "record"):
-                message_list.append(
-                    OneBotMessageSegment(
-                        "video" if segment.type == "video" else "voice",
-                        {
-                            "file": await upload_file(
-                                "",
-                                self.get_name(),
-                                segment.data["file"],
-                            )
-                        },
-                    )
+                    try:
+                        data = (await client.get(file)).content
+                    except:
+                        data = None
+
+                file_id = await upload_file(
+                    "",
+                    self.get_name(),
+                    file,
+                    data=data,
                 )
+                message_list.append(OneBotMessageSegment.image(file_id))
         return OneBotMessage(message_list)
 
     async def from_onebot_message(self, message: OneBotMessage) -> Message:
