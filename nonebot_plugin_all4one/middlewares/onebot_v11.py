@@ -84,8 +84,9 @@ class Middleware(BaseMiddleware):
         )
         event_dict["id"] = uuid.uuid4().hex
         event_dict["type"] = event.post_type
-        if not isinstance(event, MetaEvent):
-            event_dict["self"] = self.get_bot_self().dict()
+        if isinstance(event, MetaEvent):
+            return []
+        event_dict["self"] = self.get_bot_self().dict()
         if isinstance(event, MessageEvent):
             event_dict["detail_type"] = event.message_type
             event_dict["message"] = await self.to_onebot_message(event.original_message)
@@ -128,14 +129,6 @@ class Middleware(BaseMiddleware):
                 event_dict["detail_type"] = f"qq.{event.notice_type}"
         elif isinstance(event, RequestEvent):
             event_dict["detail_type"] = f"qq.{event.request_type}"
-        elif isinstance(event, MetaEvent):
-            event_dict["type"] = "meta"
-            if isinstance(event, HeartbeatMetaEvent):
-                event_dict["detail_type"] = "heartbeat"
-                event_dict["interval"] = event.interval
-            else:
-                event_dict["detail_type"] = f"qq.{event.meta_event_type}"
-            event_dict["sub_type"] = getattr(event, "sub_type", "")
         event_dict.setdefault("sub_type", "")
         if event_out := OneBotAdapter.json_to_event(
             event_dict, "nonebot-plugin-all4one"
