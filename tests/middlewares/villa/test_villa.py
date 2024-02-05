@@ -32,5 +32,6 @@ async def test_to_onebot_event(app: App):
         assert channel_create.message_id == "C9G5-O2GK-FJB9-EVB0"
         assert channel_create.channel_id == "39761"
         assert (
-            channel_create.alt_message == "<mention_robot:bot_nUcp9kz0I2AhxZGVQDUQ>/帮助"
+            channel_create.alt_message
+            == "<mention_robot:bot_nUcp9kz0I2AhxZGVQDUQ>/帮助"
         )

@@ -267,7 +267,9 @@ class Middleware(BaseMiddleware):
             # NoneBot 的默认 API_TIMEOUT 为 30s，这里设置为 25s
             result = await e.get_audit_result(timeout=25)
             if result.message_id is None:
-                raise ob_exception.PlatformError("failed", 34001, "消息审核未通过", None)
+                raise ob_exception.PlatformError(
+                    "failed", 34001, "消息审核未通过", None
+                )
             time = result.audit_time.timestamp()  # type: ignore
             message_id = {
                 "message_id": result.message_id,
@@ -351,9 +353,9 @@ class Middleware(BaseMiddleware):
             "user_displayname": member.nick or "",
             "qqguild.user": member.user.dict() if member.user else None,
             "qqguild.roles": member.roles,
-            "qqguild.joined_at": member.joined_at.timestamp()
-            if member.joined_at
-            else None,
+            "qqguild.joined_at": (
+                member.joined_at.timestamp() if member.joined_at else None
+            ),
         }
 
     async def _get_all_members(self, guild_id: str) -> List[Member]:
@@ -388,9 +390,9 @@ class Middleware(BaseMiddleware):
                         "user_displayname": member.nick or "",
                         "qqguild.user": member.user.dict() if member.user else None,
                         "qqguild.roles": member.roles,
-                        "qqguild.joined_at": member.joined_at.timestamp()
-                        if member.joined_at
-                        else None,
+                        "qqguild.joined_at": (
+                            member.joined_at.timestamp() if member.joined_at else None
+                        ),
                     }
                 )
         return members_list
@@ -425,15 +427,15 @@ class Middleware(BaseMiddleware):
                 {
                     "channel_id": str(channel.id) if channel.id else "",
                     "channel_name": channel.name or "",
-                    "qqguild.guild_id": str(channel.guild_id)
-                    if channel.guild_id
-                    else "",
+                    "qqguild.guild_id": (
+                        str(channel.guild_id) if channel.guild_id else ""
+                    ),
                     "qqguild.channel_type": channel.type,
                     "qqguild.position": channel.position,
                     "qqguild.parent_id": channel.parent_id,
-                    "qqguild.owner_id": str(channel.owner_id)
-                    if channel.owner_id
-                    else "",
+                    "qqguild.owner_id": (
+                        str(channel.owner_id) if channel.owner_id else ""
+                    ),
                     "qqguild.sub_type": channel.sub_type,
                     "qqguild.private_type": channel.private_type,
                 }
@@ -449,7 +451,10 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_channel_member_info(
         self, *, guild_id: str, channel_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], Any,]:
+    ) -> Dict[
+        Union[Literal["user_id", "user_name", "user_displayname"], str],
+        Any,
+    ]:
         member = await self.bot.get_member(guild_id=int(guild_id), user_id=int(user_id))
         if member.user is None:
             raise ob_exception.PlatformError("failed", 34001, "用户不存在", None)
@@ -460,9 +465,9 @@ class Middleware(BaseMiddleware):
             "user_displayname": member.nick or "",
             "qqguild.user": member.user.dict() if member.user else {},
             "qqguild.roles": member.roles,
-            "qqguild.joined_at": member.joined_at.timestamp()
-            if member.joined_at
-            else None,
+            "qqguild.joined_at": (
+                member.joined_at.timestamp() if member.joined_at else None
+            ),
         }
 
     @supported_action
@@ -517,9 +522,9 @@ class Middleware(BaseMiddleware):
                         "user_displayname": member.nick or "",
                         "qqguild.user": member.user.dict() if member.user else {},
                         "qqguild.roles": member.roles,
-                        "qqguild.joined_at": member.joined_at.timestamp()
-                        if member.joined_at
-                        else None,
+                        "qqguild.joined_at": (
+                            member.joined_at.timestamp() if member.joined_at else None
+                        ),
                     }
                 )
         return members_list
