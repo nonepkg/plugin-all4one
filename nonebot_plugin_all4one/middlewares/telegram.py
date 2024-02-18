@@ -64,9 +64,11 @@ class Middleware(BaseMiddleware):
                     0,
                     OneBotMessageSegment.reply(
                         f"{event.reply_to_message.chat.id}/{event.reply_to_message.message_id}",
-                        user_id=event.reply_to_message.get_user_id()
-                        if not isinstance(event.reply_to_message, ChannelPostEvent)
-                        else "",
+                        user_id=(
+                            event.reply_to_message.get_user_id()
+                            if not isinstance(event.reply_to_message, ChannelPostEvent)
+                            else ""
+                        ),
                     ),
                 )
         elif isinstance(event, NoticeEvent):
@@ -219,9 +221,7 @@ class Middleware(BaseMiddleware):
         }
 
     @supported_action
-    async def get_user_info(
-        self, *, user_id: str, **kwargs: Any
-    ) -> Dict[
+    async def get_user_info(self, *, user_id: str, **kwargs: Any) -> Dict[
         Union[Literal["user_id", "user_name", "user_displayname", "user_remark"], str],
         str,
     ]:

@@ -383,9 +383,9 @@ class OneBotImplementation:
 
     async def _http_webhook(self, conn: HTTPWebhookConfig):
         headers = {
-            "Content-Type": "application/msgpack"
-            if conn.use_msgpack
-            else "application/json",
+            "Content-Type": (
+                "application/msgpack" if conn.use_msgpack else "application/json"
+            ),
             "User-Agent": "OneBot/12 NoneBot Plugin All4One/0.1.0",
             "X-OneBot-Version": "12",
             "X-Impl": "nonebot-plugin-all4one",
