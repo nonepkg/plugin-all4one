@@ -19,10 +19,10 @@
     {
       devShells.${system} = {
         default = pkgs.mkShell {
-          shellHook = ''
-            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [pkgs.stdenv.cc.cc]}
-          ''
-          ;
+          NIX_LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+            pkgs.stdenv.cc.cc
+          ];
+          NIX_LD = pkgs.lib.fileContents "${pkgs.stdenv.cc}/nix-support/dynamic-linker";
         };
       };
     };
