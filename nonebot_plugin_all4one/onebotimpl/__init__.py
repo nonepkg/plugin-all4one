@@ -5,20 +5,14 @@ from datetime import datetime
 from functools import partial
 from contextlib import asynccontextmanager
 from typing import (
-    TYPE_CHECKING,
     Any,
-    Set,
-    Dict,
-    List,
-    Type,
     Union,
-    Generic,
     Literal,
     TypeVar,
     Optional,
-    AsyncGenerator,
     cast,
 )
+from collections.abc import AsyncGenerator
 
 import msgpack
 from nonebot.log import logger
@@ -62,18 +56,9 @@ from .config import (
 )
 
 _T = TypeVar("_T", bound=Event)
-if TYPE_CHECKING:
-
-    class _Queue(asyncio.Queue[_T]):
-        pass
-
-else:
-
-    class _Queue(Generic[_T], asyncio.Queue):
-        pass
 
 
-class Queue(_Queue[_T]):
+class Queue(asyncio.Queue[_T]):
     def __init__(
         self,
         self_id_prefix: bool = False,
@@ -86,11 +71,11 @@ class Queue(_Queue[_T]):
 class OneBotImplementation:
     def __init__(self, driver: Driver):
         self.driver = driver
-        self.config = Config(**self.driver.config.dict())
-        self.tasks: List[asyncio.Task] = []
-        self.queues: List[Queue[Event]] = []
-        self._middlewares: Dict[str, Type[Middleware]] = {}
-        self.middlewares: Dict[str, Middleware] = {}
+        self.config = Config(**self.driver.config.model_dump())
+        self.tasks: list[asyncio.Task] = []
+        self.queues: list[Queue[Event]] = []
+        self._middlewares: dict[str, type[Middleware]] = {}
+        self.middlewares: dict[str, Middleware] = {}
         self.setup()
 
     def setup_http_server(self, setup: HTTPServerSetup):
@@ -119,7 +104,7 @@ class OneBotImplementation:
         async with self.driver.websocket(setup) as ws:
             yield ws
 
-    def register_middleware(self, middleware: Type[Middleware]):
+    def register_middleware(self, middleware: type[Middleware]):
         """注册一个中间件"""
         name = middleware.get_name()
         if name in self._middlewares:
@@ -132,7 +117,7 @@ class OneBotImplementation:
             f'Succeeded to load middleware "<y>{escape_tag(name)}</y>"'
         )
 
-    async def _call_api(self, data: Dict[str, Any]) -> Any:
+    async def _call_api(self, data: dict[str, Any]) -> Any:
         try:
             if (api := data["action"]) in (
                 "get_latest_events",
@@ -167,7 +152,7 @@ class OneBotImplementation:
         limit: int = 0,
         timeout: int = 0,
         **kwargs: Any,
-    ) -> List[Event]:
+    ) -> list[Event]:
         """获取最新事件列表
 
         参数:
@@ -193,7 +178,7 @@ class OneBotImplementation:
 
     async def get_supported_actions(
         self, middleware: Middleware, **kwargs: Any
-    ) -> List[str]:
+    ) -> list[str]:
         """获取支持的动作列表
 
         参数:
@@ -218,7 +203,7 @@ class OneBotImplementation:
     async def get_version(
         self,
         **kwargs: Any,
-    ) -> Dict[Union[Literal["impl", "version", "onebot_version"], str], str]:
+    ) -> dict[Union[Literal["impl", "version", "onebot_version"], str], str]:
         """获取版本信息
 
         参数:
@@ -256,11 +241,11 @@ class OneBotImplementation:
             while True:
                 event = await queue.get()
                 await websocket.send(encode_data(event.dict(), conn.use_msgpack))
-        except WebSocketClosed as e:
+        except WebSocketClosed:
             logger.opt(colors=True).warning(
                 "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>"
             )
-        except Exception as e:
+        except Exception:
             logger.opt(colors=True).exception(
                 "<r><bg #f8bbd0>Error while process data from websocket"
                 ". Trying to reconnect...</bg #f8bbd0></r>"
@@ -301,10 +286,10 @@ class OneBotImplementation:
                 if echo is not None:
                     resp["echo"] = echo
                 await websocket.send(encode_data(resp, isinstance(raw_data, bytes)))
-        except WebSocketClosed as e:
+        except WebSocketClosed:
             logger.opt(colors=True).warning("WebSocket closed by peer")
         # 与 WebSocket 服务器的连接发生了意料之外的错误
-        except Exception as e:
+        except Exception:
             logger.opt(colors=True).exception(
                 "<r><bg #f8bbd0>Error while process data from websocket</bg #f8bbd0></r>"
             )
@@ -372,7 +357,7 @@ class OneBotImplementation:
                     detail_type="connect",
                     sub_type="",
                     version=ImplVersion(**await self.get_version()),
-                ).dict(),
+                ).model_dump(),
                 conn.use_msgpack,
             )
         )
@@ -452,7 +437,7 @@ class OneBotImplementation:
         )
         while True:
             try:
-                async with self.websocket(req) as ws:  # type:ignore
+                async with self.websocket(req) as ws:
                     try:
                         await ws.send(
                             encode_data(
@@ -463,7 +448,7 @@ class OneBotImplementation:
                                     detail_type="connect",
                                     sub_type="",
                                     version=ImplVersion(**await self.get_version()),
-                                ).dict(),
+                                ).model_dump(),
                                 conn.use_msgpack,
                             )
                         )
@@ -471,11 +456,11 @@ class OneBotImplementation:
                         t2 = asyncio.create_task(self._ws_recv(ws))
                         await t2
                         t1.cancel()
-                    except WebSocketClosed as e:
+                    except WebSocketClosed:
                         logger.opt(colors=True).warning(
                             "<y><bg #f8bbd0>WebSocket Closed</bg #f8bbd0></y>"
                         )
-                    except Exception as e:
+                    except Exception:
                         logger.opt(colors=True).exception(
                             "<r><bg #f8bbd0>Error while process data from websocket"
                             f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></r>",
@@ -485,7 +470,7 @@ class OneBotImplementation:
                     f"Current driver {self.driver.type} does not support websocket server"
                 )
                 break
-            except Exception as e:
+            except Exception:
                 logger.opt(colors=True).warning(
                     "<y><bg #f8bbd0>Error while setup websocket to "
                     f"{escape_tag(str(conn.url))}. Trying to reconnect...</bg #f8bbd0></y>",
@@ -532,7 +517,7 @@ class OneBotImplementation:
                 event = middleware.prefix_self_id(event)
             await queue.put(event)
 
-    def _register_middlewares(self, middlewares: Optional[Set[str]] = None):
+    def _register_middlewares(self, middlewares: Optional[set[str]] = None):
         if middlewares is None:
             middlewares = set(self.driver._adapters.keys())
         for middleware in middlewares:
@@ -552,7 +537,7 @@ class OneBotImplementation:
                         queue = Queue(conn.self_id_prefix, conn.event_buffer_size)
                     self.setup_http_server(
                         HTTPServerSetup(
-                            URL(f"/all4one/"),
+                            URL("/all4one/"),
                             "POST",
                             "All4One",
                             partial(self._handle_http, queue, conn),
@@ -563,7 +548,7 @@ class OneBotImplementation:
                 elif isinstance(conn, WebsocketConfig):
                     self.setup_websocket_server(
                         WebSocketServerSetup(
-                            URL(f"/all4one/"),
+                            URL("/all4one/"),
                             "All4One",
                             partial(self._handle_ws, conn),
                         )

@@ -1,7 +1,7 @@
 from hashlib import sha256
 from base64 import b64decode
 from uuid import UUID, uuid4
-from typing import Dict, Union, Optional
+from typing import Union, Optional
 
 from anyio import open_file
 from httpx import AsyncClient
@@ -24,7 +24,7 @@ class File(Model):
     src: Mapped[Optional[str]]
     src_id: Mapped[Optional[str]]
     url: Mapped[Optional[str]]
-    headers: Mapped[Optional[Dict[str, str]]] = mapped_column(JSON)
+    headers: Mapped[Optional[dict[str, str]]] = mapped_column(JSON)
     path: Mapped[Optional[str]]
     sha256: Mapped[Optional[str]]
 
@@ -69,7 +69,7 @@ async def upload_file(
     src: Optional[str] = None,
     src_id: Optional[str] = None,
     url: Optional[str] = None,
-    headers: Optional[Dict[str, str]] = None,
+    headers: Optional[dict[str, str]] = None,
     path: Optional[str] = None,
     data: Optional[Union[str, bytes]] = None,
     sha256: Optional[str] = None,

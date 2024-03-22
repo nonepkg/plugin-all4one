@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/github/license/nonepkg/nonebot-plugin-all4one?style=flat-square)](LICENSE)
 ![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg?style=flat-square)
 [![NoneBot Version](https://img.shields.io/badge/nonebot-2.0.0rc2+-red.svg?style=flat-square)](https://v2.nonebot.dev/)
-[![OneBot V12](https://img.shields.io/badge/OneBot-12-black?style=flat-square)](https://12.onebot.dev/)
+[![OneBot 4A](https://img.shields.io/badge/OneBot-4A-black?style=flat-square)](https://onebot4all.vercel.app/)
 [![PyPI Version](https://img.shields.io/pypi/v/nonebot-plugin-all4one.svg?style=flat-square)](https://pypi.python.org/pypi/nonebot-plugin-all4one)
 [![codecov](https://codecov.io/gh/nonepkg/plugin-all4one/branch/master/graph/badge.svg?token=BOK429DAHO)](https://codecov.io/gh/nonepkg/plugin-all4one)
 
@@ -16,9 +16,7 @@
 
 ## 安装
 
-### 从 PyPI 安装（推荐）
-
-- 使用 nb-cli  
+- 使用 nb-cli
 
 ```sh
 nb plugin install nonebot-plugin-all4one
@@ -28,18 +26,6 @@ nb plugin install nonebot-plugin-all4one
 
 ```sh
 pdm add nonebot-plugin-all4one
-```
-
-- 使用 pip
-
-```sh
-pip install nonebot-plugin-all4one
-```
-
-### 从 GitHub 安装（不推荐）
-
-```sh
-pdm add git+https://github.com/nonepkg/nonebot-plugin-all4one
 ```
 
 ## 使用
@@ -64,8 +50,7 @@ blocked_plugins = ["echo"] # 在 block_event=False 时生效，可自定义处�
 
 - [x] [OneBot V11](https://github.com/nonebot/adapter-onebot)
 - [x] [Telegram](http://github.com/nonebot/adapter-telegram)
-- [x] [QQ Guild](https://github.com/nonebot/adapter-qq) [@he0119](https://github.com/he0119)
-- [x] [Villa](https://github.com/CMHopeSunshine/nonebot-adapter-villa) [@he0119](https://github.com/he0119)
+- [ ] [QQ](https://github.com/nonebot/adapter-qq) [@he0119](https://github.com/he0119) 寻求新维护者
 
 ## 相关链接
 

@@ -22,11 +22,11 @@ blocked_plugins = ["echo"] # 在 block_event=False 时生效，可自定义处�
     type="application",
     homepage="https://github.com/nonepkg/nonebot-plugin-all4one",
     config=Config,
-    supported_adapters={"~console", "~onebot.v11", "~telegram", "~qqguild"},
+    supported_adapters={"~onebot.v11", "~telegram"},
 )
 
 driver = get_driver()
-a4o_config = Config(**driver.config.dict())
+a4o_config = Config(**driver.config.model_dump())
 obimpl = OneBotImplementation(driver)
 
 on(priority=1, block=False)
@@ -54,6 +54,7 @@ if not a4o_config.block_event and a4o_config.blocked_plugins:
         if (
             bot.type in obimpl._middlewares
             and matcher.plugin_name
-            and matcher.plugin_name in a4o_config.blocked_plugins  # type: ignore
+            and a4o_config.blocked_plugins
+            and matcher.plugin_name in a4o_config.blocked_plugins
         ):
             raise IgnoredException("All4One has blocked it")

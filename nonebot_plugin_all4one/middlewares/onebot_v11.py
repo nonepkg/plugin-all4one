@@ -1,10 +1,10 @@
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Union, Literal, Optional
+from typing import Any, Union, Literal, Optional
 
 from anyio import open_file
 from httpx import AsyncClient
-from pydantic import parse_obj_as
+from pydantic import TypeAdapter
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v11.message import MessageSegment
 from nonebot.adapters.onebot.v12 import ActionFailedWithRetcode
@@ -17,7 +17,6 @@ from nonebot.adapters.onebot.v11.event import (
     NoticeEvent,
     MessageEvent,
     RequestEvent,
-    HeartbeatMetaEvent,
     FriendAddNoticeEvent,
     GroupRecallNoticeEvent,
     FriendRecallNoticeEvent,
@@ -51,7 +50,7 @@ class Middleware(BaseMiddleware):
     def get_platform(self):
         return "qq"
 
-    async def to_onebot_event(self, event: Event) -> List[OneBotEvent]:
+    async def to_onebot_event(self, event: Event) -> list[OneBotEvent]:
         replaced_by_detail_type = (
             "notice_type",
             "message_type",
@@ -69,7 +68,7 @@ class Middleware(BaseMiddleware):
         good_to_be_ob12 = ("time", "sub_type")
         event_dict = {
             f"qq.{k}": v
-            for k, v in event.dict(
+            for k, v in event.model_dump(
                 exclude=set(
                     replaced_by_detail_type
                     + should_be_str
@@ -78,15 +77,15 @@ class Middleware(BaseMiddleware):
                 )
             ).items()
         }
-        event_dict.update(event.dict(include=set(good_to_be_ob12)))
+        event_dict.update(event.model_dump(include=set(good_to_be_ob12)))
         event_dict.update(
-            {k: str(v) for k, v in event.dict(include=set(should_be_str)).items()}
+            {k: str(v) for k, v in event.model_dump(include=set(should_be_str)).items()}
         )
         event_dict["id"] = uuid.uuid4().hex
         event_dict["type"] = event.post_type
         if isinstance(event, MetaEvent):
             return []
-        event_dict["self"] = self.get_bot_self().dict()
+        event_dict["self"] = self.get_bot_self().model_dump()
         if isinstance(event, MessageEvent):
             event_dict["detail_type"] = event.message_type
             event_dict["message"] = await self.to_onebot_message(event.original_message)
@@ -152,7 +151,7 @@ class Middleware(BaseMiddleware):
                 async with AsyncClient() as client:
                     try:
                         data = (await client.get(file)).content
-                    except:
+                    except Exception:
                         data = None
 
                 file_id = await upload_file(
@@ -210,8 +209,8 @@ class Middleware(BaseMiddleware):
         channel_id: Optional[str] = None,
         message: OneBotMessage,
         **kwargs: Any,
-    ) -> Dict[Union[Literal["message_id", "time"], str], Any]:
-        message = parse_obj_as(OneBotMessage, message)
+    ) -> dict[Union[Literal["message_id", "time"], str], Any]:
+        message = TypeAdapter(OneBotMessage).validate_python(message)
         if group_id:
             result = await self.bot.send_msg(
                 group_id=int(group_id), message=await self.from_onebot_message(message)
@@ -221,7 +220,7 @@ class Middleware(BaseMiddleware):
                 user_id=int(user_id), message=await self.from_onebot_message(message)
             )
         return {
-            "message_id": result["message_id"],  # type: ignore
+            "message_id": result["message_id"],
             "time": int(datetime.now().timestamp()),
         }
 
@@ -232,7 +231,7 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_self_info(
         self, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
+    ) -> dict[Union[Literal["user_id", "nickname"], str], str]:
         result = await self.bot.get_login_info()
         return {
             "user_id": str(result["user_id"]),
@@ -243,7 +242,7 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_user_info(
         self, *, user_id: str, no_cache: bool = False, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
+    ) -> dict[Union[Literal["user_id", "nickname"], str], str]:
         result = await self.bot.get_stranger_info(
             user_id=int(user_id), no_cache=no_cache
         )
@@ -260,7 +259,7 @@ class Middleware(BaseMiddleware):
     async def get_friend_list(
         self,
         **kwargs: Any,
-    ) -> List[Dict[Union[Literal["user_id", "nickname"], str], str]]:
+    ) -> list[dict[Union[Literal["user_id", "nickname"], str], str]]:
         result = await self.bot.get_friend_list()
         resp = []
         for friend in result:
@@ -279,7 +278,7 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_group_info(
         self, *, group_id: str, no_cache: bool = False, **kwargs: Any
-    ) -> Dict[Union[Literal["group_id", "group_name"], str], str]:
+    ) -> dict[Union[Literal["group_id", "group_name"], str], str]:
         result = await self.bot.get_group_info(
             group_id=int(group_id), no_cache=no_cache
         )
@@ -294,7 +293,7 @@ class Middleware(BaseMiddleware):
     async def get_group_list(
         self,
         **kwargs: Any,
-    ) -> List[Dict[Union[Literal["group_id", "group_name"], str], str]]:
+    ) -> list[dict[Union[Literal["group_id", "group_name"], str], str]]:
         result = await self.bot.get_group_list()
         resp = []
         for group in result:
@@ -311,7 +310,7 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_group_member_info(
         self, *, group_id: str, user_id: str, no_cache: bool = False, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "nickname"], str], str]:
+    ) -> dict[Union[Literal["user_id", "nickname"], str], str]:
         result = await self.bot.get_group_member_info(
             group_id=int(group_id), user_id=int(user_id), no_cache=no_cache
         )
@@ -325,7 +324,7 @@ class Middleware(BaseMiddleware):
 
     async def get_group_member_list(
         self, *, group_id: str, **kwargs: Any
-    ) -> List[Dict[Union[Literal["user_id", "nickname"], str], str]]:
+    ) -> list[dict[Union[Literal["user_id", "nickname"], str], str]]:
         result = await self.bot.get_group_member_list(group_id=int(group_id))
         resp = []
         for member in result:

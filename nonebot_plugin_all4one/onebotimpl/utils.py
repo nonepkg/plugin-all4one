@@ -2,7 +2,7 @@ import json
 import datetime
 from base64 import b64encode
 from functools import partial
-from typing import Dict, Union
+from typing import Union
 
 import msgpack
 from pydantic.json import custom_pydantic_encoder
@@ -25,11 +25,11 @@ json_type_encoders = {
     bytes: encode_bytes,
 }
 
-msgpack_encoder = partial(custom_pydantic_encoder, msgpack_type_encoders)  # type: ignore
-json_encoder = partial(custom_pydantic_encoder, json_type_encoders)  # type: ignore
+msgpack_encoder = partial(custom_pydantic_encoder, msgpack_type_encoders)
+json_encoder = partial(custom_pydantic_encoder, json_type_encoders)
 
 
-def encode_data(data: Dict, use_msgpack: bool) -> Union[str, bytes]:
+def encode_data(data: dict, use_msgpack: bool) -> Union[str, bytes]:
     """编码数据"""
     if use_msgpack:
         return msgpack.packb(data, default=msgpack_encoder)  # type: ignore

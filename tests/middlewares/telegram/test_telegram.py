@@ -94,6 +94,7 @@ async def test_send_message(app: App):
                 "photo": "test",
                 "caption": "Test",
                 "caption_entities": None,
+                "reply_parameters": None,
                 "disable_notification": None,
                 "protect_content": None,
                 "reply_to_message_id": None,

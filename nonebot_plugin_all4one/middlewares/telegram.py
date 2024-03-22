@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import Any, Dict, List, Union, Literal, Optional
+from typing import Any, Union, Literal, Optional
 
-from pydantic import parse_obj_as
+from pydantic import TypeAdapter
 from nonebot.adapters.onebot.v12 import UnsupportedSegment
 from nonebot.adapters.telegram.message import File, Entity
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
@@ -35,13 +35,13 @@ class Middleware(BaseMiddleware):
     def get_platform(self):
         return "telegram"
 
-    async def to_onebot_event(self, event: Event) -> List[OneBotEvent]:
+    async def to_onebot_event(self, event: Event) -> list[OneBotEvent]:
         event_dict = {}
         event_dict["id"] = str(event.telegram_model.update_id)
         if (type := event.get_type()) not in ["message", "notice", "request"]:
             return []
         event_dict["type"] = type
-        event_dict["self"] = self.get_bot_self().dict()
+        event_dict["self"] = self.get_bot_self().model_dump()
         if isinstance(event, MessageEvent):
             event_dict["time"] = event.date
             event_dict["detail_type"] = event.get_event_name().split(".")[1]
@@ -149,7 +149,7 @@ class Middleware(BaseMiddleware):
         channel_id: Optional[str] = None,
         message: OneBotMessage,
         **kwargs: Any,
-    ) -> Dict[Union[Literal["message_id", "time"], str], Any]:
+    ) -> dict[Union[Literal["message_id", "time"], str], Any]:
         if detail_type == "group":
             chat_id = group_id
         elif detail_type == "private":
@@ -159,7 +159,7 @@ class Middleware(BaseMiddleware):
         chat_id = str(chat_id)
 
         message_list = []
-        message = parse_obj_as(OneBotMessage, message)
+        message = TypeAdapter(OneBotMessage).validate_python(message)
         for segment in message:
             if segment.type == "text":
                 message_list.append(Entity.text(segment.data["text"]))
@@ -212,38 +212,40 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_self_info(
         self, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
+    ) -> dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
         result = await self.bot.get_me()
         return {
             "user_id": str(result.id),
-            "user_name": result.username,  # type: ignore
+            "user_name": result.username or "",
             "user_displayname": result.first_name,
         }
 
     @supported_action
-    async def get_user_info(self, *, user_id: str, **kwargs: Any) -> Dict[
+    async def get_user_info(
+        self, *, user_id: str, **kwargs: Any
+    ) -> dict[
         Union[Literal["user_id", "user_name", "user_displayname", "user_remark"], str],
         str,
     ]:
         result = await self.bot.get_chat(int(user_id))
         return {
             "user_id": str(result.id),
-            "user_name": result.username if result.username else "",
-            "user_displayname": result.first_name,  # type: ignore
+            "user_name": result.username or "",
+            "user_displayname": result.first_name or "",
             "user_remark": "",
         }
 
     @supported_action
     async def get_group_info(
         self, *, group_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["group_id", "group_name"], str], str]:
+    ) -> dict[Union[Literal["group_id", "group_name"], str], str]:
         result = await self.bot.get_chat(int(group_id))
-        return {"group_id": str(result.id), "group_name": result.title}  # type: ignore
+        return {"group_id": str(result.id), "group_name": result.title or ""}
 
     @supported_action
     async def get_group_member_info(
         self, *, group_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
+    ) -> dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
         result = await self.bot.get_chat_member(int(group_id), int(user_id))
         return {
             "user_id": str(result.user.id),
@@ -264,9 +266,9 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_guild_info(
         self, *, guild_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["guild_id", "guild_name"], str], str]:
+    ) -> dict[Union[Literal["guild_id", "guild_name"], str], str]:
         result = await self.bot.get_chat(int(guild_id))
-        return {"guild_id": str(result.id), "guild_id": result.title}  # type: ignore
+        return {"guild_id": str(result.id), "guild_name": result.title or ""}
 
     @supported_action
     async def set_guild_name(
@@ -277,7 +279,7 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_guild_member_info(
         self, *, guild_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
+    ) -> dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
         result = await self.bot.get_chat_member(int(guild_id), int(user_id))
         return {
             "user_id": str(result.user.id),
@@ -298,7 +300,7 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_channel_member_info(
         self, *, guild_id: str, channel_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
+    ) -> dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
         result = await self.bot.get_chat_member(int(guild_id), int(user_id))
         return {
             "user_id": str(result.user.id),

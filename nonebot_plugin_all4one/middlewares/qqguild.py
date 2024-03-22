@@ -1,11 +1,11 @@
 from uuid import uuid4
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Dict, List, Tuple, Union, Literal, Optional
+from typing import Any, Union, Literal, Optional
 
 from nonebot import logger
 from anyio import open_file
-from pydantic import parse_obj_as
+from pydantic import TypeAdapter
 import nonebot.adapters.onebot.v12.exception as ob_exception
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
@@ -66,7 +66,7 @@ class Middleware(BaseMiddleware):
     @staticmethod
     def _from_ob_message_id(
         message_id: str,
-    ) -> Tuple[str, Optional[int], Optional[int]]:
+    ) -> tuple[str, Optional[int], Optional[int]]:
         """从 OneBot 的消息 id 中解析出 message_id, guild_id, channel_id"""
         message, guild, channel = message_id.split("-")
         return message, int(guild) if guild else None, int(channel) if channel else None
@@ -78,12 +78,12 @@ class Middleware(BaseMiddleware):
     def get_platform(self):
         return "qqguild"
 
-    async def to_onebot_event(self, event: Event) -> List[OneBotEvent]:
+    async def to_onebot_event(self, event: Event) -> list[OneBotEvent]:
         event_dict = {}
         if (type := event.get_type()) not in ["message", "notice", "request"]:
             return []
         event_dict["type"] = type
-        event_dict["self"] = self.get_bot_self().dict()
+        event_dict["self"] = self.get_bot_self().model_dump()
         event_dict["sub_type"] = ""
         if isinstance(event, MessageEvent):
             event_dict["id"] = event.id
@@ -100,8 +100,12 @@ class Middleware(BaseMiddleware):
             event_dict["message"] = await self.to_onebot_message(event)
             event_dict["alt_message"] = str(event.get_message())
             # 扩展 author, member 信息
-            event_dict["qqguild.author"] = event.author.dict() if event.author else {}
-            event_dict["qqguild.member"] = event.member.dict() if event.member else {}
+            event_dict["qqguild.author"] = (
+                event.author.model_dump() if event.author else {}
+            )
+            event_dict["qqguild.member"] = (
+                event.member.model_dump() if event.member else {}
+            )
             if isinstance(event, DirectMessageCreateEvent):
                 event_dict["detail_type"] = "private"
                 event_dict["user_id"] = event.get_user_id()
@@ -209,12 +213,12 @@ class Middleware(BaseMiddleware):
         channel_id: Optional[str] = None,
         message: OneBotMessage,
         **kwargs: Any,
-    ) -> Dict[Union[Literal["message_id", "time"], str], Any]:
+    ) -> dict[Union[Literal["message_id", "time"], str], Any]:
         if detail_type not in ["private", "channel"]:
             raise ob_exception.UnsupportedParam("failed", 10004, "不支持的类型", None)
 
         message_list = []
-        message = parse_obj_as(OneBotMessage, message)
+        message = TypeAdapter(OneBotMessage).validate_python(message)
         for segment in message:
             if segment.type == "text":
                 message_list.append(MessageSegment.text(segment.data["text"]))
@@ -287,10 +291,10 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_guild_info(
         self, *, guild_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["guild_id", "guild_name"], str], str]:
+    ) -> dict[Union[Literal["guild_id", "guild_name"], str], str]:
         guild = await self.bot.get_guild(guild_id=int(guild_id))
 
-        guild_dict = guild.dict()
+        guild_dict = guild.model_dump()
         guild_dict["guild_id"] = str(guild_dict["id"])
         guild_dict["guild_name"] = guild_dict["name"]
         guild_dict["qqguild.icon"] = guild_dict.get("icon")
@@ -302,7 +306,7 @@ class Middleware(BaseMiddleware):
         guild_dict["qqguild.joined_at"] = guild_dict.get("joined_at")
         return guild_dict
 
-    async def _get_all_guild(self) -> List[Guild]:
+    async def _get_all_guild(self) -> list[Guild]:
         guilds = []
         # 有分页，每页 100 个
         # https://bot.q.qq.com/wiki/develop/api/openapi/user/guilds.html#%E5%8F%82%E6%95%B0
@@ -318,13 +322,13 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_guild_list(
         self, **kwargs: Any
-    ) -> List[Dict[Union[Literal["guild_id", "guild_name"], str], str]]:
+    ) -> list[dict[Union[Literal["guild_id", "guild_name"], str], str]]:
         """获取群列表"""
         guilds = await self._get_all_guild()
 
         guilds_list = []
         for guild in guilds:
-            guild_dict = guild.dict()
+            guild_dict = guild.model_dump()
             guild_dict["guild_id"] = str(guild_dict["id"])
             guild_dict["guild_name"] = guild_dict["name"]
             # 扩展字段
@@ -342,7 +346,7 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_guild_member_info(
         self, *, guild_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], Any]:
+    ) -> dict[Union[Literal["user_id", "user_name", "user_displayname"], str], Any]:
         member = await self.bot.get_member(guild_id=int(guild_id), user_id=int(user_id))
         if member.user is None:
             raise ob_exception.PlatformError("failed", 34001, "用户不存在", None)
@@ -351,14 +355,14 @@ class Middleware(BaseMiddleware):
             "user_id": str(member.user.id) if member.user.id else "",
             "user_name": member.user.username or "",
             "user_displayname": member.nick or "",
-            "qqguild.user": member.user.dict() if member.user else None,
+            "qqguild.user": member.user.model_dump() if member.user else None,
             "qqguild.roles": member.roles,
             "qqguild.joined_at": (
                 member.joined_at.timestamp() if member.joined_at else None
             ),
         }
 
-    async def _get_all_members(self, guild_id: str) -> List[Member]:
+    async def _get_all_members(self, guild_id: str) -> list[Member]:
         members = []
         # 有分页，每页 400 个
         # https://bot.q.qq.com/wiki/develop/api/openapi/member/get_members.html#%E5%8F%82%E6%95%B0
@@ -375,8 +379,8 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_guild_member_list(
         self, *, guild_id: str, **kwargs: Any
-    ) -> List[
-        Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]
+    ) -> list[
+        dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]
     ]:
         members = await self._get_all_members(guild_id=guild_id)
 
@@ -388,7 +392,9 @@ class Middleware(BaseMiddleware):
                         "user_id": str(member.user.id) if member.user.id else "",
                         "user_name": member.user.username or "",
                         "user_displayname": member.nick or "",
-                        "qqguild.user": member.user.dict() if member.user else None,
+                        "qqguild.user": member.user.model_dump()
+                        if member.user
+                        else None,
                         "qqguild.roles": member.roles,
                         "qqguild.joined_at": (
                             member.joined_at.timestamp() if member.joined_at else None
@@ -400,7 +406,7 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_channel_info(
         self, *, guild_id: str, channel_id: str, **kwargs: Any
-    ) -> Dict[Union[Literal["channel_id", "channel_name"], str], Union[str, int, None]]:
+    ) -> dict[Union[Literal["channel_id", "channel_name"], str], Union[str, int, None]]:
         channel = await self.bot.get_channel(channel_id=int(channel_id))
 
         return {
@@ -418,7 +424,7 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_channel_list(
         self, *, guild_id: str, **kwargs: Any
-    ) -> List[Dict[Union[Literal["channel_id", "channel_name"], str], str]]:
+    ) -> list[dict[Union[Literal["channel_id", "channel_name"], str], str]]:
         result = await self.bot.get_channels(guild_id=int(guild_id))
 
         channels_list = []
@@ -451,7 +457,7 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_channel_member_info(
         self, *, guild_id: str, channel_id: str, user_id: str, **kwargs: Any
-    ) -> Dict[
+    ) -> dict[
         Union[Literal["user_id", "user_name", "user_displayname"], str],
         Any,
     ]:
@@ -463,7 +469,7 @@ class Middleware(BaseMiddleware):
             "user_id": str(member.user.id) if member.user.id else "",
             "user_name": member.user.username or "",
             "user_displayname": member.nick or "",
-            "qqguild.user": member.user.dict() if member.user else {},
+            "qqguild.user": member.user.model_dump() if member.user else {},
             "qqguild.roles": member.roles,
             "qqguild.joined_at": (
                 member.joined_at.timestamp() if member.joined_at else None
@@ -473,8 +479,8 @@ class Middleware(BaseMiddleware):
     @supported_action
     async def get_channel_member_list(
         self, *, guild_id: str, channel_id: str, **kwargs: Any
-    ) -> List[
-        Dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]
+    ) -> list[
+        dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]
     ]:
         """返回可以查看该频道的用户列表"""
         guild_members = await self._get_all_members(guild_id=guild_id)
@@ -493,7 +499,8 @@ class Middleware(BaseMiddleware):
                 # https://bot.q.qq.com/wiki/develop/api/openapi/channel_permissions/model.html#permissions
                 try:
                     resp = await self.bot.get_channel_roles_permissions(
-                        channel_id=int(channel_id), role_id=role.id  # type: ignore
+                        channel_id=int(channel_id),
+                        role_id=role.id,  # type: ignore
                     )
                 except ActionFailed as e:
                     # 需要将机器人设置为管理员，可能没有权限
@@ -520,7 +527,7 @@ class Middleware(BaseMiddleware):
                         "user_id": str(member.user.id) if member.user.id else "",
                         "user_name": member.user.username or "",
                         "user_displayname": member.nick or "",
-                        "qqguild.user": member.user.dict() if member.user else {},
+                        "qqguild.user": member.user.model_dump() if member.user else {},
                         "qqguild.roles": member.roles,
                         "qqguild.joined_at": (
                             member.joined_at.timestamp() if member.joined_at else None

@@ -1,8 +1,8 @@
 from enum import Enum
-from typing import Set, List, Union, Literal, Optional
+from typing import Union, Literal, Optional
 
 from pydantic import AnyUrl, BaseModel
-from nonebot.adapters.onebot.v12.config import WSUrl
+from nonebot.adapters.onebot.utils import WSUrl
 
 
 class ConnectionType(str, Enum):
@@ -47,10 +47,10 @@ class WebsocketReverseConfig(BaseConnectionConfig):
 
 
 class Config(BaseModel):
-    obimpl_connections: List[
+    obimpl_connections: list[
         Union[HTTPConfig, HTTPWebhookConfig, WebsocketConfig, WebsocketReverseConfig]
     ] = []
-    middlewares: Optional[Set[str]] = None
+    middlewares: Optional[set[str]] = None
 
     class Config:
         extra = "ignore"
