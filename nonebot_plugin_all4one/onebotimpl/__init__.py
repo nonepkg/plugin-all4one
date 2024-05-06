@@ -3,16 +3,9 @@ import uuid
 import asyncio
 from datetime import datetime
 from functools import partial
-from contextlib import asynccontextmanager
-from typing import (
-    Any,
-    Union,
-    Literal,
-    TypeVar,
-    Optional,
-    cast,
-)
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Any, Union, Literal, TypeVar, Optional, cast
 
 import msgpack
 from nonebot.log import logger
