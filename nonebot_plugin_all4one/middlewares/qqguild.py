@@ -392,9 +392,9 @@ class Middleware(BaseMiddleware):
                         "user_id": str(member.user.id) if member.user.id else "",
                         "user_name": member.user.username or "",
                         "user_displayname": member.nick or "",
-                        "qqguild.user": member.user.model_dump()
-                        if member.user
-                        else None,
+                        "qqguild.user": (
+                            member.user.model_dump() if member.user else None
+                        ),
                         "qqguild.roles": member.roles,
                         "qqguild.joined_at": (
                             member.joined_at.timestamp() if member.joined_at else None

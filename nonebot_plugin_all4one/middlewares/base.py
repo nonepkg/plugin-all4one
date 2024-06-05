@@ -131,9 +131,7 @@ class Middleware(ABC):
         """获取机器人自身信息"""
         raise NotImplementedError
 
-    async def get_user_info(
-        self, *, user_id: str, **kwargs: Any
-    ) -> dict[
+    async def get_user_info(self, *, user_id: str, **kwargs: Any) -> dict[
         Union[Literal["user_id", "user_name", "user_displayname", "user_remark"], str],
         str,
     ]:

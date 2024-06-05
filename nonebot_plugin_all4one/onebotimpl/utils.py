@@ -1,8 +1,8 @@
 import json
 import datetime
+from typing import Union
 from base64 import b64encode
 from functools import partial
-from typing import Union
 
 import msgpack
 from pydantic.json import custom_pydantic_encoder
