@@ -220,7 +220,7 @@ class Middleware(BaseMiddleware):
                 user_id=int(user_id), message=await self.from_onebot_message(message)
             )
         return {
-            "message_id": result["message_id"],
+            "message_id": result["message_id"],  # type: ignore
             "time": int(datetime.now().timestamp()),
         }
 

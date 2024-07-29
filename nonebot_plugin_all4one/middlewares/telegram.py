@@ -166,9 +166,7 @@ class Middleware(BaseMiddleware):
             elif segment.type == "mention":
                 user = await self.bot.get_chat_member(chat_id, segment.data["user_id"])
                 user_name = user.user.username or user.user.first_name
-                message_list.append(
-                    Entity.text_mention(f"@{user_name}", segment.data["user_id"])
-                )
+                message_list.append(Entity.text_mention(f"@{user_name}", user.user))
             elif segment.type == "mention_all":
                 raise UnsupportedSegment("failed", 10005, "不支持的消息段类型", {})
             elif segment.type == "image":
@@ -221,7 +219,9 @@ class Middleware(BaseMiddleware):
         }
 
     @supported_action
-    async def get_user_info(self, *, user_id: str, **kwargs: Any) -> dict[
+    async def get_user_info(
+        self, *, user_id: str, **kwargs: Any
+    ) -> dict[
         Union[Literal["user_id", "user_name", "user_displayname", "user_remark"], str],
         str,
     ]:

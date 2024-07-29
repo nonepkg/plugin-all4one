@@ -6,12 +6,7 @@ from nonebot.adapters import Bot, Event, Message
 from nonebot.adapters.onebot.v12 import UnsupportedAction
 from nonebot.adapters.onebot.v12.exception import BadParam
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
-from nonebot.adapters.onebot.v12.event import (
-    BotSelf,
-    BotEvent,
-    MessageEvent,
-    StatusUpdateMetaEvent,
-)
+from nonebot.adapters.onebot.v12.event import BotSelf
 
 from ..database import get_file, upload_file
 
@@ -65,20 +60,6 @@ class Middleware(ABC):
             user_id=self.self_id,
         )
 
-    def prefix_self_id(self, event: OneBotEvent) -> OneBotEvent:
-        if isinstance(event, BotEvent):
-            event.self.user_id = "a4o@" + event.self.user_id
-        if isinstance(event, StatusUpdateMetaEvent):
-            for bot in event.status.bots:
-                bot.self.user_id = "a4o@" + bot.self.user_id
-        if isinstance(event, MessageEvent):
-            for msg in event.message:
-                if msg.type == "reply" and msg.data["user_id"] == self.self_id:
-                    msg.data["user_id"] = "a4o@" + msg.data["user_id"]
-                elif msg.type == "mention" and msg.data["user_id"] == self.self_id:
-                    msg.data["user_id"] = "a4o@" + msg.data["user_id"]
-        return event
-
     @classmethod
     @abstractmethod
     def get_name(cls) -> str:
@@ -131,7 +112,9 @@ class Middleware(ABC):
         """获取机器人自身信息"""
         raise NotImplementedError
 
-    async def get_user_info(self, *, user_id: str, **kwargs: Any) -> dict[
+    async def get_user_info(
+        self, *, user_id: str, **kwargs: Any
+    ) -> dict[
         Union[Literal["user_id", "user_name", "user_displayname", "user_remark"], str],
         str,
     ]:
