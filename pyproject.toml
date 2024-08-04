@@ -6,7 +6,8 @@ authors = [{ name = "Jigsaw", email = "j1g5aw@foxmail.com" }]
 dependencies = [
     "nonebot2<3.0.0,>=2.2.1",
     "nonebot-adapter-onebot>=2.2.2",
-    "nonebot-plugin-datastore>=0.6.0",
+    "nonebot-plugin-localstore>=0.7.1",
+    "nonebot-plugin-orm[default]>=0.7.5",
     "pydantic>=2.6.4",
 ]
 requires-python = ">=3.9,<4.0"
@@ -16,10 +17,7 @@ license = { text = "AGPL-3.0-only" }
 [project.optional-dependencies]
 telegram = ["nonebot-adapter-telegram>=0.1.0b13"]
 qq = ["nonebot-adapter-qq>=0.2.2"]
-adapters = [
-    "nonebot-adapter-telegram>=0.1.0b13",
-    "nonebot-adapter-qq>=0.2.4",
-]
+adapters = ["nonebot-adapter-telegram>=0.1.0b13", "nonebot-adapter-qq>=0.2.4"]
 
 [build-system]
 requires = ["pdm-backend"]
@@ -39,9 +37,7 @@ tests = [
     "pytest-cov>=4.0.0",
     "pytest-xdist>=3.2.0",
 ]
-impl = [
-    "nonebot-plugin-sentry>=0.2.2",
-]
+impl = ["nonebot-plugin-sentry>=0.2.2"]
 
 [tool.ruff]
 line-length = 88
@@ -49,25 +45,25 @@ target-version = "py39"
 
 [tool.ruff.lint]
 select = [
-  "F",     # Pyflakes
-  "W",     # pycodestyle warnings
-  "E",     # pycodestyle errors
-  "UP",    # pyupgrade
-  "ASYNC", # flake8-async
-  "C4",    # flake8-comprehensions
-  "T10",   # flake8-debugger
-  "T20",   # flake8-print
-  "PYI",   # flake8-pyi
-  "PT",    # flake8-pytest-style
-  "Q",     # flake8-quotes
-  "RUF",   # Ruff-specific rules
+    "F",     # Pyflakes
+    "W",     # pycodestyle warnings
+    "E",     # pycodestyle errors
+    "UP",    # pyupgrade
+    "ASYNC", # flake8-async
+    "C4",    # flake8-comprehensions
+    "T10",   # flake8-debugger
+    "T20",   # flake8-print
+    "PYI",   # flake8-pyi
+    "PT",    # flake8-pytest-style
+    "Q",     # flake8-quotes
+    "RUF",   # Ruff-specific rules
 ]
 ignore = [
-  "E402",   # module-import-not-at-top-of-file
-  "UP037",  # quoted-annotation
-  "RUF001", # ambiguous-unicode-character-string
-  "RUF002", # ambiguous-unicode-character-docstring
-  "RUF003", # ambiguous-unicode-character-comment
+    "E402",   # module-import-not-at-top-of-file
+    "UP037",  # quoted-annotation
+    "RUF001", # ambiguous-unicode-character-string
+    "RUF002", # ambiguous-unicode-character-docstring
+    "RUF003", # ambiguous-unicode-character-comment
 ]
 
 [tool.ruff.lint.flake8-pytest-style]
@@ -99,8 +95,10 @@ reportShadowedImports = false
 pythonVersion = "3.9"
 pythonPlatform = "All"
 executionEnvironments = [
-  { root = "./tests", extraPaths = ["./"] },
-  { root = "./" },
+    { root = "./tests", extraPaths = [
+        "./",
+    ] },
+    { root = "./" },
 ]
 
 [tool.pytest.ini_options]

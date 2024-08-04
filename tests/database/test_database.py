@@ -3,7 +3,7 @@ from sqlalchemy import select
 
 
 async def test_database(app: App):
-    from nonebot_plugin_datastore import create_session
+    from nonebot_plugin_orm import get_session
 
     from nonebot_plugin_all4one.database import File, get_file, upload_file
 
@@ -12,7 +12,7 @@ async def test_database(app: App):
     assert file_id
 
     # 确认数据库内保存了文件数据
-    async with create_session() as session:
+    async with get_session() as session:
         file = (await session.scalars(select(File))).one()
         assert file
         assert file.id.hex == file_id

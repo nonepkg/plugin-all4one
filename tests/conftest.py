@@ -45,12 +45,11 @@ def FakeMiddleware():
 @pytest.fixture
 async def app(nonebug_init: None, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     nonebot.require("nonebot_plugin_all4one")
-    from nonebot_plugin_datastore.db import init_db
-    from nonebot_plugin_datastore import create_session
+    from nonebot_plugin_orm import _init_orm, get_session
 
     import nonebot_plugin_all4one.database
 
-    await init_db()
+    _init_orm()
 
     with monkeypatch.context() as m:
         m.setattr(nonebot_plugin_all4one.database, "FILE_PATH", tmp_path)
@@ -60,5 +59,5 @@ async def app(nonebug_init: None, tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     # 清空数据库
     from nonebot_plugin_all4one.database import File
 
-    async with create_session() as session:
+    async with get_session() as session:
         await session.execute(delete(File))

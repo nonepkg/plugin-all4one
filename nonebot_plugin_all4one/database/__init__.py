@@ -7,11 +7,9 @@ from anyio import open_file
 from httpx import AsyncClient
 from sqlalchemy import JSON, Uuid, select
 from sqlalchemy.orm import Mapped, mapped_column
+from nonebot_plugin_orm import Model, get_session
+from nonebot_plugin_localstore import get_plugin_data_dir
 from nonebot.adapters.onebot.v12.exception import DatabaseError
-from nonebot_plugin_datastore import create_session, get_plugin_data
-
-plugin_data = get_plugin_data()
-Model = plugin_data.Model
 
 
 def get_sha256(data: bytes) -> str:
@@ -29,13 +27,13 @@ class File(Model):
     sha256: Mapped[Optional[str]]
 
 
-DATA_PATH = plugin_data.data_dir
+DATA_PATH = get_plugin_data_dir()
 FILE_PATH = DATA_PATH / "file"
 FILE_PATH.mkdir(parents=True, exist_ok=True)
 
 
 async def get_file(file_id: str, src: Optional[str] = None) -> File:
-    async with create_session() as session:
+    async with get_session() as session:
         file = (
             await session.scalars(select(File).where(File.id == UUID(file_id)))
         ).one_or_none()
@@ -75,7 +73,7 @@ async def upload_file(
     sha256: Optional[str] = None,
 ) -> str:
     if src and src_id:
-        async with create_session() as session:
+        async with get_session() as session:
             if file := (
                 await session.scalars(
                     select(File).where(File.src == src).where(File.src_id == src_id)
@@ -83,7 +81,7 @@ async def upload_file(
             ).first():
                 return file.id.hex
     if sha256:
-        async with create_session() as session:
+        async with get_session() as session:
             if file := (
                 await session.scalars(select(File).where(File.sha256 == sha256))
             ).first():
@@ -126,7 +124,7 @@ async def upload_file(
         path=path,
         sha256=sha256,
     )
-    async with create_session() as session:
+    async with get_session() as session:
         session.add(file)
         await session.commit()
         await session.refresh(file)

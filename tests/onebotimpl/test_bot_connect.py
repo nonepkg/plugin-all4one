@@ -1,5 +1,4 @@
 from nonebug import App
-from nonebot import get_driver
 
 
 async def test_bot_connect(app: App, FakeMiddleware):

@@ -7,7 +7,8 @@ from nonebot import on, require, get_driver
 from nonebot.exception import IgnoredException
 from nonebot.message import run_preprocessor, event_preprocessor
 
-require("nonebot_plugin_datastore")
+require("nonebot_plugin_localstore")
+require("nonebot_plugin_orm")
 
 from .config import Config
 from .onebotimpl import OneBotImplementation
