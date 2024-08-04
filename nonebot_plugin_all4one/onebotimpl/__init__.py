@@ -365,7 +365,7 @@ class OneBotImplementation:
                 event = await queue.get()
                 request = Request(
                     "POST",
-                    conn.url,
+                    str(conn.url),
                     headers=headers,
                     content=encode_data(event.dict(), conn.use_msgpack),
                 )
@@ -412,7 +412,7 @@ class OneBotImplementation:
             headers["Authorization"] = f"Bearer {conn.access_token}"
         req = Request(
             "GET",
-            conn.url,
+            str(conn.url),
             headers=headers,
             timeout=30.0,
         )
