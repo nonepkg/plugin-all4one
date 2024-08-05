@@ -219,9 +219,7 @@ class Middleware(BaseMiddleware):
         }
 
     @supported_action
-    async def get_user_info(
-        self, *, user_id: str, **kwargs: Any
-    ) -> dict[
+    async def get_user_info(self, *, user_id: str, **kwargs: Any) -> dict[
         Union[Literal["user_id", "user_name", "user_displayname", "user_remark"], str],
         str,
     ]:
