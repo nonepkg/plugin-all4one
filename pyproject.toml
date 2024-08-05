@@ -24,7 +24,7 @@ requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
 [tool.pdm.dev-dependencies]
-pre-commit = ["pycln", "isort", "black", "nonemoji", "pre-commit"]
+pre-commit = ["ruff", "isort", "black", "nonemoji", "pre-commit"]
 nonebot = [
     "httpx>=0.23.3,<1.0.0",
     "fastapi>=0.110.0,<1.0.0",
@@ -36,6 +36,8 @@ tests = [
     "pytest-asyncio>=0.20.3",
     "pytest-cov>=4.0.0",
     "pytest-xdist>=3.2.0",
+    "pytest-mock>=3.14.0",
+    "freezegun>=1.5.1",
 ]
 impl = ["nonebot-plugin-sentry>=0.2.2"]
 
@@ -64,6 +66,7 @@ ignore = [
     "RUF001", # ambiguous-unicode-character-string
     "RUF002", # ambiguous-unicode-character-docstring
     "RUF003", # ambiguous-unicode-character-comment
+    "PYI051",
 ]
 
 [tool.ruff.lint.flake8-pytest-style]

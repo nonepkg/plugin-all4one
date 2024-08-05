@@ -1,8 +1,12 @@
+import datetime
 from pathlib import Path
+from contextlib import contextmanager
 
 import pytest
 import nonebot
-from sqlalchemy import delete
+from freezegun import freeze_time
+from sqlalchemy import event, delete
+from pytest_mock import MockerFixture
 from nonebug import NONEBOT_INIT_KWARGS, App
 from nonebot.adapters.telegram import Adapter as TelegramAdapter
 from nonebot.adapters.onebot.v11 import Adapter as OnebotV11Adapter
@@ -12,12 +16,13 @@ from nonebot.adapters.onebot.v12 import Adapter as OnebotV12Adapter
 def pytest_configure(config: pytest.Config) -> None:
     config.stash[NONEBOT_INIT_KWARGS] = {
         "driver": "~fastapi+~httpx+~websockets",
-        "datastore_database_url": "sqlite+aiosqlite:///:memory:",
+        "sqlalchemy_database_url": "sqlite+aiosqlite:///:memory:",
+        "alembic_startup_check": False,
     }
 
 
 @pytest.fixture(scope="session", autouse=True)
-def load_adapters(nonebug_init: None):
+def _load_adapters(nonebug_init: None):
     driver = nonebot.get_driver()
     driver.register_adapter(OnebotV11Adapter)
     driver.register_adapter(OnebotV12Adapter)
@@ -43,13 +48,20 @@ def FakeMiddleware():
 
 
 @pytest.fixture
-async def app(nonebug_init: None, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+async def app(
+    nonebug_init: None,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    mocker: MockerFixture,
+):
     nonebot.require("nonebot_plugin_all4one")
-    from nonebot_plugin_orm import _init_orm, get_session
+    from nonebot_plugin_orm import init_orm, get_session
 
     import nonebot_plugin_all4one.database
 
-    _init_orm()
+    mocker.patch("nonebot_plugin_orm._data_dir", tmp_path / "orm")
+
+    await init_orm()
 
     with monkeypatch.context() as m:
         m.setattr(nonebot_plugin_all4one.database, "FILE_PATH", tmp_path)
@@ -61,3 +73,33 @@ async def app(nonebug_init: None, tmp_path: Path, monkeypatch: pytest.MonkeyPatc
 
     async with get_session() as session:
         await session.execute(delete(File))
+
+
+@pytest.fixture
+async def session(app: App):
+    from nonebot_plugin_orm import get_session
+
+    async with get_session() as session:
+        yield session
+
+
+# https://stackoverflow.com/questions/29116718/how-to-mocking-created-time-in-sqlalchemy
+@contextmanager
+def patch_time(time_to_freeze, tick=True):
+    from nonebot_plugin_all4one.database import File
+
+    with freeze_time(time_to_freeze, tick=tick) as frozen_time:
+
+        def set_timestamp(mapper, connection, target):
+            now = datetime.datetime.utcnow()
+            if hasattr(target, "created_at"):
+                target.created_at = now
+
+        event.listen(File, "before_insert", set_timestamp, propagate=True)
+        yield frozen_time
+        event.remove(File, "before_insert", set_timestamp)
+
+
+@pytest.fixture
+def patch_current_time():
+    return patch_time

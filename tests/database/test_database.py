@@ -1,4 +1,5 @@
 from nonebug import App
+from anyio import open_file
 from sqlalchemy import select
 
 
@@ -27,5 +28,5 @@ async def test_database(app: App):
 
     # 确认文件存在
     assert file.path
-    with open(file.path, "rb") as f:
-        assert f.read() == b"test"
+    async with await open_file(file.path, "rb") as f:
+        assert (await f.read()) == b"test"

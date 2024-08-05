@@ -6,7 +6,6 @@ from nonebot.adapters.telegram import Bot, Event
 from nonebot.adapters.telegram.model import Chat
 from nonebot.adapters.telegram.model import Message
 from nonebot.adapters.telegram.config import BotConfig
-from nonebot.adapters.telegram.message import File, Entity
 from nonebot.adapters.onebot.v12 import PrivateMessageEvent
 from nonebot.adapters.telegram.model import File as TelegramFile
 from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
