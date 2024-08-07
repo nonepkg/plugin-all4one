@@ -7,7 +7,7 @@ dependencies = [
     "nonebot2<3.0.0,>=2.2.1",
     "nonebot-adapter-onebot>=2.2.2",
     "nonebot-plugin-localstore>=0.7.1",
-    "nonebot-plugin-orm[default]>=0.7.5",
+    "nonebot-plugin-orm>=0.7.5",
     "pydantic>=2.6.4",
 ]
 requires-python = ">=3.9,<4.0"
@@ -30,6 +30,7 @@ nonebot = [
     "fastapi>=0.110.0,<1.0.0",
     "uvicorn>=0.12.0,<1.0.0",
     "websockets>=10.4",
+    "nonebot-plugin-orm[default]>=0.7.5",
 ]
 tests = [
     "nonebug>=0.3.1",

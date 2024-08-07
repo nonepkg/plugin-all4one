@@ -6,8 +6,8 @@
 让 [NoneBot2](https://github.com/nonebot/nonebot2) 成为 OneBot 实现！
 
 [![License](https://img.shields.io/github/license/nonepkg/nonebot-plugin-all4one?style=flat-square)](LICENSE)
-![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg?style=flat-square)
-[![NoneBot Version](https://img.shields.io/badge/nonebot-2.0.0rc2+-red.svg?style=flat-square)](https://v2.nonebot.dev/)
+![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg?style=flat-square)
+[![NoneBot Version](https://img.shields.io/badge/nonebot-2.3.0+-red.svg?style=flat-square)](https://v2.nonebot.dev/)
 [![OneBot 4A](https://img.shields.io/badge/OneBot-4A-black?style=flat-square)](https://onebot4all.vercel.app/)
 [![PyPI Version](https://img.shields.io/pypi/v/nonebot-plugin-all4one.svg?style=flat-square)](https://pypi.python.org/pypi/nonebot-plugin-all4one)
 [![codecov](https://codecov.io/gh/nonepkg/plugin-all4one/branch/master/graph/badge.svg?token=BOK429DAHO)](https://codecov.io/gh/nonepkg/plugin-all4one)
