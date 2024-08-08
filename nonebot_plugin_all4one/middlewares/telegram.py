@@ -3,10 +3,10 @@ from typing import Any, Union, Literal, Optional
 
 from pydantic import TypeAdapter
 from nonebot.adapters.onebot.v12 import UnsupportedSegment
-from nonebot.adapters.telegram.message import File, Entity
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
+from nonebot.adapters.telegram.message import File, Reply, Entity
 from nonebot.adapters.telegram import Bot, Event, Adapter, Message
 from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
 from nonebot.adapters.telegram.event import (
@@ -48,7 +48,7 @@ class Middleware(BaseMiddleware):
             event_dict["sub_type"] = ""
             event_dict["message_id"] = f"{event.chat.id}/{event.message_id}"
             event_dict["message"] = await self.to_onebot_message(event.original_message)
-            event_dict["alt_message"] = str(event.message)
+            event_dict["alt_message"] = str(event.original_message)
             if isinstance(event, PrivateMessageEvent):
                 event_dict["user_id"] = event.get_user_id()
             elif isinstance(event, ForumTopicMessageEvent):
@@ -177,6 +177,10 @@ class Middleware(BaseMiddleware):
                 )
             elif segment.type == "file":
                 message_list.append(File.document(segment.data["file_id"]))
+            elif segment.type == "reply":
+                message_list.append(
+                    Reply.reply(int(segment.data["message_id"].split("/")[1]))
+                )
         for segment in message_list:
             if isinstance(segment, File):
                 file = await get_file(segment.data["file"], self.get_platform())
@@ -186,17 +190,10 @@ class Middleware(BaseMiddleware):
                     segment.data["file"] = file.path
         telegram_message = Message(message_list)
 
-        reply_to_message_id = None
-        if message.count("reply"):
-            reply_to_message_id = int(
-                message["reply", 0].data["message_id"].split("/")[1]
-            )
-
         result = await self.bot.send_to(
             int(chat_id),
             telegram_message,
             message_thread_id=int(channel_id) if channel_id else None,
-            reply_to_message_id=reply_to_message_id,
             **kwargs,
         )
         if isinstance(result, list):

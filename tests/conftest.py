@@ -1,11 +1,8 @@
-import datetime
 from pathlib import Path
-from contextlib import contextmanager
 
 import pytest
 import nonebot
-from freezegun import freeze_time
-from sqlalchemy import event, delete
+from sqlalchemy import delete
 from pytest_mock import MockerFixture
 from nonebug import NONEBOT_INIT_KWARGS, App
 from nonebot.adapters.telegram import Adapter as TelegramAdapter
@@ -81,25 +78,3 @@ async def session(app: App):
 
     async with get_session() as session:
         yield session
-
-
-# https://stackoverflow.com/questions/29116718/how-to-mocking-created-time-in-sqlalchemy
-@contextmanager
-def patch_time(time_to_freeze, tick=True):
-    from nonebot_plugin_all4one.database import File
-
-    with freeze_time(time_to_freeze, tick=tick) as frozen_time:
-
-        def set_timestamp(mapper, connection, target):
-            now = datetime.datetime.utcnow()
-            if hasattr(target, "created_at"):
-                target.created_at = now
-
-        event.listen(File, "before_insert", set_timestamp, propagate=True)
-        yield frozen_time
-        event.remove(File, "before_insert", set_timestamp)
-
-
-@pytest.fixture
-def patch_current_time():
-    return patch_time

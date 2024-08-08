@@ -19,6 +19,7 @@
     {
       devShells.${system} = {
         default = pkgs.mkShell {
+          packages=[pkgs.python39];
           NIX_LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
             pkgs.stdenv.cc.cc
           ];
