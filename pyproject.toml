@@ -9,6 +9,7 @@ dependencies = [
     "nonebot-plugin-localstore>=0.7.1",
     "nonebot-plugin-orm>=0.7.5",
     "pydantic>=2.6.4",
+    "httpx>=0.27.0",
 ]
 requires-python = ">=3.9,<4.0"
 readme = "README.md"
@@ -31,10 +32,9 @@ build-backend = "pdm.backend"
 [tool.pdm.dev-dependencies]
 pre-commit = ["ruff", "isort", "black", "nonemoji", "pre-commit"]
 nonebot = [
-    "httpx>=0.23.3,<1.0.0",
-    "fastapi>=0.110.0,<1.0.0",
-    "uvicorn>=0.12.0,<1.0.0",
-    "websockets>=10.4",
+    "uvicorn[standard]>=0.12.0,<1.0.0",
+    "aiohttp>=3.10.2",
+    "fastapi>=0.112.0",
     "nonebot-plugin-orm[default]>=0.7.5",
 ]
 tests = [
