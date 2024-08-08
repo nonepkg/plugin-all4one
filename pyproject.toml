@@ -17,7 +17,12 @@ license = { text = "AGPL-3.0-only" }
 [project.optional-dependencies]
 telegram = ["nonebot-adapter-telegram>=0.1.0b13"]
 qq = ["nonebot-adapter-qq>=0.2.2"]
-adapters = ["nonebot-adapter-telegram>=0.1.0b13", "nonebot-adapter-qq>=0.2.4"]
+discord = ["nonebot-adapter-discord>=0.1.8"]
+adapters = [
+    "nonebot-adapter-telegram>=0.1.0b13",
+    "nonebot-adapter-qq>=0.2.4",
+    "nonebot-adapter-discord>=0.1.8",
+]
 
 [build-system]
 requires = ["pdm-backend"]
