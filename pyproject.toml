@@ -112,3 +112,6 @@ executionEnvironments = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+
+[tool.nonebot]
+plugins = ["nonebot_plugin_all4one"]
