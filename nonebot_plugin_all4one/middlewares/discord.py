@@ -143,3 +143,118 @@ class Middleware(BaseMiddleware):
             "message_id": str(result.id),
             "time": result.timestamp,
         }
+
+    # TODO OBA 扩展
+    # @supported_action
+    # async def delete_message(
+    #     self, *, channel_id: str, message_id: str, **kwargs: Any
+    # ) -> None:
+    #     await self.bot.delete_message(
+    #         channel_id=int(message_id), message_id=int(message_id)
+    #     )
+
+    @supported_action
+    async def get_self_info(
+        self, **kwargs: Any
+    ) -> dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
+        return {
+            "user_id": str(self.bot.self_id),
+            "user_name": self.bot.self_info.username,
+            "user_displayname": self.bot.self_info.global_name or "",
+        }
+
+    @supported_action
+    async def get_user_info(self, *, user_id: str, **kwargs: Any) -> dict[
+        Union[Literal["user_id", "user_name", "user_displayname", "user_remark"], str],
+        str,
+    ]:
+        result = await self.bot.get_user(user_id=int(user_id))
+        return {
+            "user_id": str(result.id),
+            "user_name": result.username,
+            "user_displayname": result.global_name or "",
+            "user_remark": "",
+        }
+
+    @supported_action
+    async def get_guild_info(
+        self, *, guild_id: str, **kwargs: Any
+    ) -> dict[Union[Literal["guild_id", "guild_name"], str], str]:
+        result = await self.bot.get_guild(guild_id=int(guild_id))
+        return {"guild_id": str(result.id), "guild_name": result.name}
+
+    @supported_action
+    async def set_guild_name(
+        self, *, guild_id: str, guild_name: str, **kwargs: Any
+    ) -> None:
+        await self.bot.modify_guild(guild_id=int(guild_id), name=guild_name)
+
+    @supported_action
+    async def get_guild_member_info(
+        self, *, guild_id: str, user_id: str, **kwargs: Any
+    ) -> dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
+        result = await self.bot.get_guild_member(
+            guild_id=int(guild_id), user_id=int(user_id)
+        )
+        return {
+            "user_id": str(result.user.id),
+            "user_name": result.user.username,
+            "user_displayname": result.nick or result.user.global_name or "",
+        }
+
+    @supported_action
+    async def get_guild_member_list(
+        self, *, guild_id: str, **kwargs: Any
+    ) -> list[
+        dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]
+    ]:
+        result = await self.bot.list_guild_members(guild_id=int(guild_id))
+        return [
+            {
+                "user_id": str(member.user.id),
+                "user_name": member.user.username,
+                "user_displayname": member.nick or member.user.global_name or "",
+            }
+            for member in result
+        ]
+
+    @supported_action
+    async def leave_guild(self, *, guild_id: str, **kwargs: Any) -> None:
+        await self.bot.leave_guild(guild_id=int(guild_id))
+
+    @supported_action
+    async def get_channel_info(
+        self, *, guild_id: str, channel_id: str, **kwargs: Any
+    ) -> dict[Union[Literal["channel_id", "channel_name"], str], str]:
+        result = await self.bot.get_channel(channel_id=int(channel_id))
+        return {"channel_id": str(result.id), "channel_name": result.name or ""}
+
+    @supported_action
+    async def get_channel_list(
+        self, *, guild_id: str, joined_only: bool = False, **kwargs: Any
+    ) -> list[dict[Union[Literal["channel_id", "channel_name"], str], str]]:
+        result = await self.bot.get_guild_channels(guild_id=int(guild_id))
+        return [
+            {"channel_id": str(channel.id), "channel_name": channel.name or ""}
+            for channel in result
+        ]
+
+    @supported_action
+    async def set_channel_name(
+        self, *, guild_id: str, channel_id: str, channel_name: str, **kwargs: Any
+    ) -> None:
+        await self.bot.modify_channel(channel_id=int(channel_id), name=channel_name)
+
+    @supported_action
+    async def get_channel_member_info(
+        self, *, guild_id: str, channel_id: str, user_id: str, **kwargs: Any
+    ) -> dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
+        # TODO OBA 扩展
+        return await self.get_guild_member_info(guild_id=guild_id, user_id=user_id)
+
+    # TODO 只能通过检测权限判断是否频道成员
+    # async def get_channel_member_list(
+    #     self, *, guild_id: str, channel_id: str, **kwargs: Any
+    # ) -> list[
+    #     dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]
+    # ]:
