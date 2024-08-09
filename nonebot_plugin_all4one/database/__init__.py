@@ -37,27 +37,27 @@ async def get_file(file_id: str, src: Optional[str] = None) -> File:
         file = (
             await session.scalars(select(File).where(File.id == UUID(file_id)))
         ).one_or_none()
-        if file:
-            if src is None:
-                if file.sha256:
-                    return file
+        if file is None:
+            raise DatabaseError("failed", 31001, "file not found", {})
+        if src is None:
+            if file.sha256:
+                return file
+        else:
+            if file.src == src:
+                return file
             else:
-                if file.src == src:
-                    return file
+                if file.sha256 is None:
+                    raise DatabaseError("failed", 31001, "file not found", {})
+                if file_ := (
+                    await session.scalars(
+                        select(File).where(File.sha256 == file.sha256, File.src == src)
+                    )
+                ).first():
+                    return file_
                 else:
-                    if file.sha256:
-                        if file_ := (
-                            await session.scalars(
-                                select(File).where(
-                                    File.sha256 == file.sha256, File.src == src
-                                )
-                            )
-                        ).first():
-                            return file_
-                        else:
-                            file.src = src
-                            file.src_id = None
-                            return file
+                    file.src = src
+                    file.src_id = None
+                    return file
 
         raise DatabaseError("failed", 31001, "file not found", {})
 

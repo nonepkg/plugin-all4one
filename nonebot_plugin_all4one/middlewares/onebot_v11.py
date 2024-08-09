@@ -1,4 +1,5 @@
 import uuid
+from pathlib import Path
 from datetime import datetime
 from typing import Any, Union, Literal, Optional
 
@@ -155,7 +156,7 @@ class Middleware(BaseMiddleware):
                         data = None
 
                 file_id = await upload_file(
-                    "",
+                    Path(file).name,
                     self.get_name(),
                     file,
                     data=data,
