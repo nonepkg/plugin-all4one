@@ -14,4 +14,11 @@ nonebot.load_plugin("nonebot_plugin_sentry")
 nonebot.load_plugin("nonebot_plugin_all4one")
 
 if __name__ == "__main__":
+    # 不让 orm 弹该死的升级提示
+    from nonebot_plugin_orm import _init_orm
+    from nonebot_plugin_orm.migrate import AlembicConfig, upgrade
+
+    _init_orm()
+    upgrade(AlembicConfig())
+
     nonebot.run()
