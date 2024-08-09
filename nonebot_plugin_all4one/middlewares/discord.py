@@ -1,7 +1,6 @@
 from typing import Any, Union, Literal, Optional
 
 from anyio import open_file
-from httpx import AsyncClient
 from pydantic import TypeAdapter
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
@@ -77,13 +76,8 @@ class Middleware(BaseMiddleware):
                     OneBotMessageSegment.mention(segment.data["user_id"])
                 )
         for attachment in event.attachments:
-            async with AsyncClient() as client:
-                try:
-                    data = (await client.get(attachment.url)).content
-                except Exception:
-                    data = None
             file_id = await upload_file(
-                attachment.filename, self.get_name(), attachment.id, data=data
+                attachment.filename, self.get_name(), attachment.id, url=attachment.url
             )
             if attachment.content_type.startswith("image"):
                 message_list.append(OneBotMessageSegment.image(file_id))
@@ -144,7 +138,7 @@ class Middleware(BaseMiddleware):
             "time": result.timestamp,
         }
 
-    # TODO OBA 扩展
+    # TODO: OBA 扩展
     # @supported_action
     # async def delete_message(
     #     self, *, channel_id: str, message_id: str, **kwargs: Any
@@ -249,10 +243,10 @@ class Middleware(BaseMiddleware):
     async def get_channel_member_info(
         self, *, guild_id: str, channel_id: str, user_id: str, **kwargs: Any
     ) -> dict[Union[Literal["user_id", "user_name", "user_displayname"], str], str]:
-        # TODO OBA 扩展
+        # TODO: OBA 扩展更多返回字段
         return await self.get_guild_member_info(guild_id=guild_id, user_id=user_id)
 
-    # TODO 只能通过检测权限判断是否频道成员
+    # TODO: 只能通过检测权限判断是否频道成员
     # async def get_channel_member_list(
     #     self, *, guild_id: str, channel_id: str, **kwargs: Any
     # ) -> list[

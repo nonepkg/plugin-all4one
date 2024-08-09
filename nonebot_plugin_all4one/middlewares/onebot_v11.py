@@ -1,10 +1,8 @@
 import uuid
-from pathlib import Path
 from datetime import datetime
 from typing import Any, Union, Literal, Optional
 
 from anyio import open_file
-from httpx import AsyncClient
 from pydantic import TypeAdapter
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
 from nonebot.adapters.onebot.v11.message import MessageSegment
@@ -148,18 +146,10 @@ class Middleware(BaseMiddleware):
                     continue
                 message_list.append(OneBotMessageSegment.mention(qq))
             elif segment.type == "image":
-                file = segment.data["file"]
-                async with AsyncClient() as client:
-                    try:
-                        data = (await client.get(file)).content
-                    except Exception:
-                        data = None
-
                 file_id = await upload_file(
-                    Path(file).name,
-                    self.get_name(),
-                    file,
-                    data=data,
+                    src=self.get_name(),
+                    src_id=segment.data["file"],
+                    url=segment.data["url"],
                 )
                 message_list.append(OneBotMessageSegment.image(file_id))
         return OneBotMessage(message_list)

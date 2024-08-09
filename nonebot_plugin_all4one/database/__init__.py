@@ -11,6 +11,8 @@ from nonebot_plugin_orm import Model, get_session
 from nonebot_plugin_localstore import get_plugin_data_dir
 from nonebot.adapters.onebot.v12.exception import DatabaseError
 
+from .fleep import get as get_file_info
+
 
 def get_sha256(data: bytes) -> str:
     return sha256(data).hexdigest()
@@ -63,7 +65,7 @@ async def get_file(file_id: str, src: Optional[str] = None) -> File:
 
 
 async def upload_file(
-    name: str,
+    name: Optional[str] = None,
     src: Optional[str] = None,
     src_id: Optional[str] = None,
     url: Optional[str] = None,
@@ -106,17 +108,22 @@ async def upload_file(
         async with AsyncClient() as client:
             response = await client.get(url, headers=headers)
             data = response.content
-    if data:
-        # 如果是 JSON 格式，bytes 编码为 base64
-        # https://12.onebot.dev/connect/data-protocol/basic-types/#_5
-        if isinstance(data, str):
-            data = b64decode(data)
-        sha256 = get_sha256(data)
-        path = str(FILE_PATH / sha256)
-        async with await open_file(path, "wb") as f:
-            await f.write(data)
+    if not data:
+        # FIXME: 还没决定放什么异常
+        raise
+    # 如果是 JSON 格式，bytes 编码为 base64
+    # https://12.onebot.dev/connect/data-protocol/basic-types/#_5
+    if isinstance(data, str):
+        data = b64decode(data)
+
+    sha256 = get_sha256(data)
+    extensions = get_file_info(data[:128]).extensions
+    filename = f"{sha256}.{extensions[0] if extensions else ''}"
+    path = str(FILE_PATH / filename)
+    async with await open_file(path, "wb") as f:
+        await f.write(data)
     file = File(
-        name=name,
+        name=name or filename,
         src=src,
         src_id=src_id,
         url=url,
