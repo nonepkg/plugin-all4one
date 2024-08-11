@@ -1,8 +1,8 @@
 [project]
 name = "nonebot-plugin-all4one"
 version = "0.1.0a4"
-description = ""
-authors = [{ name = "Jigsaw", email = "j1g5aw@foxmail.com" }]
+description = "Make NoneBot as OneBot Implementation"
+authors = [{ name = "Jigsaw", email = "j1g5awi@proton.me" }]
 dependencies = [
     "nonebot2<3.0.0,>=2.2.1",
     "nonebot-adapter-onebot>=2.2.2",

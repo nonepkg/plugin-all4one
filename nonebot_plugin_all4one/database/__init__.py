@@ -118,7 +118,7 @@ async def upload_file(
 
     sha256 = get_sha256(data)
     extensions = get_file_info(data[:128]).extensions
-    filename = f"{sha256}.{extensions[0] if extensions else ''}"
+    filename = f"{sha256}{'.'+extensions[0] if extensions else ''}"
     path = str(FILE_PATH / filename)
     async with await open_file(path, "wb") as f:
         await f.write(data)
