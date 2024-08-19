@@ -167,14 +167,19 @@ class Middleware(BaseMiddleware):
                 resp = await self.bot.get_forward_msg(id=segment.data["id"])
                 nodes = []
                 for node in resp["message"]:
-                    if node.type == "forward":
+                    node_message = (
+                        TypeAdapter(Message)
+                        .validate_python(node["data"]["content"])
+                        .exclude("forward")
+                    )
+                    if not node_message:
                         continue
                     nodes.append(
                         {
                             "user_id": node["data"]["user_id"],
                             "user_name": node["data"]["nickname"],
                             "message": await self.to_onebot_message(
-                                node["data"]["content"]
+                                message=node_message
                             ),
                         }
                     )
@@ -226,7 +231,9 @@ class Middleware(BaseMiddleware):
                                 "name": node["user_name"],
                                 "uin": node["user_id"],
                                 "content": await self.from_onebot_message(
-                                    node["message"]
+                                    message=TypeAdapter(OneBotMessage).validate_python(
+                                        node["message"]
+                                    )
                                 ),
                             },
                         )
