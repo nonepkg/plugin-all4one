@@ -102,7 +102,6 @@ class OneBotImplementation:
         try:
             if (api := data["action"]) in (
                 "get_latest_events",
-                "get_supported_actions",
                 "get_status",
                 "get_version",
             ):
@@ -110,7 +109,7 @@ class OneBotImplementation:
             else:
                 if bot_self := data.pop("self", None):
                     if middleware := self.middlewares.get(
-                        bot_self.get("user_id", "").replace("a4o@", ""), None
+                        bot_self.get("user_id", ""), None
                     ):
                         resp = await middleware._call_api(api, **data["params"])
                     else:
@@ -542,12 +541,8 @@ class OneBotImplementation:
 
         @self.driver.on_bot_connect
         async def _(bot: Bot):
-            if bot.self_id.startswith("a4o@"):
-                return
             await self.bot_connect(bot)
 
         @self.driver.on_bot_disconnect
         async def _(bot: Bot):
-            if bot.self_id.startswith("a4o@"):
-                return
             await self.bot_disconnect(bot)

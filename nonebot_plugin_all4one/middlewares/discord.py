@@ -66,6 +66,16 @@ class Middleware(BaseMiddleware):
             return [event_out]
         return []
 
+    async def get_supported_message_segments(self, **kwargs: Any) -> list[str]:
+        return [
+            "text",
+            "mention",
+            "mention_all",
+            "image",
+            "file",
+            "reply",
+        ]
+
     async def to_onebot_message(self, event: MessageEvent) -> OneBotMessage:
         message_list = []
         for segment in event.original_message:

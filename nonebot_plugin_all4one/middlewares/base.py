@@ -58,6 +58,10 @@ class Middleware(ABC):
         return BotSelf(
             platform=self.get_platform(),
             user_id=self.self_id,
+            **{
+                "supported_actions": self.get_supported_actions(),
+                "supported_message_segments": self.get_supported_message_segments(),
+            },
         )
 
     @classmethod
@@ -73,6 +77,14 @@ class Middleware(ABC):
     @abstractmethod
     async def to_onebot_event(self, event: Event) -> list[OneBotEvent]:
         raise NotImplementedError
+
+    @supported_action
+    async def get_supported_message_segments(self, **kwargs: Any) -> list[str]:
+        """获取支持的消息段列表
+        参数:
+            kwargs: 扩展字段
+        """
+        return []
 
     async def send_message(
         self,

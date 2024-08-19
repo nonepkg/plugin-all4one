@@ -134,6 +134,17 @@ class Middleware(BaseMiddleware):
             return [event_out]
         return []
 
+    async def get_supported_message_segments(self, **kwargs: Any) -> list[str]:
+        return [
+            "text",
+            "mention",
+            "mention_all",
+            "image",
+            "video",
+            "reply",
+            "message_nodes",
+        ]
+
     async def to_onebot_message(self, message: Message) -> OneBotMessage:
         message_list = []
         for segment in message:
@@ -152,6 +163,24 @@ class Middleware(BaseMiddleware):
                     url=segment.data["url"],
                 )
                 message_list.append(OneBotMessageSegment.image(file_id))
+            elif segment.type == "forward":
+                resp = await self.bot.get_forward_msg(id=segment.data["id"])
+                nodes = []
+                for node in resp["message"]:
+                    if node.type == "forward":
+                        continue
+                    nodes.append(
+                        {
+                            "user_id": node["data"]["user_id"],
+                            "user_name": node["data"]["nickname"],
+                            "message": await self.to_onebot_message(
+                                node["data"]["content"]
+                            ),
+                        }
+                    )
+                message_list.append(
+                    OneBotMessageSegment("message_nodes", {"nodes": nodes})
+                )
         return OneBotMessage(message_list)
 
     async def from_onebot_message(self, message: OneBotMessage) -> Message:
@@ -187,6 +216,23 @@ class Middleware(BaseMiddleware):
                     message_list.append(MessageSegment.record(data))
             elif segment.type == "reply":
                 message_list.append(MessageSegment.reply(segment.data["message_id"]))
+            elif segment.type == "message_nodes":
+                nodes = []
+                for node in segment.data["nodes"]:
+                    nodes.append(
+                        MessageSegment(
+                            "node",
+                            {
+                                "name": node["user_name"],
+                                "uin": node["user_id"],
+                                "content": await self.from_onebot_message(
+                                    node["message"]
+                                ),
+                            },
+                        )
+                    )
+                resp = await self.bot.send_forward_msg(meesages=nodes)
+                message_list.append(MessageSegment.forward(resp["resid"]))
         return Message(message_list)
 
     @supported_action
