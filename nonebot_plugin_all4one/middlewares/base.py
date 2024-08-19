@@ -54,13 +54,13 @@ class Middleware(ABC):
     def self_id(self) -> str:
         return self.bot.self_id
 
-    def get_bot_self(self) -> BotSelf:
+    async def get_bot_self(self) -> BotSelf:
         return BotSelf(
             platform=self.get_platform(),
             user_id=self.self_id,
             **{
-                "supported_actions": self.get_supported_actions(),
-                "supported_message_segments": self.get_supported_message_segments(),
+                "supported_actions": await self.get_supported_actions(),
+                "supported_message_segments": await self.get_supported_message_segments(),
             },
         )
 

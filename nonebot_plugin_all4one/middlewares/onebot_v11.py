@@ -84,7 +84,7 @@ class Middleware(BaseMiddleware):
         event_dict["type"] = event.post_type
         if isinstance(event, MetaEvent):
             return []
-        event_dict["self"] = self.get_bot_self().model_dump()
+        event_dict["self"] = (await self.get_bot_self()).model_dump()
         if isinstance(event, MessageEvent):
             event_dict["detail_type"] = event.message_type
             event_dict["message"] = await self.to_onebot_message(event.original_message)

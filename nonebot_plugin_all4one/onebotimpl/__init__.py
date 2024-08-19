@@ -175,7 +175,7 @@ class OneBotImplementation:
         return Status(
             good=True,
             bots=[
-                BotStatus(self=middleware.get_bot_self(), online=True)
+                BotStatus(self=await middleware.get_bot_self(), online=True)
                 for middleware in self.middlewares.values()
             ],
         )
@@ -471,7 +471,7 @@ class OneBotImplementation:
                 sub_type="",
                 status=Status(
                     good=True,
-                    bots=[BotStatus(self=middleware.get_bot_self(), online=True)],
+                    bots=[BotStatus(self=await middleware.get_bot_self(), online=True)],
                 ),
             )
             await queue.put(event)
@@ -488,7 +488,9 @@ class OneBotImplementation:
                 sub_type="",
                 status=Status(
                     good=True,
-                    bots=[BotStatus(self=middleware.get_bot_self(), online=False)],
+                    bots=[
+                        BotStatus(self=await middleware.get_bot_self(), online=False)
+                    ],
                 ),
             )
             await queue.put(event)

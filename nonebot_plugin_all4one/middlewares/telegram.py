@@ -41,7 +41,7 @@ class Middleware(BaseMiddleware):
         if (type := event.get_type()) not in ["message", "notice", "request"]:
             return []
         event_dict["type"] = type
-        event_dict["self"] = self.get_bot_self().model_dump()
+        event_dict["self"] = (await self.get_bot_self()).model_dump()
         if isinstance(event, MessageEvent):
             event_dict["time"] = event.date
             event_dict["detail_type"] = event.get_event_name().split(".")[1]
