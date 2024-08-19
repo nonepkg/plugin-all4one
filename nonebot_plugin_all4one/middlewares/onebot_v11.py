@@ -65,18 +65,7 @@ class Middleware(BaseMiddleware):
             "channel_id",
         )
         good_to_be_ob12 = ("time", "sub_type")
-        event_dict = {
-            f"qq.{k}": v
-            for k, v in event.model_dump(
-                exclude=set(
-                    replaced_by_detail_type
-                    + should_be_str
-                    + good_to_be_ob12
-                    + ("self_id", "post_type")
-                )
-            ).items()
-        }
-        event_dict.update(event.model_dump(include=set(good_to_be_ob12)))
+        event_dict = event.model_dump(include=set(good_to_be_ob12))
         event_dict.update(
             {k: str(v) for k, v in event.model_dump(include=set(should_be_str)).items()}
         )
@@ -109,7 +98,7 @@ class Middleware(BaseMiddleware):
                 elif event.sub_type == "invite":
                     event_dict["sub_type"] = "invite"
                 else:
-                    event_dict["sub_type"] = f"qq.{event.sub_type}"
+                    event_dict["sub_type"] = f"{event.sub_type}"
             elif isinstance(event, GroupDecreaseNoticeEvent):
                 event_dict["detail_type"] = "group_member_decrease"
                 if event.sub_type == "leave":
@@ -117,16 +106,16 @@ class Middleware(BaseMiddleware):
                 elif event.sub_type in ("kick", "kick_me"):
                     event_dict["sub_type"] = "kick"
                 else:
-                    event_dict["sub_type"] = f"qq.{event.sub_type}"
+                    event_dict["sub_type"] = f"{event.sub_type}"
             elif isinstance(event, GroupRecallNoticeEvent):
                 event_dict["detail_type"] = "group_message_delete"
                 event_dict["sub_type"] = (
                     "recall" if event.user_id == event.operator_id else "delete"
                 )
             else:
-                event_dict["detail_type"] = f"qq.{event.notice_type}"
+                event_dict["detail_type"] = f"{event.notice_type}"
         elif isinstance(event, RequestEvent):
-            event_dict["detail_type"] = f"qq.{event.request_type}"
+            event_dict["detail_type"] = f"{event.request_type}"
         event_dict.setdefault("sub_type", "")
         if event_out := OneBotAdapter.json_to_event(
             event_dict, "nonebot-plugin-all4one"
@@ -296,7 +285,6 @@ class Middleware(BaseMiddleware):
             "user_displayname": "",
             "user_remark": "",
         }
-        resp.update({f"qq.{k}": v for k, v in result.items() if k not in resp})
         return resp
 
     @supported_action
@@ -313,9 +301,6 @@ class Middleware(BaseMiddleware):
                 "user_displayname": "",
                 "user_remark": friend["remark"],
             }
-            friend_dict.update(
-                {f"qq.{k}": v for k, v in friend.items() if k not in friend_dict}
-            )
             resp.append(friend_dict)
         return resp
 
@@ -330,7 +315,6 @@ class Middleware(BaseMiddleware):
             "group_id": str(result["group_id"]),
             "group_name": result["group_name"],
         }
-        resp.update({f"qq.{k}": v for k, v in result.items() if k not in resp})
         return resp
 
     @supported_action
@@ -345,9 +329,6 @@ class Middleware(BaseMiddleware):
                 "group_id": str(group["group_id"]),
                 "group_name": group["group_name"],
             }
-            group_dict.update(
-                {f"qq.{k}": v for k, v in group.items() if k not in group}
-            )
             resp.append(group_dict)
         return resp
 
@@ -363,7 +344,6 @@ class Middleware(BaseMiddleware):
             "user_name": result["nickname"],
             "user_displayname": result["card"],
         }
-        resp.update({f"qq.{k}": v for k, v in result.items() if k not in resp})
         return resp
 
     async def get_group_member_list(
@@ -377,7 +357,6 @@ class Middleware(BaseMiddleware):
                 "user_name": member["nickname"],
                 "user_displayname": member["card"],
             }
-            tmp.update({f"qq.{k}": v for k, v in member.items() if k not in tmp})
             resp.append(tmp)
         return resp
 
