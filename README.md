@@ -12,7 +12,7 @@
 [![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/main/docs/badge/v2.json)](https://pydantic.dev)  
 [![PyPI Version](https://img.shields.io/pypi/v/nonebot-plugin-all4one.svg?style=flat-square)](https://pypi.python.org/pypi/nonebot-plugin-all4one)
 [![OneBot 4A](https://img.shields.io/badge/OneBot-4A-black?style=flat-square)](https://onebot4all.vercel.app/)
-[![NoneBot Version](https://img.shields.io/badge/nonebot-2.3.0+-red.svg?style=flat-square)](https://v2.nonebot.dev/)
+[![NoneBot Version](https://img.shields.io/badge/nonebot-2.3.0+-red.svg?style=flat-square)](https://v2.nonebot.dev/)  
 [![NoneBot Registry](https://img.shields.io/endpoint?url=https%3A%2F%2Fnbbdg.lgc2333.top%2Fplugin%2Fnonebot-plugin-all4one)](https://registry.nonebot.dev/plugin/nonebot-plugin-all4one:nonebot_plugin_all4one)
 [![Supported Adapters](https://img.shields.io/endpoint?url=https%3A%2F%2Fnbbdg.lgc2333.top%2Fplugin-adapters%2Fnonebot-plugin-all4one)](https://registry.nonebot.dev/plugin/nonebot-plugin-all4one:nonebot_plugin_all4one)
 

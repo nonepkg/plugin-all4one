@@ -50,12 +50,6 @@ class Middleware(BaseMiddleware):
         return "qq"
 
     async def to_onebot_event(self, event: Event) -> list[OneBotEvent]:
-        replaced_by_detail_type = (
-            "notice_type",
-            "message_type",
-            "request_type",
-            "meta_event_type",
-        )
         should_be_str = (
             "message_id",
             "user_id",

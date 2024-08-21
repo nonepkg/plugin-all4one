@@ -60,7 +60,7 @@ class Middleware(ABC):
             user_id=self.self_id,
             **{
                 "supported_actions": await self.get_supported_actions(),
-                "supported_message_segments": await self.get_supported_message_segments(),
+                "supported_message_segments": await self.get_supported_message_segments(),  # noqa: E501
             },
         )
 
@@ -100,7 +100,8 @@ class Middleware(ABC):
         """发送消息
 
         参数:
-            detail_type: 发送的类型，可以为 private、group 或扩展的类型，和消息事件的 detail_type 字段对应
+            detail_type: 发送的类型，可以为 private、group 或扩展的类型，
+            和消息事件的 detail_type 字段对应
             user_id: 用户 ID，当 detail_type 为 private 时必须传入
             group_id: 群 ID，当 detail_type 为 group 时必须传入
             guild_id: Guild 群组 ID，当 detail_type 为 channel 时必须传入

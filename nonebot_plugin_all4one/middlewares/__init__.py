@@ -2,8 +2,7 @@ import importlib
 from pathlib import Path
 from typing import Optional, cast
 
-from nonebot.log import logger
-
+from ..logger import log
 from .base import Middleware
 
 MIDDLEWARE_MAP = {}
@@ -23,4 +22,4 @@ for file in Path(__file__).parent.rglob("*.py"):
         ):
             MIDDLEWARE_MAP[middleware.get_name()] = middleware
     except Exception:
-        logger.warning(f"Failed to import {module_name}")
+        log("WARNING", f"Failed to import {module_name}")
