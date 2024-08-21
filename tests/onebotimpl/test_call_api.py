@@ -12,4 +12,5 @@ async def test_get_supported_action(app: App, FakeMiddleware):
             "upload_file",
             "get_file",
             "get_supported_actions",
+            "get_supported_message_segments",
         }
