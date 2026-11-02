@@ -1,8 +1,8 @@
 from copy import deepcopy
 
 from nonebot.adapters import Bot, Event
-from nonebot.plugin import PluginMetadata
 from nonebot import on, require, get_driver
+from nonebot.plugin import PluginMetadata
 from nonebot.message import event_preprocessor
 
 require("nonebot_plugin_localstore")

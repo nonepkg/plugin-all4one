@@ -4,10 +4,10 @@ from typing import Any, Union, Literal, Optional
 from pydantic import TypeAdapter
 from nonebot.adapters.onebot.v12 import UnsupportedSegment
 from nonebot.adapters.onebot.v12 import Event as OneBotEvent
+from nonebot.adapters.telegram import Bot, Event, Adapter, Message
+from nonebot.adapters.telegram.message import File, Reply, Entity
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
-from nonebot.adapters.telegram.message import File, Reply, Entity
-from nonebot.adapters.telegram import Bot, Event, Adapter, Message
 from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
 from nonebot.adapters.telegram.event import (
     NoticeEvent,

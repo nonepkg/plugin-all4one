@@ -1,6 +1,6 @@
 from hashlib import sha256
-from base64 import b64decode
 from uuid import UUID, uuid4
+from base64 import b64decode
 from typing import Union, Optional
 
 from anyio import open_file

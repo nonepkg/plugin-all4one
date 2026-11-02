@@ -13,16 +13,16 @@ from nonebot.utils import escape_tag
 from nonebot.exception import WebSocketClosed
 from nonebot.adapters.onebot.utils import get_auth_bearer
 from nonebot.adapters.onebot.v12 import Event, StatusUpdateMetaEvent
-from nonebot.adapters.onebot.v12.exception import (
-    WhoAmI,
-    UnknownSelf,
-    ActionFailedWithRetcode,
-)
 from nonebot.adapters.onebot.v12.event import (
     Status,
     BotStatus,
     ImplVersion,
     ConnectMetaEvent,
+)
+from nonebot.adapters.onebot.v12.exception import (
+    WhoAmI,
+    UnknownSelf,
+    ActionFailedWithRetcode,
 )
 from nonebot.drivers import (
     URL,

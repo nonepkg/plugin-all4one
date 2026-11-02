@@ -9,8 +9,8 @@ from nonebot.adapters.onebot.v11.message import MessageSegment
 from nonebot.adapters.onebot.v12 import ActionFailedWithRetcode
 from nonebot.adapters.onebot.v12 import Adapter as OneBotAdapter
 from nonebot.adapters.onebot.v12 import Message as OneBotMessage
-from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
 from nonebot.adapters.onebot.v11 import Bot, Event, Adapter, Message, ActionFailed
+from nonebot.adapters.onebot.v12 import MessageSegment as OneBotMessageSegment
 from nonebot.adapters.onebot.v11.event import (
     MetaEvent,
     NoticeEvent,
